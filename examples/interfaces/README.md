@@ -1,7 +1,9 @@
 <!-- BEGIN_TF_DOCS -->
-# Default AVS example
+# Interfaces Example
 
-This example demonstrate a deployment with a single Azure VMware Solution private cloud, with the default management cluster and an additional 3-node cluster.  It activates the HCX addon, and creates an example HCX site key.  An expressroute authorization key is also created for attaching the private cloud to an expressRoute gateway.
+This example demonstrates the core module interfaces.  These include the ability to set tags and locks, enable the system-managed identity, encrypt the VSAN datastore using a customer managed key, configure diagnostic settings, and add resource level role assignments.
+
+It deploys a private cloud with a minimum management cluster, and demonstrates activating the internet SNAT option.
 
 ```hcl
 terraform {
@@ -95,6 +97,71 @@ resource "azurerm_resource_group" "this" {
   location = local.with_quota[random_integer.region_index[0].result]
 }
 
+#get the deployment user details
+data "azurerm_client_config" "current" {}
+
+#create a log analytics workspace as a diag settings destination.
+resource "azurerm_log_analytics_workspace" "this_workspace" {
+  name                = module.naming.log_analytics_workspace.name_unique
+  location            = azurerm_resource_group.this[0].location
+  resource_group_name = azurerm_resource_group.this[0].name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+#create a keyvault for storing the example customer managed key 
+module "avm-res-keyvault-vault" {
+  source                      = "Azure/avm-res-keyvault-vault/azurerm"
+  version                     = ">=0.4.0"
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  name                        = module.naming.key_vault.name_unique
+  resource_group_name         = azurerm_resource_group.this[0].name
+  location                    = azurerm_resource_group.this[0].location
+  enabled_for_disk_encryption = true
+  network_acls = {
+    default_action = "Allow"
+    bypass         = "AzureServices"
+  }
+
+  role_assignments = {
+    deployment_user_keys = { #give the deployment user access to keys
+      role_definition_id_or_name = "Key Vault Crypto Officer"
+      principal_id               = data.azurerm_client_config.current.object_id
+    }
+    user_managed_identity_keys = { #give the private cloud managed identity access to the key vault
+      role_definition_id_or_name = "Key Vault Crypto Officer"
+      principal_id               = module.test_private_cloud[0].private_cloud.properties.identity.principalId
+    }
+  }
+}
+
+#separate the key generation outside the keyvault to try and avoid a circular reference error when permissioning the private cloud managed identity
+resource "azurerm_key_vault_key" "generated" {
+  name         = "dummy-cmk"
+  key_vault_id = module.avm-res-keyvault-vault.resource.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+
+  rotation_policy {
+    automatic {
+      time_before_expiry = "P30D"
+    }
+
+    expire_after         = "P90D"
+    notify_before_expiry = "P29D"
+  }
+}
+
+
 # This is the module call
 module "test_private_cloud" {
   source = "../../"
@@ -107,22 +174,53 @@ module "test_private_cloud" {
   location                = azurerm_resource_group.this[0].location
   name                    = "avs-sddc-${random_string.namestring.result}"
   sku_name                = "av36"
-  avs_network_cidr        = "10.0.0.0/22"
-  internet_enabled        = false
+  avs_network_cidr        = "10.96.0.0/22"
+  internet_enabled        = true
   management_cluster_size = 3
   hcx_enabled             = true
   hcx_key_names           = ["test_site_key_1"]
   expressroute_auth_keys  = ["test_auth_key_1"]
-  clusters = {
-    Cluster_2 = {
-      cluster_node_count = 3
-      sku_name           = "av36"
+
+  #demonstrate the role_assignments interface
+  role_assignments = {
+    deployment_user_secrets = { #give the deployment user access private cloud directly
+      role_definition_id_or_name = "Contributor"
+      principal_id               = data.azurerm_client_config.current.object_id
     }
   }
+
+  #demonstrate the tags interface
   tags = {
-    scenario = "avs_sddc_default"
+    scenario = "avs_sddc_interfaces"
   }
 
+  #demonstrate the diagnostic settings interface
+  diagnostic_settings = {
+    avs_diags = {
+      name                  = module.naming.monitor_diagnostic_setting.name_unique
+      workspace_resource_id = azurerm_log_analytics_workspace.this_workspace.id
+      metric_categories     = ["AllMetrics"]
+      log_groups            = ["allLogs"]
+    }
+  }
+
+  #demonstrate the managed Identity interface
+  managed_identities = {
+    system_assigned = true
+  }
+
+  #demonstrate customer managed keys
+  customer_managed_key = {
+    key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
+    key_name              = azurerm_key_vault_key.generated.name
+    key_version           = azurerm_key_vault_key.generated.version
+  }
+
+  #demonstrate the locks interface
+  lock = {
+    name = "lock-avs-sddc-${random_string.namestring.result}"
+    type = "CanNotDelete"
+  }
 }
 ```
 
@@ -153,10 +251,13 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azurerm_key_vault_key.generated](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key) (resource)
+- [azurerm_log_analytics_workspace.this_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.namestring](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [azapi_resource_action.quota](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -185,6 +286,12 @@ No outputs.
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_avm-res-keyvault-vault"></a> [avm-res-keyvault-vault](#module\_avm-res-keyvault-vault)
+
+Source: Azure/avm-res-keyvault-vault/azurerm
+
+Version: >=0.4.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
