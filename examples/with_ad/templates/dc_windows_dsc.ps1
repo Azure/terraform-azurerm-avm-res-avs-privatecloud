@@ -108,7 +108,6 @@ Configuration dc {
         ADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
-            # Credential = $LocalAdminCredential
             CAType = 'EnterpriseRootCA'
             CACommonName = $Node.CACommonName
             CADistinguishedNameSuffix = $Node.CADistinguishedNameSuffix
@@ -117,7 +116,10 @@ Configuration dc {
             CryptoProviderName = 'RSA#Microsoft Software Key Storage Provider'
             HashAlgorithmName = 'SHA256'
             KeyLength = 4096
-            DependsOn = '[WindowsFeature]ADCSCA' 
+            DependsOn = '[WindowsFeature]ADCSCA'
+            IsSingleInstance = 'Yes' 
+            Credential = $credObject
+
         }
 
         WindowsFeature RSAT-ADCS 
