@@ -170,8 +170,10 @@ module "avm-res-keyvault-vault" {
   name                = module.naming.key_vault.name_unique
   resource_group_name = azurerm_resource_group.this[0].name
   location            = azurerm_resource_group.this[0].location
+  enabled_for_deployment = true
   network_acls = {
     default_action = "Allow"
+    bypass = "AzureServices"
   }
 
   role_assignments = {

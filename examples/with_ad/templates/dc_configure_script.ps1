@@ -1,0 +1,27 @@
+#set environment variables
+$env:THUMBPRINT = "${thumbprint}"
+$env:VAULTNAME  =  "${vault_name}"
+$env:ADMINUSERNAME = "${admin_username}"
+$env:ADMINPASSWORD = "${admin_password}"
+$env:ACTIVEDIRECTORYFQDN = "${active_directory_fqdn}"
+$env:ACTIVEDIRECTORYNETBIOS = "${active_directory_netbios}"
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+$url = "${script_url}"
+$output = "c:\temp\dc_windows_dsc.ps1"
+Invoke-WebRequest -Uri $url -OutFile $output
+
+#install modules
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+Install-Module -Name PowerShellGet -Force
+Install-Module -Name ActiveDirectoryDsc -Force -AllowClobber
+Install-Module -Name DnsServerDsc -Force -AllowClobber
+Install-Module -Name SecurityPolicyDsc -Force -AllowClobber
+Install-Module -Name ComputerManagementDsc -Force -AllowClobber
+
+New-Item -Path 'c:\temp' -ItemType Directory -ErrorAction SilentlyContinue
+set-location -Path 'c:\temp'
+
+#run the script file
+.\dc_windows_dsc.ps1

@@ -93,36 +93,6 @@ Configuration dc {
         {
             DomainName = $Node.ActiveDirectoryFQDN
         }
-
-
-        #write the domain values to the key vault to populate the credential spec template later
-        script 'uploadDomainInfoToKeyVault' {
-            DependsOn            = "[WaitForADDomain]thisDomain"
-            GetScript            = { return @{result = 'Writing Domain GUID and SID to keyvault' } }
-            TestScript           = { 
-                Connect-AzAccount -Identity | Out-Null
-                $domainInfo = get-AdDomain -errorAction SilentlyContinue
-                $Sid = Get-AzKeyVaultSecret -vaultName $Node.VaultName -Name "domain-sid" -AsPlainText -errorAction SilentlyContinue
-                $Guid = Get-AzKeyVaultSecret -vaultName $Node.VaultName -Name "domain-guid" -AsPlainText -errorAction SilentlyContinue
-                if (($domainInfo.DomainSid.value.toUpper() -ne $Sid) -or ($domainInfo.ObjectGuid.Guid.toUpper() -ne $Guid)) { 
-                    $return = $false 
-                }
-                else {
-                    $return = $true
-                }
-                
-                return $return 
-                #return $true
-            }
-            SetScript            = {                    
-                Connect-AzAccount -Identity | Out-Null
-                $domainInfo = get-AdDomain
-                $Sid = convertTo-SecureString -String $domainInfo.DomainSid.value.toUpper() -AsPlainText -Force
-                $Guid = convertTo-SecureString -String $domainInfo.ObjectGuid.Guid.toUpper -AsPlainText -Force
-                Set-AzKeyVaultSecret -vaultName $Node.VaultName -Name "domain-sid" -SecretValue $Sid
-                Set-AzKeyVaultSecret -vaultName $Node.VaultName -Name "domain-guid" -SecretValue $Guid
-            }
-        }       
         
     }
 }
@@ -133,7 +103,6 @@ $cd = @{
             NodeName               = "localhost"
             CertificateFile        = "C:\temp\dsc64.cer"
             Thumbprint             = $env:THUMBPRINT
-            VaultName              = $env:VAULTNAME
             AdminUsername          = $env:ADMINUSERNAME
             AdminPassword          = $env:ADMINPASSWORD
             ActiveDirectoryFQDN    = $env:ACTIVEDIRECTORYFQDN
