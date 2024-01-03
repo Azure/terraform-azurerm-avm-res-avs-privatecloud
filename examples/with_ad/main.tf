@@ -164,16 +164,16 @@ data "azurerm_client_config" "current" {}
 
 #create a keyvault for storing the credential with RBAC for the deployment user
 module "avm-res-keyvault-vault" {
-  source              = "Azure/avm-res-keyvault-vault/azurerm"
-  version             = ">=0.3.0"
-  tenant_id           = data.azurerm_client_config.current.tenant_id
-  name                = module.naming.key_vault.name_unique
-  resource_group_name = azurerm_resource_group.this[0].name
-  location            = azurerm_resource_group.this[0].location
+  source                 = "Azure/avm-res-keyvault-vault/azurerm"
+  version                = ">=0.3.0"
+  tenant_id              = data.azurerm_client_config.current.tenant_id
+  name                   = module.naming.key_vault.name_unique
+  resource_group_name    = azurerm_resource_group.this[0].name
+  location               = azurerm_resource_group.this[0].location
   enabled_for_deployment = true
   network_acls = {
     default_action = "Allow"
-    bypass = "AzureServices"
+    bypass         = "AzureServices"
   }
 
   role_assignments = {
@@ -243,6 +243,22 @@ resource "azurerm_key_vault_certificate" "this" {
   }
 }
 
+#Create the template script file
+data "template_file" "run_script" {
+  template = file("${path.module}/templates/dc_configure_script.ps1")
+  vars = {
+    thumbprint                   = azurerm_key_vault_certificate.this.thumbprint
+    admin_username               = module.testvm.virtual_machine.admin_username
+    admin_password               = module.testvm.admin_password
+    active_directory_fqdn        = "test.local"
+    active_directory_netbios     = "test"
+    ca_common_name               = "Test Root CA"
+    ca_distinguished_name_suffix = "DC=test,DC=local"
+    script_url                   = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/examples/with_ad/templates/dc_windows_dsc.ps1"
+  }
+}
+
+
 #build the DC VM
 #create the virtual machine
 module "testvm" {
@@ -293,4 +309,20 @@ module "testvm" {
       ]
     }
   ]
+
+  extensions = {
+    configure_domain_controller = {
+      name                       = "${module.testvm.virtual_machine.name}-configure-domain-controller"
+      publisher                  = "Microsoft.Compute"
+      type                       = "CustomScriptExtension"
+      type_handler_version       = "1.9"
+      auto_upgrade_minor_version = true
+      protected_settings         = <<PROTECTED_SETTINGS
+        {
+            "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
+        }
+      PROTECTED_SETTINGS
+
+    }
+  }
 }

@@ -1,6 +1,5 @@
 #set environment variables
 $env:THUMBPRINT = "${thumbprint}"
-$env:VAULTNAME = "${vault_name}"
 $env:ADMINUSERNAME = "${admin_username}"
 $env:ADMINPASSWORD = "${admin_password}"
 $env:ACTIVEDIRECTORYFQDN = "${active_directory_fqdn}"
