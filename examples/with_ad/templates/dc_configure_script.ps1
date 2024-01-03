@@ -1,10 +1,14 @@
 #set environment variables
 $env:THUMBPRINT = "${thumbprint}"
-$env:VAULTNAME  =  "${vault_name}"
+$env:VAULTNAME = "${vault_name}"
 $env:ADMINUSERNAME = "${admin_username}"
 $env:ADMINPASSWORD = "${admin_password}"
 $env:ACTIVEDIRECTORYFQDN = "${active_directory_fqdn}"
 $env:ACTIVEDIRECTORYNETBIOS = "${active_directory_netbios}"
+$env:CACOMMONNAME = "${ca_common_name}"
+$env:CADISTINGUISHEDNAMESUFFIX = "${ca_distinguished_name_suffix}"
+
+
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -19,6 +23,8 @@ Install-Module -Name ActiveDirectoryDsc -Force -AllowClobber
 Install-Module -Name DnsServerDsc -Force -AllowClobber
 Install-Module -Name SecurityPolicyDsc -Force -AllowClobber
 Install-Module -Name ComputerManagementDsc -Force -AllowClobber
+Install-Module -Name ActiveDirectoryCSDsc -Force -AllowClobber
+
 
 New-Item -Path 'c:\temp' -ItemType Directory -ErrorAction SilentlyContinue
 set-location -Path 'c:\temp'
