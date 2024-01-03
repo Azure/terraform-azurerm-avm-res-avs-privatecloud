@@ -105,7 +105,7 @@ Configuration dc {
         }
         
         # Configure the CA as Standalone Root CA
-        xADCSCertificationAuthority ConfigCA
+        ADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
             # Credential = $LocalAdminCredential
