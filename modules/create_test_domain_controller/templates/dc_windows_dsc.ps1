@@ -40,39 +40,39 @@ Configuration dc {
 
     Node localhost
     {
-        #Add the containers and hypervisor features and reboot if needed 
+        #Add the domain services feature
         WindowsFeature 'ad-domain-services'
         {
             Name                 = 'ad-domain-services'
             Ensure               = 'Present'
             IncludeAllSubFeature = $true 
         }
-
+        #Add the dns feature
         WindowsFeature 'dns'
         {
             Name                 = 'dns'
             Ensure               = 'Present'
             IncludeAllSubFeature = $true 
         }
-
+        #Add the RSAT tools for DNS
         WindowsFeature 'rsat-dns-server'
         {
             Name                 = 'rsat-dns-server'
             Ensure               = 'Present'
         }
-
+        #add the RSAT tools for ADDS
         WindowsFeature 'rsat-adds'
         {
             Name                 = 'rsat-adds'
             Ensure               = 'Present'
         }
-
+        #Add the AD DS powershell cmdlets
         WindowsFeature 'rsat-ad-powershell'
         {
             Name                 = 'rsat-ad-powershell'
             Ensure               = 'Present'
         }
-
+        #configure the DNS forwarder Addresses to point to Azure and Google DNS servers
         DnsServerForwarder 'SetForwarders'
         {
             IsSingleInstance = 'Yes'
@@ -80,7 +80,7 @@ Configuration dc {
             UseRootHint      = $false
             DependsOn        = "[WindowsFeature]dns"
         }
-
+        #Configure the Domain details
         ADDomain 'thisDomain'
         {
             DomainName                    = $Node.ActiveDirectoryFQDN
@@ -91,20 +91,18 @@ Configuration dc {
             DomainNetBiosName             = $Node.ActiveDirectoryNETBIOS
             DependsOn                     = "[WindowsFeature]ad-domain-services"
         } 
-        
+        #Wait for the Domain to be configured
         WaitForADDomain 'thisDomain'
         {
             DomainName = $Node.ActiveDirectoryFQDN
-        }
-        
+        }        
         # Install the ADCS Certificate Authority
         WindowsFeature ADCSCA {
             Name      = 'ADCS-Cert-Authority'
             Ensure    = 'Present'
             DependsOn = '[WaitForADDomain]thisDomain' 
-        }
-        
-        # Configure the CA as Standalone Root CA
+        }        
+        # Configure the CA as Standalone Enterprise Root CA
         ADCSCertificationAuthority ConfigCA
         {
             Ensure = 'Present'
@@ -119,21 +117,30 @@ Configuration dc {
             DependsOn = '[WindowsFeature]ADCSCA'
             IsSingleInstance = 'Yes' 
             Credential = $credObject
-
         }
-
+        #Install the RSAT tools of Certificate Services
         WindowsFeature RSAT-ADCS 
         { 
             Ensure = 'Present' 
             Name = 'RSAT-ADCS' 
             DependsOn = '[WindowsFeature]ADCSCA' 
         } 
+        #Install the RSAT tools for ADCS mgmt
         WindowsFeature RSAT-ADCS-Mgmt 
         { 
             Ensure = 'Present' 
             Name = 'RSAT-ADCS-Mgmt' 
             DependsOn = '[WindowsFeature]ADCSCA' 
         } 
+        #create a regular user account for LDAP lookups
+        ADUser 'ldapUser'
+        {
+            Ensure     = 'Present'
+            UserName   = $Node.ldapUser
+            Password   = $Node.ldapUserPassword
+            DomainName = $Node.ActiveDirectoryFQDN
+            Path       = "CN=Users,$env:CADistinguishedNameSuffix"
+        }
     }
 }
 
@@ -143,15 +150,16 @@ $cd = @{
             NodeName                  = "localhost"
             CertificateFile           = "C:\temp\dsc64.cer"
             Thumbprint                = $env:THUMBPRINT
-            AdminUsername             = $env:ADMINUSERNAME
-            AdminPassword             = $env:ADMINPASSWORD
             ActiveDirectoryFQDN       = $env:ACTIVEDIRECTORYFQDN
             ActiveDirectoryNETBIOS    = $env:ACTIVEDIRECTORYNETBIOS
             CACommonName              = $env:CACOMMONNAME
             CADistinguishedNameSuffix = $env:CADISTINGUISHEDNAMESUFFIX
+            ldapUser                  = $env:LDAPUSER
+            ldapUserPassword          = $env:LDAPUSERPASSWORD
         }
     ) 
 }
+
 dc -ConfigurationData $cd
 Start-dscConfiguration -Path ./dc -Force
 

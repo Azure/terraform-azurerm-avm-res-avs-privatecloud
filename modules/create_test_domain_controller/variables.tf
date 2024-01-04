@@ -84,3 +84,10 @@ variable "dc_dsc_script_url" {
     description = "the github url for the raw DSC configuration script that will be used by the custom script extension."
     default = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/examples/with_ad/templates/dc_windows_dsc.ps1"  
 }
+
+variable "ldap_user" {
+    type = string
+    description = "the username to use for the account used to query ldap."
+    default = "ldapuser"  
+}
+

@@ -91,6 +91,8 @@ data "template_file" "run_script" {
     ca_common_name               = "${var.domain_netbios_name} Root CA"
     ca_distinguished_name_suffix = var.domain_distinguished_name
     script_url                   = var.dc_dsc_script_url
+    ldap_user                    = var.ldap_user
+    ldap_user_password           = random_password.ldap_password.result
   }
 }
 
@@ -173,5 +175,23 @@ resource "time_sleep" "wait_600_seconds" {
 data "azurerm_virtual_machine" "this_vm" {
     name = module.testvm.virtual_machine.name
     resource_group_name = var.resource_group_name
-    depends_on = [ time_sleep.wait_600_seconds ]
+    depends_on = [ time_sleep.wait_600_seconds, module.testvm ]
+}
+
+#generate a password for use by the ldap user account
+resource "random_password" "ldap_password" {
+  length           = 22
+  min_lower        = 2
+  min_numeric      = 2
+  min_special      = 2
+  min_upper        = 2
+  special          = true
+  override_special = "!#$%&()*+,-./:;<=>?@[]^_{|}~"
+}
+
+#store the ldap user account in the key vault as a secret
+resource "azurerm_key_vault_secret" "admin_password" {
+  name         = "${var.ldap_user}-password"
+  value        = random_password.ldap_password.result
+  key_vault_id = var.key_vault_resource_id
 }

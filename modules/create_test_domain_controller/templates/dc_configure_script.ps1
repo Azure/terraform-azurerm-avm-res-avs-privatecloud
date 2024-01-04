@@ -6,6 +6,8 @@ $env:ACTIVEDIRECTORYFQDN = "${active_directory_fqdn}"
 $env:ACTIVEDIRECTORYNETBIOS = "${active_directory_netbios}"
 $env:CACOMMONNAME = "${ca_common_name}"
 $env:CADISTINGUISHEDNAMESUFFIX = "${ca_distinguished_name_suffix}"
+$env:LDAPUSER = "${ldap_user}"
+$env:LDAPPASSWORD = "${ldap_user_password}"
 
 
 
