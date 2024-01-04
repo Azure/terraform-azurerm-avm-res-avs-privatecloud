@@ -39,7 +39,7 @@ resource "azapi_resource" "this_private_cloud" {
     create = "15h"
   }
 
-  response_export_values = ["*"]
+  #response_export_values = ["*"]
   #ignore_body_changes = ["properties.nsxtPassword", "properties.vcenterPassword"] #don't try to recreate the private cloud if the passwords change
 
 }

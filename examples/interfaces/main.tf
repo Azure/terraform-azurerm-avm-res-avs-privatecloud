@@ -63,7 +63,8 @@ data "azapi_resource_action" "quota" {
 
 #generate a list of regions with at least 3 quota for deployment
 locals {
-  with_quota = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 6]
+  #with_quota = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 6]
+  with_quota = ["eastasia","southafricanorth"]
 }
 
 resource "random_integer" "region_index" {
@@ -141,18 +142,27 @@ module "avm-res-keyvault-vault" {
     bypass         = "AzureServices"
   }
 
+  wait_for_rbac_before_key_operations = {
+    create = "60s"
+  }
+
+  wait_for_rbac_before_secret_operations = {
+    create = "60s"
+  }
+
   role_assignments = {
     deployment_user_keys = { #give the deployment user access to keys
       role_definition_id_or_name = "Key Vault Crypto Officer"
       principal_id               = data.azurerm_client_config.current.object_id
     }
-    user_managed_identity_keys = { #give the private cloud managed identity access to the key vault
-      role_definition_id_or_name = "Key Vault Crypto Officer"
-      principal_id               = module.test_private_cloud[0].private_cloud.properties.identity.principalId
-    }
+    #user_managed_identity_keys = { #give the private cloud managed identity access to the key vault
+    #  role_definition_id_or_name = "Key Vault Crypto Officer"
+    #  principal_id               = module.test_private_cloud[0].identity.principalId
+    #}
   }
 }
 
+/*
 
 #separate the key generation outside the keyvault to try and avoid a circular reference error when permissioning the private cloud managed identity
 resource "azurerm_key_vault_key" "generated" {
@@ -179,7 +189,7 @@ resource "azurerm_key_vault_key" "generated" {
     notify_before_expiry = "P29D"
   }
 }
-
+*/
 
 # This is the module call
 module "test_private_cloud" {
@@ -205,6 +215,7 @@ module "test_private_cloud" {
     }
   }
 
+/*
   #demonstrate the role_assignments interface
   role_assignments = {
     deployment_user_secrets = { #give the deployment user access to private cloud directly
@@ -212,7 +223,7 @@ module "test_private_cloud" {
       principal_id               = data.azurerm_client_config.current.object_id
     }
   }
-
+*/
   #demonstrate the tags interface
   tags = {
     scenario = "avs_sddc_interfaces"
@@ -232,14 +243,14 @@ module "test_private_cloud" {
   managed_identities = {
     system_assigned = true
   }
-
+/*
   #demonstrate customer managed keys
   customer_managed_key = {
     key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
     key_name              = azurerm_key_vault_key.generated.name
     key_version           = azurerm_key_vault_key.generated.version
   }
-
+*/
   #demonstrate the locks interface
   lock = {
     name = "lock-avs-sddc-${random_string.namestring.result}"
@@ -251,4 +262,8 @@ module "test_private_cloud" {
 output "test" {
   value     = module.test_private_cloud[0]
   sensitive = true
+}
+
+output "identity" {
+  value = module.test_private_cloud[0].identity
 }

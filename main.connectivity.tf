@@ -37,13 +37,19 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
   express_route_circuit_id   = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
 }
 
+data "azurerm_vmware_private_cloud" "this_private_cloud" {
+  name                = azapi_resource.this_private_cloud.name
+  resource_group_name = data.azurerm_resource_group.sddc_deployment.name
+}
+
 #Create one or more ExpressRoute Gateway connections to a VWAN hub
 resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if v.vwan_hub_connection == true }
 
   name                             = each.key
   express_route_gateway_id         = each.value.expressroute_gateway_resource_id
-  express_route_circuit_peering_id = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
+  express_route_circuit_peering_id = data.azurerm_vmware_private_cloud.this_private_cloud.circuit[0].express_route_private_peering_id
+  #express_route_circuit_peering_id = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRoutePrivatePeeringID
   authorization_key                = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
   enable_internet_security         = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
   routing_weight                   = each.value.routing_weight
@@ -61,4 +67,6 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
       }
     }
   }
+
+  lifecycle {  ignore_changes = [ express_route_circuit_peering_id ]  }
 }

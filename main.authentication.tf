@@ -41,14 +41,14 @@ resource "azurerm_role_assignment" "this_private_cloud" {
 resource "azapi_update_resource" "managed_identity" {
   count = var.managed_identities.system_assigned ? 1 : 0
 
-  type      = "Microsoft.AVS/privateClouds@2022-05-01"
-  name      = "${azapi_resource.this_private_cloud.name}-managed-identity"
-  parent_id = azapi_resource.this_private_cloud.id
+  type        = "Microsoft.AVS/privateClouds@2022-05-01"
+  resource_id = azapi_resource.this_private_cloud.id
   body = jsonencode({
     identity = {
-      type = "SystemAssigned"
+      type = "systemassigned"
     }
   })
+  response_export_values = ["*"]
 }
 
 /* TODO: add this back if we can get a working API call to modify the credentials

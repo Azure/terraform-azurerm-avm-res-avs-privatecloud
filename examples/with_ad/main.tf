@@ -30,6 +30,9 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
+#get the deployer user details
+data "azurerm_client_config" "current" {}
+
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
@@ -90,6 +93,32 @@ resource "azurerm_resource_group" "this" {
 }
 
 
+#create a keyvault for storing the credential with RBAC for the deployment user
+module "avm-res-keyvault-vault" {
+  source                 = "Azure/avm-res-keyvault-vault/azurerm"
+  version                = ">=0.3.0"
+  tenant_id              = data.azurerm_client_config.current.tenant_id
+  name                   = module.naming.key_vault.name_unique
+  resource_group_name    = azurerm_resource_group.this[0].name
+  location               = azurerm_resource_group.this[0].location
+  enabled_for_deployment = true
+  network_acls = {
+    default_action = "Allow"
+    bypass         = "AzureServices"
+  }
+
+  role_assignments = {
+    deployment_user_secrets = {
+      role_definition_id_or_name = "Key Vault Administrator"
+      principal_id               = data.azurerm_client_config.current.object_id
+    }
+  }
+
+  wait_for_rbac_before_secret_operations = {
+    create = "60s"
+  }
+}
+
 #create a NAT gateway and public IP associate it to the Subnet where the DC will be created
 resource "azurerm_public_ip" "nat_gateway" {
   name                = module.naming.public_ip.name_unique
@@ -110,7 +139,6 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
   nat_gateway_id       = azurerm_nat_gateway.this_nat_gateway.id
   public_ip_address_id = azurerm_public_ip.nat_gateway.id
 }
-
 
 #create a simple vnet for the expressroute gateway
 module "gateway_vnet" {
@@ -139,190 +167,26 @@ module "gateway_vnet" {
   }
 }
 
-resource "azurerm_public_ip" "bastionpip" {
-  name                = "${module.naming.public_ip.name_unique}-bastion"
-  location            = azurerm_resource_group.this[0].location
-  resource_group_name = azurerm_resource_group.this[0].name
-  allocation_method   = "Static"
-  sku                 = "Standard"
+#create DC and Bastion
+module "create_dc" {
+  source = "../../modules/create_test_domain_controller"
+
+  resource_group_name        = azurerm_resource_group.this[0].name
+  resource_group_location    = azurerm_resource_group.this[0].location
+  dc_vm_name                 = "dc01-${module.naming.virtual_machine.name_unique}"
+  key_vault_resource_id      = module.avm-res-keyvault-vault.resource.id
+  create_bastion             = true
+  bastion_name               = module.naming.bastion_host.name_unique
+  bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
+  bastion_subnet_resource_id = module.gateway_vnet.subnets["AzureBastionSubnet"].id
+  dc_subnet_resource_id      = module.gateway_vnet.subnets["DCSubnet"].id
+  dc_vm_sku                  = "Standard_D2_v4"
+  domain_fqdn                = "test.local"
+  domain_netbios_name        = "test"
+  domain_distinguished_name  = "dc=test,dc=local"
 }
 
-resource "azurerm_bastion_host" "bastion" {
-  name                = module.naming.bastion_host.name_unique
-  location            = azurerm_resource_group.this[0].location
-  resource_group_name = azurerm_resource_group.this[0].name
-
-  ip_configuration {
-    name                 = "${module.naming.bastion_host.name_unique}-ipconf"
-    subnet_id            = module.gateway_vnet.subnets["AzureBastionSubnet"].id
-    public_ip_address_id = azurerm_public_ip.bastionpip.id
-  }
-}
-
-
-data "azurerm_client_config" "current" {}
-
-#create a keyvault for storing the credential with RBAC for the deployment user
-module "avm-res-keyvault-vault" {
-  source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = ">=0.3.0"
-  tenant_id              = data.azurerm_client_config.current.tenant_id
-  name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this[0].name
-  location               = azurerm_resource_group.this[0].location
-  enabled_for_deployment = true
-  network_acls = {
-    default_action = "Allow"
-    bypass         = "AzureServices"
-  }
-
-  role_assignments = {
-    deployment_user_secrets = {
-      role_definition_id_or_name = "Key Vault Administrator"
-      principal_id               = data.azurerm_client_config.current.object_id
-    }
-  }
-
-  wait_for_rbac_before_secret_operations = {
-    create = "60s"
-  }
-}
-
-#Create a self-signed certificate for DSC to use for encrypted deployment
-resource "azurerm_key_vault_certificate" "this" {
-  name         = "${module.naming.key_vault.name_unique}-dsc-cert"
-  key_vault_id = module.avm-res-keyvault-vault.resource.id
-
-  certificate_policy {
-    issuer_parameters {
-      name = "Self"
-    }
-
-    key_properties {
-      exportable = true
-      key_size   = 2048
-      key_type   = "RSA"
-      reuse_key  = true
-    }
-
-    lifetime_action {
-      action {
-        action_type = "AutoRenew"
-      }
-
-      trigger {
-        days_before_expiry = 30
-      }
-    }
-
-    secret_properties {
-      content_type = "application/x-pkcs12"
-    }
-
-    x509_certificate_properties {
-      # Server Authentication = 1.3.6.1.5.5.7.3.1
-      # Client Authentication = 1.3.6.1.5.5.7.3.2
-      extended_key_usage = ["1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2", "2.5.29.37", "1.3.6.1.4.1.311.80.1"]
-
-      key_usage = [
-        "cRLSign",
-        "dataEncipherment",
-        "digitalSignature",
-        "keyAgreement",
-        "keyCertSign",
-        "keyEncipherment",
-      ]
-
-      subject_alternative_names {
-        dns_names = ["${module.naming.virtual_machine.name_unique}.${local.test_domain_name}"]
-      }
-
-      subject            = "CN=${module.naming.virtual_machine.name_unique}"
-      validity_in_months = 12
-    }
-  }
-}
-
-#Create the template script file
-data "template_file" "run_script" {
-  template = file("${path.module}/templates/dc_configure_script.ps1")
-  vars = {
-    thumbprint                   = azurerm_key_vault_certificate.this.thumbprint
-    admin_username               = module.testvm.virtual_machine.admin_username
-    admin_password               = module.testvm.admin_password
-    active_directory_fqdn        = "test.local"
-    active_directory_netbios     = "test"
-    ca_common_name               = "Test Root CA"
-    ca_distinguished_name_suffix = "DC=test,DC=local"
-    script_url                   = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/examples/with_ad/templates/dc_windows_dsc.ps1"
-  }
-}
-
-
-#build the DC VM
-#create the virtual machine
-module "testvm" {
-  source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = ">=0.1.0"
-
-  resource_group_name                    = azurerm_resource_group.this[0].name
-  virtualmachine_os_type                 = "Windows"
-  name                                   = module.naming.virtual_machine.name_unique
-  admin_credential_key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
-  virtualmachine_sku_size                = "Standard_D2as_v4"
-
-  source_image_reference = {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2022-datacenter-g2"
-    version   = "latest"
-  }
-
-  managed_identities = {
-    system_assigned = true
-  }
-
-  network_interfaces = {
-    network_interface_1 = {
-      name = module.naming.network_interface.name_unique
-      ip_configurations = {
-        ip_configuration_1 = {
-          name                          = "${module.naming.network_interface.name_unique}-ipconfig1"
-          private_ip_subnet_resource_id = module.gateway_vnet.subnets["DCSubnet"].id
-        }
-      }
-    }
-  }
-
-  secrets = [
-    {
-      key_vault_id = module.avm-res-keyvault-vault.resource.id
-      certificate = [
-        {
-          url   = azurerm_key_vault_certificate.this.secret_id
-          store = "My"
-        },
-        {
-          store = "Root"
-          url   = azurerm_key_vault_certificate.this.secret_id
-        }
-      ]
-    }
-  ]
-
-  extensions = {
-    configure_domain_controller = {
-      name                       = "${module.testvm.virtual_machine.name}-configure-domain-controller"
-      publisher                  = "Microsoft.Compute"
-      type                       = "CustomScriptExtension"
-      type_handler_version       = "1.9"
-      auto_upgrade_minor_version = true
-      protected_settings         = <<PROTECTED_SETTINGS
-        {
-            "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
-        }
-      PROTECTED_SETTINGS
-
-    }
-  }
+output "dc_values" {
+    value = module.create_dc.dc_details
+    sensitive = true
 }
