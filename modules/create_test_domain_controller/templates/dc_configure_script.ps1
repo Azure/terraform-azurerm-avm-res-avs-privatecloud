@@ -1,13 +1,13 @@
 #set environment variables
 $env:THUMBPRINT = "${thumbprint}"
 $env:ADMINUSERNAME = "${admin_username}"
-$env:ADMINPASSWORD = "${admin_password}"
+$env:ADMINPASSWORD = (ConvertTo-SecureString "${admin_password}" -AsPlainText -Force)
 $env:ACTIVEDIRECTORYFQDN = "${active_directory_fqdn}"
 $env:ACTIVEDIRECTORYNETBIOS = "${active_directory_netbios}"
 $env:CACOMMONNAME = "${ca_common_name}"
 $env:CADISTINGUISHEDNAMESUFFIX = "${ca_distinguished_name_suffix}"
 $env:LDAPUSER = "${ldap_user}"
-$env:LDAPUSERPASSWORD = "${ldap_user_password}"
+$env:LDAPUSERPASSWORD = (ConvertTo-SecureString "${ldap_user_password}" -AsPlainText -Force)
 
 
 
