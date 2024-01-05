@@ -184,6 +184,8 @@ module "create_dc" {
   domain_fqdn                = "test.local"
   domain_netbios_name        = "test"
   domain_distinguished_name  = "dc=test,dc=local"
+
+  depends_on = [ module.avm-res-keyvault-vault ]
 }
 
 output "dc_values" {

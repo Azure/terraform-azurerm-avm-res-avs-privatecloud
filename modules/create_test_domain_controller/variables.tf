@@ -82,7 +82,7 @@ variable "key_vault_resource_id" {
 variable "dc_dsc_script_url" {
     type = string
     description = "the github url for the raw DSC configuration script that will be used by the custom script extension."
-    default = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/examples/with_ad/templates/dc_windows_dsc.ps1"  
+    default = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/modules/create_test_domain_controller/templates/dc_windows_dsc.ps1"  
 }
 
 variable "ldap_user" {
