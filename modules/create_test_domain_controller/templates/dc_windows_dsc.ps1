@@ -24,7 +24,7 @@ Write-Host "Creating LCM mof"
 lcmConfig -InstanceName localhost -OutputPath .\lcmConfig
 Set-DscLocalConfigurationManager -Path .\lcmConfig -Verbose
 
-[pscredential]$credObject = New-Object System.Management.Automation.PSCredential ("$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME", "$env:ADMINPASSWORD")
+[pscredential]$credObject = New-Object System.Management.Automation.PSCredential ("$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME", $env:ADMINPASSWORD)
 
 Configuration dc {
    
