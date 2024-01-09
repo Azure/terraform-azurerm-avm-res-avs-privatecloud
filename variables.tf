@@ -329,14 +329,12 @@ variable "vcenter_identity_sources" {
     base_group_dn    = string
     base_user_dn     = string
     domain           = string
-    password         = string
+    name             = string
     primary_server   = string
     secondary_server = optional(string, null)
     ssl              = optional(string, "Enabled")
-    username         = string
   }))
   default     = {}
-  sensitive   = true
   description = <<VCENTER_IDENTITY_SOURCES
   A map of objects representing a list of 0-2 identity sources for configuring LDAP or LDAPs on the private cloud. The map key will be used as the name value for the identity source.
 
@@ -345,41 +343,42 @@ variable "vcenter_identity_sources" {
       base_group_dn           = (Required) - The base distinguished name for groups
       base_user_dn            = (Required) - The base distinguished name for users
       domain                  = (Required) - The fully qualified domain name for the identity source
+      name                    = (Required) - The name to give the identity source
       password                = (Required) - Password to use for the domain user the vcenter will use to query LDAP(s)
       primary_server          = (Required) - The URI of the primary server. (Ex: ldaps://server.domain.local:636)
       secondary_server        = (Optional) - The URI of the secondary server. (Ex: ldaps://server.domain.local:636)
       ssl                     = (Optional) - Determines if ldap is configured to use ssl. Default to Enabled, valid values are "Enabled" and "Disabled"
-      username                = (Required) - The username for the domain user the vcenter will use to query LDAP(s)
     }))
 
     Example Input:
     ```terraform
       {
-        dc01 = {
-          alias                   = "testdomain"
-          base_group_dn           = "dc=testdomain,dc=local"
-          base_user_dn            = "dc=testdomain,dc=local"
-          domain                  = "testdomain.local"
-          password                = "supersecretldapuserpassword"
+        test.local = {
+          alias                   = "test.local"
+          base_group_dn           = "dc=test,dc=local"
+          base_user_dn            = "dc=test,dc=local"
+          domain                  = "test.local"
+          name                    = "test.local"
           primary_server          = "ldaps://dc01.testdomain.local:636"
-          secondary_server        = "ldaps://dc01.testdomain.local:636"
-          ssl                     = "Enabled"
-          username                = "ldapuser"
-        },
-        dc02 = {
-          alias                   = "testdomain"
-          base_group_dn           = "dc=testdomain,dc=local"
-          base_user_dn            = "dc=testdomain,dc=local"
-          domain                  = "testdomain.local"
-          password                = "supersecretldapuserpassword"
-          primary_server          = "ldaps://dc02.testdomain.local:636"
           secondary_server        = "ldaps://dc02.testdomain.local:636"
           ssl                     = "Enabled"
-          username                = "ldapuser"
         }
       }
   ```
   VCENTER_IDENTITY_SOURCES
+}
+
+variable "ldap_user" {
+  type = string
+  description = "The username for the domain user the vcenter will use to query LDAP(s)"
+  default = null
+}
+
+variable "ldap_user_password" {
+  type = string
+  description = "Password to use for the domain user the vcenter will use to query LDAP(s)"
+  sensitive = true
+  default = null
 }
 
 variable "global_reach_connections" {

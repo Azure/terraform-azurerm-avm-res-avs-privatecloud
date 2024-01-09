@@ -67,7 +67,7 @@ data "azapi_resource_action" "quota" {
 
 #generate a list of regions with at least 3 quota for deployment
 locals {
-  with_quota = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 6]
+  with_quota = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 3]
 }
 
 resource "random_integer" "region_index" {
@@ -121,7 +121,7 @@ module "avm-res-keyvault-vault" {
 
 #create a NAT gateway and public IP associate it to the Subnet where the DC will be created
 resource "azurerm_public_ip" "nat_gateway" {
-  name                = module.naming.public_ip.name_unique
+  name                = "${module.naming.nat_gateway.name_unique}-pip"
   location            = azurerm_resource_group.this[0].location
   resource_group_name = azurerm_resource_group.this[0].name
   allocation_method   = "Static"
@@ -185,10 +185,82 @@ module "create_dc" {
   domain_netbios_name        = "test"
   domain_distinguished_name  = "dc=test,dc=local"
 
-  depends_on = [ module.avm-res-keyvault-vault ]
+  depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
+}
+
+#Create a public IP
+resource "azurerm_public_ip" "gatewaypip" {
+  name                = module.naming.public_ip.name_unique
+  resource_group_name = azurerm_resource_group.this[0].name
+  location            = azurerm_resource_group.this[0].location
+  allocation_method   = "Static"
+  sku                 = "Standard" #required for an ultraperformance gateway
+
+}
+
+#create an expressRoute gateway
+resource "azurerm_virtual_network_gateway" "gateway" {
+  name                = module.naming.express_route_gateway.name_unique
+  resource_group_name = azurerm_resource_group.this[0].name
+  location            = azurerm_resource_group.this[0].location
+
+  type = "ExpressRoute"
+  sku  = "ErGw1AZ"
+
+  ip_configuration {
+    name                          = "default"
+    public_ip_address_id          = azurerm_public_ip.gatewaypip.id
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = module.gateway_vnet.subnets["GatewaySubnet"].id
+  }
+}
+
+# Create the private cloud and connect it to a vnet expressroute gateway
+module "test_private_cloud" {
+  source = "../../"
+  # source             = "Azure/avm-res-avs-privatecloud/azurerm"
+
+  count = length(local.with_quota) > 0 ? 1 : 0 #fails if we don't have quota
+
+  enable_telemetry        = var.enable_telemetry
+  resource_group_name     = azurerm_resource_group.this[0].name
+  location                = azurerm_resource_group.this[0].location
+  name                    = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
+  sku_name                = "av36"
+  avs_network_cidr        = "10.0.0.0/22"
+  internet_enabled        = false
+  management_cluster_size = 3
+  hcx_enabled             = true
+  hcx_key_names           = ["test_site_key_1"] #requires the HCX addon to be configured
+  ldap_user               = module.create_dc.ldap_user
+  ldap_user_password      = module.create_dc.ldap_user_password
+
+  #define the expressroute connections
+  expressroute_connections = {
+    default = {
+      expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
+    }
+  }
+  #configure the Domain controllers used for Vcenter connectivity
+  vcenter_identity_sources = {
+    test_local = {
+      alias          = module.create_dc.domain_fqdn
+      base_group_dn  = module.create_dc.domain_distinguished_name
+      base_user_dn   = module.create_dc.domain_distinguished_name
+      domain         = module.create_dc.domain_fqdn
+      name           = module.create_dc.domain_fqdn
+      primary_server = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
+      ssl            = "Enabled"
+    }
+  }
+
+  #define the tags
+  tags = {
+    scenario = "avs_sddc_default"
+  }
 }
 
 output "dc_values" {
-    value = module.create_dc.dc_details
-    sensitive = true
+  value     = module.create_dc.dc_details
+  sensitive = true
 }

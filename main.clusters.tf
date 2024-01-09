@@ -18,7 +18,7 @@ resource "azapi_resource" "clusters" {
 
   })
 
-  #adding lifecycle block to handle replacement issue with parent_id
+  #adding lifecycle block to handle deployment issue with parent_id 
   lifecycle {
     ignore_changes = [
       parent_id
@@ -30,15 +30,7 @@ resource "azapi_resource" "clusters" {
     delete = "4h"
     update = "4h"
   }
+  
+  depends_on = [ azapi_resource.this_private_cloud ] #setting explicit dependencies to force deployment order
 }
 
-/*
-resource "azurerm_vmware_cluster" "example" {
-  for_each = var.clusters
-  
-  name               = each.key
-  vmware_cloud_id    = azapi_resource.this_private_cloud.id
-  cluster_node_count = each.value.cluster_node_count
-  sku_name           = each.value.sku_name
-}
-*/

@@ -23,10 +23,10 @@ resource "azapi_resource" "hcx_addon" {
   }
 
   depends_on = [
+    azapi_resource.this_private_cloud,
     azapi_resource.clusters,
-    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
     azurerm_role_assignment.this_private_cloud,
-    azurerm_vmware_express_route_authorization.this_authorization_key,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key
   ]
@@ -92,7 +92,12 @@ resource "azapi_resource" "srm_addon" {
   }
 
   depends_on = [
+    azapi_resource.this_private_cloud,
     azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon
   ]
 
@@ -130,7 +135,12 @@ resource "azapi_resource" "vr_addon" {
   }
 
   depends_on = [
+    azapi_resource.this_private_cloud,
     azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.srm_addon
   ]

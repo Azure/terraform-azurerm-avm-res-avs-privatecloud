@@ -10,5 +10,5 @@ output "credentials" {
 }
 
 output "identity" {
-  value = jsondecode(azapi_update_resource.managed_identity[0].output)
+  value = var.managed_identities.system_assigned ? jsondecode(azapi_update_resource.managed_identity[0].output) : null
 }

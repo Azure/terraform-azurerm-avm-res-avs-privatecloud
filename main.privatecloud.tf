@@ -37,47 +37,11 @@ resource "azapi_resource" "this_private_cloud" {
   #TODO: Test to see if a lifecycle block is needed when the NSXT or VCenter passwords change
   timeouts {
     create = "15h"
+    delete = "4h"
+    update = "4h"
   }
 
-  #response_export_values = ["*"]
+  response_export_values = ["*"]
   #ignore_body_changes = ["properties.nsxtPassword", "properties.vcenterPassword"] #don't try to recreate the private cloud if the passwords change
 
 }
-
-
-
-
-
-
-/*
-resource "azurerm_vmware_private_cloud" "this_private_cloud" {
-  name                = var.name
-  resource_group_name = var.resource_group_name
-  location            = local.location
-  sku_name            = lower(var.sku_name)
-  tags                = var.tags
-
-  management_cluster {
-    size = var.management_cluster_size
-  }
-
-  network_subnet_cidr         = var.avs_network_cidr
-  internet_connection_enabled = var.internet_enabled
-  nsxt_password               = random_password.nsxt.result
-  vcenter_password            = random_password.vcenter.result
-
-  timeouts { #Handle issues with too short creation timeout defaults
-    create = "20h"
-  }
-
-  lifecycle { #ignore changes to the nsxt and vcenter password for idempotency. Changing these values will force recreation which is undesired.
-    ignore_changes = [
-      nsxt_password,
-      vcenter_password
-    ]
-  }
-}
-
-
-*/
-

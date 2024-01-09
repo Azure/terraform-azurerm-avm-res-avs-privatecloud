@@ -35,6 +35,11 @@ resource "azurerm_role_assignment" "this_private_cloud" {
   description                            = each.value.description
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
+
+  depends_on = [ 
+    azapi_resource.this_private_cloud, 
+    azapi_resource.clusters 
+  ]
 }
 
 #toggle the system managed identity
@@ -49,6 +54,13 @@ resource "azapi_update_resource" "managed_identity" {
     }
   })
   response_export_values = ["*"]
+  
+  depends_on = [ 
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags
+  ]
 }
 
 /* TODO: add this back if we can get a working API call to modify the credentials
@@ -77,15 +89,15 @@ data "azapi_resource_action" "sddc_creds" {
   response_export_values = ["*"]
 }
 
-
-/* Move this to a pattern module - requires connectivity?
+ 
+/* Doesn't work because this section of the API is read only - try using run-command.
+# Move this to a pattern module - requires connectivity?
 #configure Vcenter identity sources:
 resource "azapi_update_resource" "vcenter_identity_sources" {
   for_each = var.vcenter_identity_sources
 
   type      = "Microsoft.AVS/privateClouds@2022-05-01"
-  name      = each.key
-  parent_id = azapi_resource.this_private_cloud.id
+  resource_id = azapi_resource.this_private_cloud.id
   body = jsonencode({
     properties = {
       identitySources = {
@@ -93,17 +105,29 @@ resource "azapi_update_resource" "vcenter_identity_sources" {
         baseGroupDN     = each.value.base_group_dn
         baseUserDN      = each.value.base_user_dn
         domain          = each.value.domain
-        name            = each.key
-        password        = each.value.password
+        name            = each.value.name
+        password        = var.ldap_user_password
         primaryServer   = each.value.primary_server
         secondaryServer = each.value.secondary_server
         ssl             = each.value.ssl
-        username        = each.value.username
+        username        = var.ldap_user
       }
     }
   })
 
   #using depends on to serialize the resource updates to avoid parallel update conflicts
-  depends_on = [azapi_update_resource.managed_identity]
+  depends_on = [ 
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azurerm_express_route_connection.avs_private_cloud_connection,
+    azurerm_virtual_network_gateway_connection.this
+  ]
 }
 */

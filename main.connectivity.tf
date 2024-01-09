@@ -19,6 +19,18 @@ resource "azapi_resource" "globalreach_connections" {
       peerExpressRouteCircuit = each.value.peer_expressroute_circuit_resource_id
     }
   })
+
+  depends_on = [ 
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon
+   ]
 }
 
 #create one or more ExpressRoute Gateway connections to virtual network hubs
@@ -35,6 +47,18 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
   authorization_key          = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
   virtual_network_gateway_id = each.value.expressroute_gateway_resource_id
   express_route_circuit_id   = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
+
+  depends_on = [ 
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon
+  ]
 }
 
 data "azurerm_vmware_private_cloud" "this_private_cloud" {
@@ -67,6 +91,18 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
       }
     }
   }
+
+  depends_on = [ 
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon
+  ]
 
   lifecycle {  ignore_changes = [ express_route_circuit_peering_id ]  }
 }

@@ -195,3 +195,5 @@ resource "azurerm_key_vault_secret" "admin_password" {
   value        = random_password.ldap_password.result
   key_vault_id = var.key_vault_resource_id
 }
+
+

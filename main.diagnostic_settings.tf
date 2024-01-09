@@ -32,5 +32,11 @@ resource "azurerm_monitor_diagnostic_setting" "this_private_cloud_diags" {
       category = metric.value
     }
   }
+
+  depends_on = [ 
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud
+   ]
 }
 
