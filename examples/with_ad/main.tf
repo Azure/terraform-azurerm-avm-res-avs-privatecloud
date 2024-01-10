@@ -68,6 +68,8 @@ data "azapi_resource_action" "quota" {
 #generate a list of regions with at least 3 quota for deployment
 locals {
   with_quota = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 3]
+  region = "eastasia"
+  install_now = true
 }
 
 resource "random_integer" "region_index" {
@@ -86,10 +88,12 @@ resource "random_string" "namestring" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  count = length(local.with_quota) > 0 ? 1 : 0 #fails if we don't have quota
+  #count = length(local.with_quota) > 0 ? 1 : 0 #fails if we don't have quota
+  count = local.install_now ? 1 : 0
 
   name     = module.naming.resource_group.name_unique
-  location = local.with_quota[random_integer.region_index[0].result]
+  #location = local.with_quota[random_integer.region_index[0].result]
+  location = local.region
 }
 
 
@@ -184,8 +188,10 @@ module "create_dc" {
   domain_fqdn                = "test.local"
   domain_netbios_name        = "test"
   domain_distinguished_name  = "dc=test,dc=local"
+  ldap_user                  = "ldapuser"
 
   depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
+  
 }
 
 #Create a public IP
@@ -232,7 +238,7 @@ module "test_private_cloud" {
   management_cluster_size = 3
   hcx_enabled             = true
   hcx_key_names           = ["test_site_key_1"] #requires the HCX addon to be configured
-  ldap_user               = module.create_dc.ldap_user
+  ldap_user               = "${module.create_dc.ldap_user}@${module.create_dc.domain_fqdn}"
   ldap_user_password      = module.create_dc.ldap_user_password
 
   #define the expressroute connections
@@ -248,6 +254,7 @@ module "test_private_cloud" {
       base_group_dn  = module.create_dc.domain_distinguished_name
       base_user_dn   = module.create_dc.domain_distinguished_name
       domain         = module.create_dc.domain_fqdn
+      group_name     = "Domain Users"
       name           = module.create_dc.domain_fqdn
       primary_server = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       ssl            = "Enabled"
@@ -263,4 +270,8 @@ module "test_private_cloud" {
 output "dc_values" {
   value     = module.create_dc.dc_details
   sensitive = true
+}
+
+output "id" {
+    value = module.test_private_cloud[0].id
 }

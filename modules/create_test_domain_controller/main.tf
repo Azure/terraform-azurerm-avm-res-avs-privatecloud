@@ -104,6 +104,7 @@ module "testvm" {
   version = ">=0.1.0"
 
   resource_group_name                    = var.resource_group_name
+  location                               = var.resource_group_location
   virtualmachine_os_type                 = "Windows"
   name                                   = var.dc_vm_name
   admin_credential_key_vault_resource_id = var.key_vault_resource_id

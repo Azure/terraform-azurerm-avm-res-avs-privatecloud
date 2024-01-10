@@ -329,10 +329,12 @@ variable "vcenter_identity_sources" {
     base_group_dn    = string
     base_user_dn     = string
     domain           = string
+    group_name       = optional(string, null)
     name             = string
     primary_server   = string
     secondary_server = optional(string, null)
     ssl              = optional(string, "Enabled")
+    timeout          = optional(string, "10m")
   }))
   default     = {}
   description = <<VCENTER_IDENTITY_SOURCES
@@ -343,6 +345,7 @@ variable "vcenter_identity_sources" {
       base_group_dn           = (Required) - The base distinguished name for groups
       base_user_dn            = (Required) - The base distinguished name for users
       domain                  = (Required) - The fully qualified domain name for the identity source
+      group_name              = (Optional) - The name of the LDAP group that will be added to the cloudadmins role
       name                    = (Required) - The name to give the identity source
       password                = (Required) - Password to use for the domain user the vcenter will use to query LDAP(s)
       primary_server          = (Required) - The URI of the primary server. (Ex: ldaps://server.domain.local:636)

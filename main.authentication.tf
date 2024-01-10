@@ -131,3 +131,100 @@ resource "azapi_update_resource" "vcenter_identity_sources" {
   ]
 }
 */
+
+#####################################################################################################################################
+# Configure LDAPS
+#####################################################################################################################################
+resource "azapi_resource" "ldaps" {
+  for_each = var.vcenter_identity_sources
+
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
+  #Resource Name must match the addonType
+  name      = "New-LDAPSIdentitySource-Exec4"
+  parent_id = azapi_resource.this_private_cloud.id
+  body = jsonencode({
+
+    properties = {
+      timeout = "PT15M"
+      retention = "P30D"
+      scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@5.3.99/scriptCmdlets/New-LDAPSIdentitySource"
+      hiddenParameters = [{
+        name = "Credential"
+        type = "Credential"
+        username = var.ldap_user
+        password = var.ldap_user_password
+    }]
+    parameters = [
+      {
+        name = "GroupName"
+        type = "Value"
+        value = each.value.group_name
+      },
+      {
+        name = "BaseDNGroups"
+        type = "Value"
+        value = each.value.base_group_dn
+      },
+      {
+        name = "BaseDNUsers"
+        type = "Value"
+        value = each.value.base_user_dn
+      },
+      {
+        name = "PrimaryUrl"
+        type = "Value"
+        value = each.value.primary_server
+      },
+      #{
+      #  name = "SecondaryUrl"
+      #  type = "Value"
+      #  value = each.value.secondary_server
+      #},
+      {
+        name = "DomainAlias"
+        type = "Value"
+        value = each.value.alias
+      },
+      {
+        name = "DomainName"
+        type = "Value"
+        value = each.value.domain
+      },
+      {
+        name = "Name"
+        type = "Value"
+        value = each.value.name
+      }
+    ]
+    }
+    
+
+  })
+
+  #adding lifecycle block to handle replacement issue with parent_id
+  lifecycle {
+    ignore_changes = [
+      parent_id
+    ]
+  }
+
+  depends_on = [ 
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azurerm_express_route_connection.avs_private_cloud_connection,
+    azurerm_virtual_network_gateway_connection.this
+  ]
+
+  timeouts {
+    create = "4h"
+    delete = "4h"
+    update = "4h"
+  }
+}
