@@ -459,5 +459,38 @@ variable "expressroute_connections" {
     }
 
   GLOBAL_REACH_CONNECTIONS
+}
 
+variable "dns_forwarder_zones" {
+  type = map(object({
+    display_name   = string
+    dns_server_ips = list(string)
+    domain_names   = list(string)
+    revision       = optional(number, 0)
+    source_ip      = optional(string, "")
+    add_to_default_dns_service = optional(bool, false)
+  }))
+  default = {}
+  description = <<DNS_FORWARDER_ZONES
+    Map of string objects describing one or more dns forwarder zones for NSX within the private cloud. Up to 5 additional forwarder zone can be configured. 
+    This is primarily useful for identity source configurations or in cases where NSX DHCP is providing DNS configurations.
+    map(object({
+    display_name   = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.
+    dns_server_ips = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.
+    domain_names   = (Required) - A list of domain names that will be forwarded as part of this zone.
+    revision       = (Optional) - NSX Revision number.  Defaults to 0
+    source_ip      = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
+  }))
+
+  Example Input:
+    ```terraform
+    {
+      exr_region_1 = {
+        expressroute_gateway_resource_id                     = "<expressRoute Gateway Resource ID>"
+        peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
+      }
+    }
+
+  DNS_FORWARDER_ZONES
+  
 }

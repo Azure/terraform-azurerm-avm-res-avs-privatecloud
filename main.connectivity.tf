@@ -59,6 +59,8 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon
   ]
+
+  lifecycle {  ignore_changes = [ express_route_circuit_id ]  } #TODO - determine why this is returning 'known after apply'
 }
 
 data "azurerm_vmware_private_cloud" "this_private_cloud" {
@@ -104,5 +106,5 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     azapi_resource.vr_addon
   ]
 
-  lifecycle {  ignore_changes = [ express_route_circuit_peering_id ]  }
+  lifecycle {  ignore_changes = [ express_route_circuit_peering_id ]  } #TODO - determine why this is returning 'known after apply'
 }

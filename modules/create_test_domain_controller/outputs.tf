@@ -11,6 +11,10 @@ output "domain_distinguished_name" {
     value = var.domain_distinguished_name
 }
 
+output "domain_netbios_name" {
+    value = var.domain_netbios_name
+}
+
 output "ldap_user" {
     value = var.ldap_user
 }

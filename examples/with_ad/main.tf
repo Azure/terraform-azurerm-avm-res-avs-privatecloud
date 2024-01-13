@@ -86,6 +86,11 @@ resource "random_string" "namestring" {
   lower   = true
 }
 
+locals {
+  daySecond = (split("-", plantimestamp()))[2]
+  month = (split("-", plantimestamp()))[1]
+}
+
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
   #count = length(local.with_quota) > 0 ? 1 : 0 #fails if we don't have quota
@@ -94,6 +99,10 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
   #location = local.with_quota[random_integer.region_index[0].result]
   location = local.region
+
+  tags = {
+    DeleteDate = formatdate("MM/DD/YYYY", timestamp())
+  }
 }
 
 
@@ -247,23 +256,38 @@ module "test_private_cloud" {
       expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
     }
   }
+
+  dns_forwarder_zones = {
+    test_local = {
+      display_name = "test.local"
+      dns_server_ips = [module.create_dc.dc_details.private_ip_address]
+      domain_names   = [module.create_dc.domain_fqdn]  
+      add_to_default_dns_service = true   
+    }
+    second_domain = {
+      display_name = "test2.local"
+      dns_server_ips = ["192.168.0.4"]
+      domain_names = ["test2.local"]
+    }
+  }
+
   #configure the Domain controllers used for Vcenter connectivity
   vcenter_identity_sources = {
     test_local = {
-      alias          = module.create_dc.domain_fqdn
+      alias          = module.create_dc.domain_netbios_name
       base_group_dn  = module.create_dc.domain_distinguished_name
       base_user_dn   = module.create_dc.domain_distinguished_name
       domain         = module.create_dc.domain_fqdn
       group_name     = "Domain Users"
-      name           = module.create_dc.domain_fqdn
+      name           = module.create_dc.domain_netbios_name
       primary_server = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       ssl            = "Enabled"
     }
-  }
+  }  
 
   #define the tags
   tags = {
-    scenario = "avs_sddc_default"
+    scenario = "avs_sddc_ldap"
   }
 }
 
