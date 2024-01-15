@@ -64,7 +64,7 @@ data "azapi_resource_action" "quota" {
 #generate a list of regions with at least 3 quota for deployment
 locals {
   #with_quota = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 6]
-  with_quota = ["eastasia","southafricanorth"]
+  with_quota = ["eastasia", "southafricanorth"]
 }
 
 resource "random_integer" "region_index" {
@@ -215,7 +215,7 @@ module "test_private_cloud" {
     }
   }
 
-/*
+  /*
   #demonstrate the role_assignments interface
   role_assignments = {
     deployment_user_secrets = { #give the deployment user access to private cloud directly
@@ -243,7 +243,7 @@ module "test_private_cloud" {
   managed_identities = {
     system_assigned = true
   }
-/*
+  /*
   #demonstrate customer managed keys
   customer_managed_key = {
     key_vault_resource_id = module.avm-res-keyvault-vault.resource.id

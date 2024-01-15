@@ -1,3 +1,6 @@
+#####################################################################################################################################
+# Get Current Identity Source State
+#####################################################################################################################################
 #get the current identity sources configuration
 resource "azapi_resource" "current_status_identity_sources" {
   type      = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
@@ -11,10 +14,25 @@ resource "azapi_resource" "current_status_identity_sources" {
     }
   })
   response_export_values = ["*"]
+
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azurerm_express_route_connection.avs_private_cloud_connection,
+    azurerm_virtual_network_gateway_connection.this,
+    azapi_resource.dns_forwarder_zones,
+    azapi_resource_action.dns_service
+  ]
 }
 
-#Configure the identity source(s)
-
+#Use locals to process the API HEREDOC string, and do a comparison against the expected values
 locals {
   # API output is a heredoc string of the field values. Split the string into separate list elements and remove the whitespaces.
   parsed_identity_sources          = try([for value in split("\n", tostring(jsondecode(azapi_resource.current_status_identity_sources.output).properties.output[1])) : split(": ", value) if strcontains(value, ": ")], [])
@@ -35,25 +53,83 @@ locals {
 }
 
 #####################################################################################################################################
-# Configure LDAPS
+# Remove Existing Source
 #####################################################################################################################################
-resource "azapi_resource" "configure_ldaps" {
+#if a config exists and they don't match, remove the existing configuration.
+#get the current identity sources configuration. Currently assumes only one identity source.  TODO: Adapt this to allow for multiple sources if the API works that direction
+resource "azapi_resource" "remove_existing_identity_source" {
+  #for_each and count won't work if result is only known after apply.
+  #Loop through each result and if deletion is not needed just do a get instead
+  for_each = var.vcenter_identity_sources
+
+  type                   = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
+  parent_id              = azapi_resource.this_private_cloud.id
+  response_export_values = ["*"]
+  name = ((local.identity_matches[each.key] == false &&                                                                                       #the current values don't match the expected values
+    try(local.cleaned_identity_sources_to_map["PrimaryUrl"], null) != null) ?                                                                 #And the primaryURL is currently configured
+    "Remove-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Remove-ExternalIdentitySources"]) + 1)}" #Remove the identity sources    
+    :
+    "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}" #Else run the Get command
+  )
+  #Set the body to remove the domain if the conditions match, otherwise just run the get.
+  body = (local.identity_matches[each.key] == false && #the current values don't match the expected values
+    try(local.cleaned_identity_sources_to_map["PrimaryUrl"], null) != null) ? (
+    jsonencode({ #remove the current identity source
+      properties = {
+        timeout        = "PT15M"
+        retention      = "P30D"
+        scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*/scriptCmdlets/Remove-ExternalIdentitySources"
+        DomainName     = each.value.domain
+      }
+    })) : (
+    jsonencode({
+      properties = {
+        timeout        = "PT15M"
+        retention      = "P30D"
+        scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*/scriptCmdlets/Get-ExternalIdentitySources"
+      }
+  }))
+
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azurerm_express_route_connection.avs_private_cloud_connection,
+    azurerm_virtual_network_gateway_connection.this,
+    azapi_resource.dns_forwarder_zones,
+    azapi_resource_action.dns_service,
+    azapi_resource.current_status_identity_sources
+  ]
+}
+
+
+#####################################################################################################################################
+# Configure LDAP(s)
+#####################################################################################################################################
+resource "azapi_resource" "configure_identity_sources" {
   #for_each = {for k,v in var.vcenter_identity_sources : k =>v if local.identity_matches[k] == false }
   for_each = var.vcenter_identity_sources
 
   type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
   # if SSL is enabled use the LDAPS cmdlet, else use the LDAP cmdlet
-  name = ( local.identity_matches[each.key] == false ?
+  name = (local.identity_matches[each.key] == false ?
     (
       each.value.ssl == "Enabled" ?
-        "New-LDAPSIdentitySource-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["New-LDAPSIdentitySource"]) + 1)}" :
-        "New-LDAPIdentitySource-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["New-LDAPIdentitySource"]) + 1)}"
+      "New-LDAPSIdentitySource-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["New-LDAPSIdentitySource"]) + 1)}" :
+      "New-LDAPIdentitySource-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["New-LDAPIdentitySource"]) + 1)}"
     ) :
     (
-      "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}")
+      "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}"
     )
+  )
   parent_id = azapi_resource.this_private_cloud.id
-  body = ( local.identity_matches[each.key] == false ?
+  body = (local.identity_matches[each.key] == false ?
     ( #Nothing needs to change, run the get action
       jsonencode({
         properties = {
@@ -61,7 +137,7 @@ resource "azapi_resource" "configure_ldaps" {
           retention      = "P30D"
           scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*/scriptCmdlets/Get-ExternalIdentitySources"
         }
-    })
+      })
     ) : #else update the configuration with the new values
     (
       jsonencode({
@@ -177,7 +253,9 @@ resource "azapi_resource" "configure_ldaps" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.dns_forwarder_zones,
-    azapi_resource_action.dns_service
+    azapi_resource_action.dns_service,
+    azapi_resource.current_status_identity_source,
+    azapi_resource.remove_existing_identity_source
   ]
 
   timeouts {

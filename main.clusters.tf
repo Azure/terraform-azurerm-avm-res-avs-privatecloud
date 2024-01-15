@@ -30,7 +30,7 @@ resource "azapi_resource" "clusters" {
     delete = "4h"
     update = "4h"
   }
-  
-  depends_on = [ azapi_resource.this_private_cloud ] #setting explicit dependencies to force deployment order
+
+  depends_on = [azapi_resource.this_private_cloud] #setting explicit dependencies to force deployment order
 }
 

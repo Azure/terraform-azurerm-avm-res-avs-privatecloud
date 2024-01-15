@@ -20,7 +20,7 @@ resource "azapi_resource" "globalreach_connections" {
     }
   })
 
-  depends_on = [ 
+  depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
@@ -30,7 +30,7 @@ resource "azapi_resource" "globalreach_connections" {
     azapi_resource.hcx_addon,
     azapi_resource.srm_addon,
     azapi_resource.vr_addon
-   ]
+  ]
 }
 
 #create one or more ExpressRoute Gateway connections to virtual network hubs
@@ -48,7 +48,7 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
   virtual_network_gateway_id = each.value.expressroute_gateway_resource_id
   express_route_circuit_id   = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
 
-  depends_on = [ 
+  depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
@@ -60,7 +60,7 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
     azapi_resource.vr_addon
   ]
 
-  lifecycle {  ignore_changes = [ express_route_circuit_id ]  } #TODO - determine why this is returning 'known after apply'
+  lifecycle { ignore_changes = [express_route_circuit_id] } #TODO - determine why this is returning 'known after apply'
 }
 
 data "azurerm_vmware_private_cloud" "this_private_cloud" {
@@ -76,9 +76,9 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   express_route_gateway_id         = each.value.expressroute_gateway_resource_id
   express_route_circuit_peering_id = data.azurerm_vmware_private_cloud.this_private_cloud.circuit[0].express_route_private_peering_id
   #express_route_circuit_peering_id = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRoutePrivatePeeringID
-  authorization_key                = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
-  enable_internet_security         = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
-  routing_weight                   = each.value.routing_weight
+  authorization_key        = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+  enable_internet_security = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
+  routing_weight           = each.value.routing_weight
 
   dynamic "routing" {
     for_each = each.value.routing
@@ -94,7 +94,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     }
   }
 
-  depends_on = [ 
+  depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
@@ -106,5 +106,5 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     azapi_resource.vr_addon
   ]
 
-  lifecycle {  ignore_changes = [ express_route_circuit_peering_id ]  } #TODO - determine why this is returning 'known after apply'
+  lifecycle { ignore_changes = [express_route_circuit_peering_id] } #TODO - determine why this is returning 'known after apply'
 }

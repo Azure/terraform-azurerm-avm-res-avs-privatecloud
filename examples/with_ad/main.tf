@@ -67,8 +67,8 @@ data "azapi_resource_action" "quota" {
 
 #generate a list of regions with at least 3 quota for deployment
 locals {
-  with_quota = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 3]
-  region = "eastasia"
+  with_quota  = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 3]
+  region      = "eastasia"
   install_now = true
 }
 
@@ -88,7 +88,7 @@ resource "random_string" "namestring" {
 
 locals {
   daySecond = (split("-", plantimestamp()))[2]
-  month = (split("-", plantimestamp()))[1]
+  month     = (split("-", plantimestamp()))[1]
 }
 
 # This is required for resource modules
@@ -96,7 +96,7 @@ resource "azurerm_resource_group" "this" {
   #count = length(local.with_quota) > 0 ? 1 : 0 #fails if we don't have quota
   count = local.install_now ? 1 : 0
 
-  name     = module.naming.resource_group.name_unique
+  name = module.naming.resource_group.name_unique
   #location = local.with_quota[random_integer.region_index[0].result]
   location = local.region
 
@@ -200,7 +200,7 @@ module "create_dc" {
   ldap_user                  = "ldapuser"
 
   depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
-  
+
 }
 
 #Create a public IP
@@ -259,15 +259,15 @@ module "test_private_cloud" {
 
   dns_forwarder_zones = {
     test_local = {
-      display_name = "test.local"
-      dns_server_ips = [module.create_dc.dc_details.private_ip_address]
-      domain_names   = [module.create_dc.domain_fqdn]  
-      add_to_default_dns_service = true   
+      display_name               = "test.local"
+      dns_server_ips             = [module.create_dc.dc_details.private_ip_address]
+      domain_names               = [module.create_dc.domain_fqdn]
+      add_to_default_dns_service = true
     }
     second_domain = {
-      display_name = "test2.local"
+      display_name   = "test2.local"
       dns_server_ips = ["192.168.0.4"]
-      domain_names = ["test2.local"]
+      domain_names   = ["test2.local"]
     }
   }
 
@@ -283,7 +283,7 @@ module "test_private_cloud" {
       primary_server = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       ssl            = "Enabled"
     }
-  }  
+  }
 
   #define the tags
   tags = {
@@ -297,5 +297,5 @@ output "dc_values" {
 }
 
 output "id" {
-    value = module.test_private_cloud[0].id
+  value = module.test_private_cloud[0].id
 }

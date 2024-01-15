@@ -36,9 +36,9 @@ resource "azurerm_role_assignment" "this_private_cloud" {
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
 
-  depends_on = [ 
-    azapi_resource.this_private_cloud, 
-    azapi_resource.clusters 
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters
   ]
 }
 
@@ -54,8 +54,8 @@ resource "azapi_update_resource" "managed_identity" {
     }
   })
   response_export_values = ["*"]
-  
-  depends_on = [ 
+
+  depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
@@ -89,7 +89,7 @@ data "azapi_resource_action" "sddc_creds" {
   response_export_values = ["*"]
 }
 
- 
+
 /* Doesn't work because this section of the API is read only - try using run-command.
 # Move this to a pattern module - requires connectivity?
 #configure Vcenter identity sources:

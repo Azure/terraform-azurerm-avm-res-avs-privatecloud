@@ -281,30 +281,6 @@ variable "expressroute_auth_keys" {
   description = "This set of strings defines one or more names to creating new expressroute authorization keys for the private cloud"
 }
 
-variable "netapp_files_attachments" {
-  type = map(object({
-    netapp_volume_resource_id = string
-    cluster_names             = set(string)
-  }))
-  default     = {}
-  description = <<NETAPP_FILES_ATTACHMENTS
-    This map of objects describes one or more netapp volume attachments.  The map key will be used for the attachment name and should be unique. 
-
-    map(object({
-      netapp_volume_resource_id = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.
-      cluster_names             = (required) - A set of cluster name(s) where this volume should be attached
-    }))
-
-    Example Input:
-    ```terraform
-      cluster1_volume1 = {
-        netapp_volume_resource_id = azurerm_netapp_volume.test.id
-        cluster_names             = ["Cluster-1"]
-      }
-    ```
-  NETAPP_FILES_ATTACHMENTS
-}
-
 variable "primary_zone" {
   type        = number
   default     = null
@@ -372,16 +348,16 @@ variable "vcenter_identity_sources" {
 }
 
 variable "ldap_user" {
-  type = string
+  type        = string
   description = "The username for the domain user the vcenter will use to query LDAP(s)"
-  default = null
+  default     = null
 }
 
 variable "ldap_user_password" {
-  type = string
+  type        = string
   description = "Password to use for the domain user the vcenter will use to query LDAP(s)"
-  sensitive = true
-  default = null
+  sensitive   = true
+  default     = null
 }
 
 variable "global_reach_connections" {
@@ -463,14 +439,14 @@ variable "expressroute_connections" {
 
 variable "dns_forwarder_zones" {
   type = map(object({
-    display_name   = string
-    dns_server_ips = list(string)
-    domain_names   = list(string)
-    revision       = optional(number, 0)
-    source_ip      = optional(string, "")
+    display_name               = string
+    dns_server_ips             = list(string)
+    domain_names               = list(string)
+    revision                   = optional(number, 0)
+    source_ip                  = optional(string, "")
     add_to_default_dns_service = optional(bool, false)
   }))
-  default = {}
+  default     = {}
   description = <<DNS_FORWARDER_ZONES
     Map of string objects describing one or more dns forwarder zones for NSX within the private cloud. Up to 5 additional forwarder zone can be configured. 
     This is primarily useful for identity source configurations or in cases where NSX DHCP is providing DNS configurations.
@@ -492,5 +468,29 @@ variable "dns_forwarder_zones" {
     }
 
   DNS_FORWARDER_ZONES
-  
+
+}
+
+variable "netapp_files_attachments" {
+  type = map(object({
+    netapp_volume_resource_id = string
+    cluster_names             = set(string)
+  }))
+  default     = {}
+  description = <<NETAPP_FILES_ATTACHMENTS
+    This map of objects describes one or more netapp volume attachments.  The map key will be used for the attachment name and should be unique. 
+
+    map(object({
+      netapp_volume_resource_id = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.
+      cluster_names             = (required) - A set of cluster name(s) where this volume should be attached
+    }))
+
+    Example Input:
+    ```terraform
+      cluster1_volume1 = {
+        netapp_volume_resource_id = azurerm_netapp_volume.test.id
+        cluster_names             = ["Cluster-1"]
+      }
+    ```
+  NETAPP_FILES_ATTACHMENTS
 }

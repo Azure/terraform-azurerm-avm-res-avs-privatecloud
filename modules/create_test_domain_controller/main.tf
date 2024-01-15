@@ -10,7 +10,7 @@ resource "azurerm_public_ip" "bastion_pip" {
 }
 
 resource "azurerm_bastion_host" "bastion" {
-  count = var.create_bastion ? 1 : 0
+  count               = var.create_bastion ? 1 : 0
   name                = var.bastion_name
   location            = var.resource_group_location
   resource_group_name = var.resource_group_name
@@ -174,9 +174,9 @@ resource "time_sleep" "wait_600_seconds" {
 }
 
 data "azurerm_virtual_machine" "this_vm" {
-    name = module.testvm.virtual_machine.name
-    resource_group_name = var.resource_group_name
-    depends_on = [ time_sleep.wait_600_seconds, module.testvm ]
+  name                = module.testvm.virtual_machine.name
+  resource_group_name = var.resource_group_name
+  depends_on          = [time_sleep.wait_600_seconds, module.testvm]
 }
 
 #generate a password for use by the ldap user account
