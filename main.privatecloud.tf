@@ -4,8 +4,7 @@
 #build a base private cloud resource then modify it as needed.
 resource "azapi_resource" "this_private_cloud" {
 
-  type = "Microsoft.AVS/privateClouds@2022-05-01"
-  #Resource Name must match the addonType
+  type      = "Microsoft.AVS/privateClouds@2022-05-01"
   name      = var.name
   parent_id = data.azurerm_resource_group.sddc_deployment.id
   location  = local.location

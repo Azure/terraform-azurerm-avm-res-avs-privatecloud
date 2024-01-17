@@ -69,7 +69,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
     try(local.cleaned_identity_sources_to_map["PrimaryUrl"], null) != null) ?                                                                 #And the primaryURL is currently configured
     "Remove-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Remove-ExternalIdentitySources"]) + 1)}" #Remove the identity sources    
     :
-    "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}" #Else run the Get command
+    "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 2)}" #Else run the Get command (increment by two in case the previous command also used get)
   )
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = (local.identity_matches[each.key] == false && #the current values don't match the expected values
@@ -254,7 +254,7 @@ resource "azapi_resource" "configure_identity_sources" {
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
-    azapi_resource.current_status_identity_source,
+    azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source
   ]
 

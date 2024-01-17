@@ -177,6 +177,21 @@ module "gateway_vnet" {
     AzureBastionSubnet = {
       address_prefixes = ["10.100.2.0/24"]
     }
+    ANFSubnet = {
+      address_prefixes = ["10.100.3.0/24"]
+      delegations = [
+        {
+          name    = "Microsoft.Netapp/volumes"
+          service_delegation = {
+            name    = "Microsoft.Netapp/volumes"
+            actions = [
+              "Microsoft.Network/networkinterfaces/*", 
+              "Microsoft.Network/virtualNetworks/subnets/join/action"
+            ]
+          }
+        }        
+      ]
+    }
   }
 }
 
@@ -198,6 +213,7 @@ module "create_dc" {
   domain_netbios_name        = "test"
   domain_distinguished_name  = "dc=test,dc=local"
   ldap_user                  = "ldapuser"
+  dc_vm_name_secondary       = "dc02-${module.naming.virtual_machine.name_unique}"
 
   depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
 
@@ -291,6 +307,21 @@ module "test_private_cloud" {
   }
 }
 
+module "create_anf_volume" {
+  source = "../../modules/create_test_netapp_volume"
+
+  resource_group_name     = azurerm_resource_group.this[0].name
+  resource_group_location = azurerm_resource_group.this[0].location
+  anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
+  anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
+  anf_pool_size           = 2
+  anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
+  anf_volume_size         = 2048
+  anf_subnet_resource_id  = module.gateway_vnet.subnets["ANFSubnet"].id
+  anf_zone_number         = module.test_private_cloud[0].private_cloud.properties.availability.zone
+  anf_nfs_allowed_clients = [module.test_private_cloud[0].private_cloud.properties.networkBlock]
+}
+
 output "dc_values" {
   value     = module.create_dc.dc_details
   sensitive = true
@@ -298,4 +329,8 @@ output "dc_values" {
 
 output "id" {
   value = module.test_private_cloud[0].id
+}
+
+output "private_cloud" {
+  value = module.test_private_cloud[0].private_cloud
 }

@@ -16,4 +16,13 @@ resource "azurerm_vmware_netapp_volume_attachment" "test" {
   netapp_volume_id  = azurerm_netapp_volume.test.id
   vmware_cluster_id = azurerm_vmware_cluster.test.id
 }
+
+
+resource "azurerm_vmware_netapp_volume_attachment" "attach" {
+  for_each = var.cluster_ids
+  
+  name              = "anf-${each.key}"
+  netapp_volume_id  = azurerm_netapp_volume.anf_volume.id
+  vmware_cluster_id = each.value
+}
 */

@@ -91,3 +91,13 @@ variable "ldap_user" {
   default     = "ldapuser"
 }
 
+variable "dc_vm_name_secondary" {
+  type        = string
+  description = "The name of the domain controller virtual machine."
+}
+
+variable "dc_dsc_script_url_secondary" {
+  type        = string
+  description = "the github url for the raw DSC configuration script that will be used by the custom script extension."
+  default     = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/modules/create_test_domain_controller/templates/dc_secondary_windows_dsc.ps1"
+}
