@@ -62,7 +62,7 @@ Configuration dc {
         WaitForADDomain 'WaitForestAvailability'
         {
             DomainName = $Node.ActiveDirectoryFQDN
-            Credential = $Credential
+            Credential = $credObject
 
             DependsOn  = '[WindowsFeature]rsat-ad-powershell'
         }
@@ -72,6 +72,9 @@ Configuration dc {
             DomainName                    = $Node.ActiveDirectoryFQDN
             Credential                    = $credObject
             SafeModeAdministratorPassword = $credObject
+            IsGlobalCatalog               = $true
+            Ensure                        = 'Present'
+            InstallDns                    = $true
 
             DependsOn                     = '[WaitForADDomain]WaitForestAvailability'
         }

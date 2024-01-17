@@ -101,3 +101,13 @@ variable "dc_dsc_script_url_secondary" {
   description = "the github url for the raw DSC configuration script that will be used by the custom script extension."
   default     = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/modules/create_test_domain_controller/templates/dc_secondary_windows_dsc.ps1"
 }
+
+variable "private_ip_address" {
+  type        = string
+  description = "The ip address to use for the primary dc"
+}
+
+variable "virtual_network_resource_id" {
+  type        = string
+  description = "The resource ID Of the virtual network where the resources are deployed."
+}

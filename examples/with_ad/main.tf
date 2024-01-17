@@ -162,6 +162,7 @@ module "gateway_vnet" {
   virtual_network_address_space = ["10.100.0.0/16"]
   vnet_name                     = "GatewayHubVnet"
   vnet_location                 = azurerm_resource_group.this[0].location
+
   subnets = {
     GatewaySubnet = {
       address_prefixes = ["10.100.0.0/24"]
@@ -181,15 +182,15 @@ module "gateway_vnet" {
       address_prefixes = ["10.100.3.0/24"]
       delegations = [
         {
-          name    = "Microsoft.Netapp/volumes"
+          name = "Microsoft.Netapp/volumes"
           service_delegation = {
-            name    = "Microsoft.Netapp/volumes"
+            name = "Microsoft.Netapp/volumes"
             actions = [
-              "Microsoft.Network/networkinterfaces/*", 
+              "Microsoft.Network/networkinterfaces/*",
               "Microsoft.Network/virtualNetworks/subnets/join/action"
             ]
           }
-        }        
+        }
       ]
     }
   }
@@ -199,21 +200,23 @@ module "gateway_vnet" {
 module "create_dc" {
   source = "../../modules/create_test_domain_controller"
 
-  resource_group_name        = azurerm_resource_group.this[0].name
-  resource_group_location    = azurerm_resource_group.this[0].location
-  dc_vm_name                 = "dc01-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id      = module.avm-res-keyvault-vault.resource.id
-  create_bastion             = true
-  bastion_name               = module.naming.bastion_host.name_unique
-  bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
-  bastion_subnet_resource_id = module.gateway_vnet.subnets["AzureBastionSubnet"].id
-  dc_subnet_resource_id      = module.gateway_vnet.subnets["DCSubnet"].id
-  dc_vm_sku                  = "Standard_D2_v4"
-  domain_fqdn                = "test.local"
-  domain_netbios_name        = "test"
-  domain_distinguished_name  = "dc=test,dc=local"
-  ldap_user                  = "ldapuser"
-  dc_vm_name_secondary       = "dc02-${module.naming.virtual_machine.name_unique}"
+  resource_group_name         = azurerm_resource_group.this[0].name
+  resource_group_location     = azurerm_resource_group.this[0].location
+  dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
+  key_vault_resource_id       = module.avm-res-keyvault-vault.resource.id
+  create_bastion              = true
+  bastion_name                = module.naming.bastion_host.name_unique
+  bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
+  bastion_subnet_resource_id  = module.gateway_vnet.subnets["AzureBastionSubnet"].id
+  dc_subnet_resource_id       = module.gateway_vnet.subnets["DCSubnet"].id
+  dc_vm_sku                   = "Standard_D2_v4"
+  domain_fqdn                 = "test.local"
+  domain_netbios_name         = "test"
+  domain_distinguished_name   = "dc=test,dc=local"
+  ldap_user                   = "ldapuser"
+  dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
+  private_ip_address          = cidrhost("10.100.1.0/24", 4)
+  virtual_network_resource_id = module.gateway_vnet.vnet-resource.id
 
   depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
 

@@ -35,5 +35,9 @@ resource "azurerm_netapp_volume" "anf_volume" {
     protocols_enabled   = ["NFSv3"]
     root_access_enabled = true
   }
+
+  lifecycle {
+    ignore_changes = [zone]
+  }
 }
 

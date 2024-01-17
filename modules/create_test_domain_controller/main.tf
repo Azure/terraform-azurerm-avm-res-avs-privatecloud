@@ -128,6 +128,7 @@ module "testvm" {
         ip_configuration_1 = {
           name                          = "${var.dc_vm_name}-nic1-ipconfig1"
           private_ip_subnet_resource_id = var.dc_subnet_resource_id
+          private_ip_address            = var.private_ip_address
         }
       }
     }
@@ -198,13 +199,19 @@ resource "azurerm_key_vault_secret" "admin_password" {
 }
 
 
+resource "azurerm_virtual_network_dns_servers" "dc_dns" {
+  virtual_network_id = var.virtual_network_resource_id
+  dns_servers        = [var.private_ip_address]
+}
+
+
 ###############################################################
 # Create secondary DC
 ###############################################################
 
 #Create a self-signed certificate for DSC to use for encrypted deployment
 resource "azurerm_key_vault_certificate" "this_secondary" {
-  name         = "${var.dc_vm_name}-dsc-cert"
+  name         = "${var.dc_vm_name_secondary}-dsc-cert"
   key_vault_id = var.key_vault_resource_id
 
   certificate_policy {
@@ -261,7 +268,7 @@ resource "azurerm_key_vault_certificate" "this_secondary" {
 data "template_file" "run_script_secondary" {
   template = file("${path.module}/templates/dc_configure_script.ps1")
   vars = {
-    thumbprint                   = azurerm_key_vault_certificate.this.thumbprint
+    thumbprint                   = azurerm_key_vault_certificate.this_secondary.thumbprint
     admin_username               = module.testvm_secondary.virtual_machine.admin_username
     admin_password               = module.testvm_secondary.admin_password
     active_directory_fqdn        = var.domain_fqdn
@@ -316,12 +323,12 @@ module "testvm_secondary" {
       key_vault_id = var.key_vault_resource_id
       certificate = [
         {
-          url   = azurerm_key_vault_certificate.this.secret_id
+          url   = azurerm_key_vault_certificate.this_secondary.secret_id
           store = "My"
         },
         {
           store = "Root"
-          url   = azurerm_key_vault_certificate.this.secret_id
+          url   = azurerm_key_vault_certificate.this_secondary.secret_id
         }
       ]
     }
@@ -343,5 +350,5 @@ module "testvm_secondary" {
     }
   }
 
-  depends_on = [ module.testvm ]
+  depends_on = [module.testvm, azurerm_virtual_network_dns_servers.dc_dns]
 }

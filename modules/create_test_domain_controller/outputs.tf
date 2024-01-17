@@ -23,3 +23,7 @@ output "ldap_user_password" {
   value     = random_password.ldap_password.result
   sensitive = true
 }
+
+output "primary_dc_private_ip_address" {
+  value = module.testvm.virtual_machine_azurerm.private_ip_address
+}
