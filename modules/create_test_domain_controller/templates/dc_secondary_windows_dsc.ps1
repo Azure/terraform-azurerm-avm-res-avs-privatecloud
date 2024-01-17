@@ -73,7 +73,6 @@ Configuration dc {
             Credential                    = $credObject
             SafeModeAdministratorPassword = $credObject
             IsGlobalCatalog               = $true
-            Ensure                        = 'Present'
             InstallDns                    = $true
 
             DependsOn                     = '[WaitForADDomain]WaitForestAvailability'
