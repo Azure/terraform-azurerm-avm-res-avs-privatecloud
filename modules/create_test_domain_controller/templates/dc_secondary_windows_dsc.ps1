@@ -62,7 +62,9 @@ Configuration dc {
         WaitForADDomain 'WaitForestAvailability'
         {
             DomainName = $Node.ActiveDirectoryFQDN
-            Credential = $credObject
+            #Credential = $credObject
+            RestartCount = 3
+
 
             DependsOn  = '[WindowsFeature]rsat-ad-powershell'
         }
