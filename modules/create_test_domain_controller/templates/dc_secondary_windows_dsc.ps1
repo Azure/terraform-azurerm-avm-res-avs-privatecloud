@@ -26,7 +26,7 @@ Set-DscLocalConfigurationManager -Path .\lcmConfig -Verbose
 
 [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ("$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME", (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force))
 $safeMode = (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force)
-
+$adminUser = "$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME"
 Configuration dc {
    
     Import-DscResource -ModuleName PSDesiredStateConfiguration
@@ -109,7 +109,7 @@ $cd = @{
             Thumbprint                = $env:THUMBPRINT
             ActiveDirectoryFQDN       = $env:ACTIVEDIRECTORYFQDN
             ActiveDirectoryNETBIOS    = $env:ACTIVEDIRECTORYNETBIOS
-            AdminUser                 = "$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME"
+            AdminUser                 = $adminUser
             AdminPassword             = $env:ADMINPASSWORD
     ) 
 }
