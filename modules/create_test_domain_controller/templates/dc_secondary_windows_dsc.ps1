@@ -110,7 +110,7 @@ $cd = @{
             ActiveDirectoryFQDN       = $env:ACTIVEDIRECTORYFQDN
             ActiveDirectoryNETBIOS    = $env:ACTIVEDIRECTORYNETBIOS
             AdminUser                 = "$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME"
-            AdminPassword             = "$env:ADMINPASSWORD"
+            AdminPassword             = $env:ADMINPASSWORD
     ) 
 }
 
