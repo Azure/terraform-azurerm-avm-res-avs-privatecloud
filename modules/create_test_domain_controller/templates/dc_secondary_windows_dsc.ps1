@@ -88,8 +88,10 @@ Configuration dc {
                 $returnValue = try{(get-ADDomainController).enabled} catch {$false}
                 return $returnValue
             }
-            SetScript            = {                    
-                Install-ADDSDomainController -InstallDns -DomainName $Using:Node.ActiveDirectoryFQDN -Credential $Using:credObject -SafeModeAdministratorPassword $Using:credObject -Force
+            SetScript            = {   
+                $domain = $Using:ConfigurationData.AllNodes.ActiveDirectoryFQDN
+
+                Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:credObject -Force
             }
         }
        
