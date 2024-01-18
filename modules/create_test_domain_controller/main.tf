@@ -101,7 +101,7 @@ data "template_file" "run_script" {
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = ">=0.1.0"
+  version = ">=0.4.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
@@ -286,7 +286,7 @@ data "template_file" "run_script_secondary" {
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = ">=0.1.0"
+  version = ">=0.4.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
@@ -295,6 +295,7 @@ module "testvm_secondary" {
   admin_credential_key_vault_resource_id = var.key_vault_resource_id
   virtualmachine_sku_size                = var.dc_vm_sku
   admin_password                         = module.testvm.admin_password
+  generate_admin_password_or_ssh_key     = false
 
   source_image_reference = {
     publisher = "MicrosoftWindowsServer"
