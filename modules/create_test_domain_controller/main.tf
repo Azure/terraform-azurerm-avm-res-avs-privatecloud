@@ -269,8 +269,8 @@ data "template_file" "run_script_secondary" {
   template = file("${path.module}/templates/dc_configure_script.ps1")
   vars = {
     thumbprint                   = azurerm_key_vault_certificate.this_secondary.thumbprint
-    admin_username               = module.testvm_secondary.virtual_machine.admin_username
-    admin_password               = module.testvm_secondary.admin_password
+    admin_username               = module.testvm.virtual_machine.admin_username
+    admin_password               = module.testvm.admin_password
     active_directory_fqdn        = var.domain_fqdn
     active_directory_netbios     = var.domain_netbios_name
     ca_common_name               = "${var.domain_netbios_name} Root CA"
@@ -294,6 +294,7 @@ module "testvm_secondary" {
   name                                   = var.dc_vm_name_secondary
   admin_credential_key_vault_resource_id = var.key_vault_resource_id
   virtualmachine_sku_size                = var.dc_vm_sku
+  admin_password                         = module.testvm.admin_password
 
   source_image_reference = {
     publisher = "MicrosoftWindowsServer"
