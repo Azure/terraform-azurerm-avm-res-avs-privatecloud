@@ -71,34 +71,46 @@ Configuration dc {
             DependsOn  = '[WindowsFeature]rsat-ad-powershell'
         }
 
-        ADDomainController 'DomainControllerUsingExistingDNSServer'
-        {
-            DomainName                    = $Node.ActiveDirectoryFQDN
-            Credential                    = $credObject
-            SafeModeAdministratorPassword = $credObject
-            IsGlobalCatalog               = $true
-            InstallDns                    = $true
-            DependsOn                     = '[WaitForADDomain]WaitForestAvailability'
-        }
+        #ADDomainController 'DomainControllerUsingExistingDNSServer'
+        #{
+        #    DomainName                    = $Node.ActiveDirectoryFQDN
+        #    Credential                    = $credObject
+        #    SafeModeAdministratorPassword = $credObject
+        #    IsGlobalCatalog               = $true
+        #    InstallDns                    = $true
+        #    DependsOn                     = '[WaitForADDomain]WaitForestAvailability'
+        #}
 
 
         #ADDomainController resource wasn't working, use custom script with powershell instead.
-        #script 'configureDomainController' {
-        #    PsDscRunAsCredential = $credObjectLocal
-        #    DependsOn            = '[WaitForADDomain]WaitForestAvailability'
-        #    GetScript            = { return @{result = 'Installing Domain Controller' } }
-        #    TestScript           = {                
-        #        $returnValue = try{(get-ADDomainController).enabled} catch {$false}
-        #        return $returnValue
-        #    }
-        #    SetScript            = {   
-        #        $domain = $Using:ConfigurationData.AllNodes.ActiveDirectoryFQDN
-        #        [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ($Using:ConfigurationData.AllNodes.AdminUser, (ConvertTo-SecureString $Using:ConfigurationData.AllNodes.AdminPassword -AsPlainText -Force))
-        #        Write-Host "joining domain controller to domain $domain"
-        #        Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:safeMode -AllowDomainControllerReinstall -Force
-        #    }
-        #}
-       
+        script 'configureDomainController' {
+            PsDscRunAsCredential = $credObjectLocal
+            DependsOn            = '[WaitForADDomain]WaitForestAvailability'
+            GetScript            = { return @{result = 'Installing Domain Controller' } }
+            TestScript           = {                
+                $returnValue = try{(get-ADDomainController).enabled} catch {$false}
+                return $returnValue
+            }
+            SetScript            = {   
+                $domain = $Using:ConfigurationData.AllNodes.ActiveDirectoryFQDN
+                [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ($Using:ConfigurationData.AllNodes.AdminUser, (ConvertTo-SecureString $Using:ConfigurationData.AllNodes.AdminPassword -AsPlainText -Force))
+                Write-Host "joining domain controller to domain $domain"
+                Install-ADDSDomainController `
+                    -AllowDomainControllerReinstall:$true `
+                    -NoGlobalCatalog:$false `
+                    -CreateDnsDelegation:$false `
+                    -Credential $credObject `
+                    -CriticalReplicationOnly:$false `
+                    -DatabasePath "C:\Windows\NTDS" `
+                    -DomainName $domain `
+                    -InstallDns:$true `
+                    -LogPath "C:\Windows\NTDS" `
+                    -NoRebootOnCompletion:$false `
+                    -SiteName "Default-Site" `
+                    -SysvolPath "C:\Windows\SYSVOL" `
+                    -Force:$true
+            }
+        }       
     }
 }
 
