@@ -59,15 +59,6 @@ Configuration dc {
             Name                 = 'rsat-ad-powershell'
             Ensure               = 'Present'
         }
-        WaitForADDomain 'WaitForestAvailability'
-        {
-            DomainName = $Node.ActiveDirectoryFQDN
-            #Credential = $credObject
-            RestartCount = 3
-
-
-            DependsOn  = '[WindowsFeature]rsat-ad-powershell'
-        }
 
         ADDomainController 'DomainControllerUsingExistingDNSServer'
         {
