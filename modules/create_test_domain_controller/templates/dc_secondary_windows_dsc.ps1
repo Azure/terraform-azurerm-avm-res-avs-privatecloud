@@ -83,7 +83,6 @@ Configuration dc {
 
         #ADDomainController resource wasn't working, use custom script with powershell instead.
         script 'configureDomainController' {
-            PsDscRunAsCredential = $credObject
             DependsOn            = '[WaitForADDomain]WaitForestAvailability'
             GetScript            = { return @{result = 'Installing Domain Controller' } }
             TestScript           = {                
@@ -96,8 +95,7 @@ Configuration dc {
                 Write-Host "joining domain controller to domain $domain"
                 Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:safeMode -AllowDomainControllerReinstall -Force
             }
-        }
-       
+        }       
     }
 }
 
