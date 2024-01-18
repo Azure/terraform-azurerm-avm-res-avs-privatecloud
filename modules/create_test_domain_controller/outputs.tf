@@ -3,6 +3,10 @@ output "dc_details" {
   sensitive = false
 }
 
+output "dc_details_secondary" {
+  value = data.azurerm_virtual_machine.this_vm_secondary
+}
+
 output "domain_fqdn" {
   value = var.domain_fqdn
 }

@@ -293,14 +293,15 @@ module "test_private_cloud" {
   #configure the Domain controllers used for Vcenter connectivity
   vcenter_identity_sources = {
     test_local = {
-      alias          = module.create_dc.domain_netbios_name
-      base_group_dn  = module.create_dc.domain_distinguished_name
-      base_user_dn   = module.create_dc.domain_distinguished_name
-      domain         = module.create_dc.domain_fqdn
-      group_name     = "Domain Users"
-      name           = module.create_dc.domain_netbios_name
-      primary_server = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
-      ssl            = "Enabled"
+      alias            = module.create_dc.domain_netbios_name
+      base_group_dn    = module.create_dc.domain_distinguished_name
+      base_user_dn     = module.create_dc.domain_distinguished_name
+      domain           = module.create_dc.domain_fqdn
+      group_name       = "Domain Users"
+      name             = module.create_dc.domain_netbios_name
+      primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
+      secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
+      ssl              = "Enabled"
     }
   }
 

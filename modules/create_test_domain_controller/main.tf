@@ -354,3 +354,16 @@ module "testvm_secondary" {
 
   depends_on = [module.testvm, azurerm_virtual_network_dns_servers.dc_dns]
 }
+
+#adding sleep wait to give the DC time to install the features and configure itself
+resource "time_sleep" "wait_600_seconds_2" {
+  depends_on = [module.testvm_secondary]
+
+  create_duration = "600s"
+}
+
+data "azurerm_virtual_machine" "this_vm_secondary" {
+  name                = module.testvm_secondary.virtual_machine.name
+  resource_group_name = var.resource_group_name
+  depends_on          = [time_sleep.wait_600_seconds_2, module.testvm_secondary]
+}

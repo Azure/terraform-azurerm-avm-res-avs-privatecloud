@@ -129,7 +129,7 @@ resource "azapi_resource" "configure_identity_sources" {
     )
   )
   parent_id = azapi_resource.this_private_cloud.id
-  body = (local.identity_matches[each.key] == false ?
+  body = (local.identity_matches[each.key] != false ?
     ( #Nothing needs to change, run the get action
       jsonencode({
         properties = {
