@@ -94,6 +94,7 @@ Configuration dc {
             SetScript            = {   
                 $domain = $Using:ConfigurationData.AllNodes.ActiveDirectoryFQDN
                 [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ($Using:ConfigurationData.AllNodes.AdminUser, (ConvertTo-SecureString $Using:ConfigurationData.AllNodes.AdminPassword -AsPlainText -Force))
+                $safePass = (ConvertTo-SecureString $Using:ConfigurationData.AllNodes.AdminPassword -AsPlainText -Force)
                 Write-Host "joining domain controller to domain $domain"
                 Install-ADDSDomainController `
                     -AllowDomainControllerReinstall:$true `
@@ -109,7 +110,7 @@ Configuration dc {
                     -SiteName "Default-Site" `
                     -SysvolPath "C:\Windows\SYSVOL" `
                     -Force:$true `
-                    -SafeModeAdministratorPassword $credObject
+                    -SafeModeAdministratorPassword $safePass
             }
         }       
     }
