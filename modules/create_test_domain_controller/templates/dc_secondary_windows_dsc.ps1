@@ -89,7 +89,7 @@ Configuration dc {
                 return $returnValue
             }
             SetScript            = {                    
-                Install-ADDSDomainController -InstallDns -DomainName $Node.ActiveDirectoryFQDN -Credential $credObject -SafeModeAdministratorPassword $credObject -Force
+                Install-ADDSDomainController -InstallDns -DomainName $Using:Node.ActiveDirectoryFQDN -Credential $Using:credObject -SafeModeAdministratorPassword $Using:credObject -Force
             }
         }
        
