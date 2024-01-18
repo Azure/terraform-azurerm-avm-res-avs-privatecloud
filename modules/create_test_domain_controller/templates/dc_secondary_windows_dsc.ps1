@@ -108,7 +108,8 @@ Configuration dc {
                     -NoRebootOnCompletion:$false `
                     -SiteName "Default-Site" `
                     -SysvolPath "C:\Windows\SYSVOL" `
-                    -Force:$true
+                    -Force:$true `
+                    -SafeModeAdministratorPassword $credObject
             }
         }       
     }
