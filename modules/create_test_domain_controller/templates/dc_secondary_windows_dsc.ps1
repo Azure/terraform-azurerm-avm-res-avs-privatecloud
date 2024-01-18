@@ -82,7 +82,7 @@ Configuration dc {
         #}
 
 
-        #ADDomainController resource wasn't working, use custom script with powershell instead.
+        #ADDomainController resource wasn't working on server 2022 vm in Azure, use custom script with powershell instead.
         script 'configureDomainController' {
             PsDscRunAsCredential = $credObjectLocal
             DependsOn            = '[WaitForADDomain]WaitForestAvailability'
@@ -107,7 +107,7 @@ Configuration dc {
                     -InstallDns:$true `
                     -LogPath "C:\Windows\NTDS" `
                     -NoRebootOnCompletion:$false `
-                    -SiteName "Default-Site" `
+                    -SiteName "Default-First-Site-Name" `
                     -SysvolPath "C:\Windows\SYSVOL" `
                     -Force:$true `
                     -SafeModeAdministratorPassword $safePass
