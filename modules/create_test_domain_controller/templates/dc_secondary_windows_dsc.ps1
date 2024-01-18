@@ -25,6 +25,7 @@ lcmConfig -InstanceName localhost -OutputPath .\lcmConfig
 Set-DscLocalConfigurationManager -Path .\lcmConfig -Verbose
 
 [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ("$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME", (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force))
+[pscredential]$credObjectLocal = New-Object System.Management.Automation.PSCredential ($env:ADMINUSERNAME, (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force))
 $safeMode = (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force)
 $adminUser = "$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME"
 Configuration dc {
@@ -83,6 +84,7 @@ Configuration dc {
 
         #ADDomainController resource wasn't working, use custom script with powershell instead.
         script 'configureDomainController' {
+            PsDscRunAsCredential = $credObjectLocal
             DependsOn            = '[WaitForADDomain]WaitForestAvailability'
             GetScript            = { return @{result = 'Installing Domain Controller' } }
             TestScript           = {                
@@ -95,7 +97,8 @@ Configuration dc {
                 Write-Host "joining domain controller to domain $domain"
                 Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:safeMode -AllowDomainControllerReinstall -Force
             }
-        }       
+        }
+       
     }
 }
 
