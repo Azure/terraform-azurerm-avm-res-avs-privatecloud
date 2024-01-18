@@ -93,7 +93,7 @@ Configuration dc {
             SetScript            = {   
                 $domain = $Using:ConfigurationData.AllNodes.ActiveDirectoryFQDN
                 Write-Host "joining domain controller to domain $domain"
-                Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:safeMode -Force
+                Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:safeMode -AllowDomainControllerReinstall -Force
             }
         }
        
