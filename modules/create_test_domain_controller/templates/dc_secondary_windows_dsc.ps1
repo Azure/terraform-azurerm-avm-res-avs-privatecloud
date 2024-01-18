@@ -75,7 +75,7 @@ Configuration dc {
         {
             DomainName                    = $Node.ActiveDirectoryFQDN
             Credential                    = $credObject
-            SafeModeAdministratorPassword = $safeMode
+            SafeModeAdministratorPassword = $credObject
             IsGlobalCatalog               = $true
             InstallDns                    = $true
             DependsOn                     = '[WaitForADDomain]WaitForestAvailability'
