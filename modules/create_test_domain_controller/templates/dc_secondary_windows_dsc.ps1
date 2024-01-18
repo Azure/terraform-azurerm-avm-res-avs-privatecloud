@@ -69,14 +69,27 @@ Configuration dc {
             DependsOn  = '[WindowsFeature]rsat-ad-powershell'
         }
 
-        ADDomainController 'DomainControllerUsingExistingDNSServer'
-        {
-            DomainName                    = $Node.ActiveDirectoryFQDN
-            Credential                    = $credObject
-            SafeModeAdministratorPassword = $credObject
-            IsGlobalCatalog               = $true
-            InstallDns                    = $true
-            DependsOn                     = '[WaitForADDomain]WaitForestAvailability'
+        #ADDomainController 'DomainControllerUsingExistingDNSServer'
+        #{
+        #    DomainName                    = $Node.ActiveDirectoryFQDN
+        #    Credential                    = $credObject
+        #    SafeModeAdministratorPassword = $credObject
+        #    IsGlobalCatalog               = $true
+        #    InstallDns                    = $true
+        #    DependsOn                     = '[WaitForADDomain]WaitForestAvailability'
+        #}
+
+
+        #ADDomainController resource wasn't working, use custom script with powershell instead.
+        script 'configureDomainController' {
+            DependsOn            = '[WaitForADDomain]WaitForestAvailability'
+            GetScript            = { return @{result = 'Installing Domain Controller' } }
+            TestScript           = {                
+                return (try {(get-ADDomainController).enabled} catch {$false}) 
+            }
+            SetScript            = {                    
+                Install-ADDSDomainController -InstallDns -DomainName $Node.ActiveDirectoryFQDN -Credential $credObject -SafeModeAdministratorPassword $credObject -Force
+            }
         }
        
     }
