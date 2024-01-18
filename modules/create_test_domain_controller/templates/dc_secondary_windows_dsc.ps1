@@ -92,6 +92,7 @@ Configuration dc {
             }
             SetScript            = {   
                 $domain = $Using:ConfigurationData.AllNodes.ActiveDirectoryFQDN
+                [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ($Using:ConfigurationData.AllNodes.AdminUser, (ConvertTo-SecureString $Using:ConfigurationData.AllNodes.AdminPassword -AsPlainText -Force))
                 Write-Host "joining domain controller to domain $domain"
                 Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:safeMode -AllowDomainControllerReinstall -Force
             }
@@ -108,7 +109,8 @@ $cd = @{
             Thumbprint                = $env:THUMBPRINT
             ActiveDirectoryFQDN       = $env:ACTIVEDIRECTORYFQDN
             ActiveDirectoryNETBIOS    = $env:ACTIVEDIRECTORYNETBIOS
-        }
+            AdminUser                 = "$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME"
+            AdminPassword             = "$env:ADMINPASSWORD"
     ) 
 }
 
