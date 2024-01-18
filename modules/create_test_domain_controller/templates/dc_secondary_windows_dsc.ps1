@@ -82,6 +82,7 @@ Configuration dc {
 
         #ADDomainController resource wasn't working, use custom script with powershell instead.
         script 'configureDomainController' {
+            PsDscRunAsCredential = $credObject
             DependsOn            = '[WaitForADDomain]WaitForestAvailability'
             GetScript            = { return @{result = 'Installing Domain Controller' } }
             TestScript           = {                
