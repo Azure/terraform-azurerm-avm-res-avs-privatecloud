@@ -85,7 +85,8 @@ Configuration dc {
             DependsOn            = '[WaitForADDomain]WaitForestAvailability'
             GetScript            = { return @{result = 'Installing Domain Controller' } }
             TestScript           = {                
-                return (get-ADDomainController).enabled
+                $returnValue = try{(get-ADDomainController).enabled} catch {$false}
+                return $returnValue
             }
             SetScript            = {                    
                 Install-ADDSDomainController -InstallDns -DomainName $Node.ActiveDirectoryFQDN -Credential $credObject -SafeModeAdministratorPassword $credObject -Force
