@@ -25,6 +25,7 @@ lcmConfig -InstanceName localhost -OutputPath .\lcmConfig
 Set-DscLocalConfigurationManager -Path .\lcmConfig -Verbose
 
 [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ("$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME", (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force))
+$safeMode = (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force)
 
 Configuration dc {
    
@@ -91,8 +92,8 @@ Configuration dc {
             }
             SetScript            = {   
                 $domain = $Using:ConfigurationData.AllNodes.ActiveDirectoryFQDN
-
-                Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:credObject -Force
+                Write-Host "joining domain controller to domain $domain"
+                Install-ADDSDomainController -InstallDns -DomainName $domain -Credential $Using:credObject -SafeModeAdministratorPassword $Using:safeMode -Force
             }
         }
        
