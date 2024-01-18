@@ -111,6 +111,7 @@ $cd = @{
             ActiveDirectoryNETBIOS    = $env:ACTIVEDIRECTORYNETBIOS
             AdminUser                 = $adminUser
             AdminPassword             = $env:ADMINPASSWORD
+        }
     ) 
 }
 
