@@ -471,14 +471,14 @@ variable "dns_forwarder_zones" {
 
 }
 
-variable "netapp_files_attachments" {
+variable "netapp_files_datastores" {
   type = map(object({
     netapp_volume_resource_id = string
     cluster_names             = set(string)
   }))
   default     = {}
   description = <<NETAPP_FILES_ATTACHMENTS
-    This map of objects describes one or more netapp volume attachments.  The map key will be used for the attachment name and should be unique. 
+    This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique. 
 
     map(object({
       netapp_volume_resource_id = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.
@@ -487,7 +487,7 @@ variable "netapp_files_attachments" {
 
     Example Input:
     ```terraform
-      cluster1_volume1 = {
+      anf_datastore_cluster1 = {
         netapp_volume_resource_id = azurerm_netapp_volume.test.id
         cluster_names             = ["Cluster-1"]
       }

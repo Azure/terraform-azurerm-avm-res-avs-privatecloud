@@ -37,7 +37,7 @@ locals {
   # API output is a heredoc string of the field values. Split the string into separate list elements and remove the whitespaces.
   parsed_identity_sources          = try([for value in split("\n", tostring(jsondecode(azapi_resource.current_status_identity_sources.output).properties.output[1])) : split(": ", value) if strcontains(value, ": ")], [])
   cleaned_identity_sources_to_list = try([for value in local.parsed_identity_sources : [for item in value : trimspace(item)]], [])
-  cleaned_identity_sources_to_map  = try({ for value in local.cleaned_identity_sources_to_list : value[0] => value[1] })
+  cleaned_identity_sources_to_map  = try({ for value in local.cleaned_identity_sources_to_list : value[0] => value[1] }, {})
 
 
   #do the comparison
@@ -65,14 +65,14 @@ resource "azapi_resource" "remove_existing_identity_source" {
   type                   = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
   parent_id              = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
-  name = ((local.identity_matches[each.key] == false &&                                                                                       #the current values don't match the expected values
+  name = ((try(local.identity_matches[each.key], true) == false &&                                                                            #the current values don't match the expected values
     try(local.cleaned_identity_sources_to_map["PrimaryUrl"], null) != null) ?                                                                 #And the primaryURL is currently configured
     "Remove-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Remove-ExternalIdentitySources"]) + 1)}" #Remove the identity sources    
     :
     "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 2)}" #Else run the Get command (increment by two in case the previous command also used get)
   )
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
-  body = (local.identity_matches[each.key] == false && #the current values don't match the expected values
+  body = (try(local.identity_matches[each.key], true) == false && #the current values don't match the expected values
     try(local.cleaned_identity_sources_to_map["PrimaryUrl"], null) != null) ? (
     jsonencode({ #remove the current identity source
       properties = {
@@ -82,7 +82,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
         DomainName     = each.value.domain
       }
     })) : (
-    jsonencode({
+    jsonencode({ #Get the current values as a read to avoid setting the current values.
       properties = {
         timeout        = "PT15M"
         retention      = "P30D"
@@ -118,18 +118,18 @@ resource "azapi_resource" "configure_identity_sources" {
 
   type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
   # if SSL is enabled use the LDAPS cmdlet, else use the LDAP cmdlet
-  name = (local.identity_matches[each.key] == false ?
+  name = ( try(local.identity_matches[each.key], true) == false ?
     (
       each.value.ssl == "Enabled" ?
       "New-LDAPSIdentitySource-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["New-LDAPSIdentitySource"]) + 1)}" :
       "New-LDAPIdentitySource-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["New-LDAPIdentitySource"]) + 1)}"
     ) :
     (
-      "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}"
+      "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 3)}"
     )
   )
   parent_id = azapi_resource.this_private_cloud.id
-  body = (local.identity_matches[each.key] != false ?
+  body = ( try(local.identity_matches[each.key], true) != false ?
     ( #Nothing needs to change, run the get action
       jsonencode({
         properties = {

@@ -169,11 +169,9 @@ module "gateway_vnet" {
     }
     DCSubnet = {
       address_prefixes = ["10.100.1.0/24"]
-
       nat_gateway = {
         id = azurerm_nat_gateway.this_nat_gateway.id
       }
-
     }
     AzureBastionSubnet = {
       address_prefixes = ["10.100.2.0/24"]
@@ -298,11 +296,18 @@ module "test_private_cloud" {
       base_user_dn     = module.create_dc.domain_distinguished_name
       domain           = module.create_dc.domain_fqdn
       group_name       = "Domain Users"
-      name             = module.create_dc.domain_netbios_name
+      name             = module.create_dc.domain_fqdn
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
       ssl              = "Enabled"
     }
+  }
+
+  netapp_files_datastores = {
+    anf_datastore_cluster1 = {
+        netapp_volume_resource_id = module.create_anf_volume.volume_id
+        cluster_names             = ["Cluster-1"]
+      }
   }
 
   #define the tags
@@ -323,7 +328,8 @@ module "create_anf_volume" {
   anf_volume_size         = 2048
   anf_subnet_resource_id  = module.gateway_vnet.subnets["ANFSubnet"].id
   anf_zone_number         = module.test_private_cloud[0].private_cloud.properties.availability.zone
-  anf_nfs_allowed_clients = [module.test_private_cloud[0].private_cloud.properties.networkBlock]
+  #anf_nfs_allowed_clients = [module.test_private_cloud[0].private_cloud.properties.networkBlock]
+  anf_nfs_allowed_clients = ["0.0.0.0/0"]
 }
 
 output "dc_values" {

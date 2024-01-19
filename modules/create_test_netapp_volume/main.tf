@@ -34,6 +34,8 @@ resource "azurerm_netapp_volume" "anf_volume" {
     allowed_clients     = var.anf_nfs_allowed_clients
     protocols_enabled   = ["NFSv3"]
     root_access_enabled = true
+    unix_read_only      = false
+    unix_read_write     = true
   }
 
   lifecycle {
