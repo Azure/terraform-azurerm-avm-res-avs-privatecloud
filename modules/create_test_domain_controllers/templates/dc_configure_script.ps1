@@ -8,6 +8,7 @@ $env:CACOMMONNAME = "${ca_common_name}"
 $env:CADISTINGUISHEDNAMESUFFIX = "${ca_distinguished_name_suffix}"
 $env:LDAPUSER = "${ldap_user}"
 $env:LDAPUSERPASSWORD = "${ldap_user_password}"
+$env:PRIMARYADMINPASSWORD = "${primary_admin_password}"
 
 
 

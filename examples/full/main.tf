@@ -30,10 +30,6 @@ If it is set to false, then no telemetry will be collected.
 DESCRIPTION
 }
 
-#get the deployer user details
-data "azurerm_client_config" "current" {}
-
-# This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = ">= 0.3.0"
@@ -44,52 +40,45 @@ module "regions" {
   version = ">= 0.4.0"
 }
 
-#seed the test regions with regions where the lab subscription currently has quota
 locals {
-  test_domain_name = "test.local"
+  test_domain_name    = "test.local"
+  test_domain_netbios = "test"
+  test_domain_dn      = "dc=test,dc=local"
+  ldap_user_name      = "ldapuser"
+  dc_vm_sku           = "Standard_D2_v4"
 }
 
-### this segment of code gets quota availability for testing
-data "azurerm_subscription" "current" {}
+data "azurerm_client_config" "current" {}
 
-
-
-#generate a list of regions with at least 3 quota for deployment
-locals {
-  with_quota  = [for region in data.azapi_resource_action.quota : split("/", region.resource_id)[6] if jsondecode(region.output).hostsRemaining.he >= 3]
-  region      = "eastasia"
-  install_now = true
+module "generate_deployment_region" {
+  source               = "../../modules/generate_deployment_region"
+  total_quota_required = 6
 }
 
-
-locals {
-  daySecond = (split("-", plantimestamp()))[2]
-  month     = (split("-", plantimestamp()))[1]
-}
-
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  #count = length(local.with_quota) > 0 ? 1 : 0 #fails if we don't have quota
-  count = local.install_now ? 1 : 0
-
-  name = module.naming.resource_group.name_unique
-  #location = local.with_quota[random_integer.region_index[0].result]
-  location = local.region
-
-  tags = {
-    DeleteDate = formatdate("MM/DD/YYYY", timestamp())
+resource "local_file" "region_sku_cache" {
+  content  = jsonencode(module.generate_deployment_region.deployment_region)
+  filename = "${path.module}/region_cache.txt"
+  lifecycle {
+    ignore_changes = [content]
   }
 }
 
+resource "azurerm_resource_group" "this" {
+  name     = module.naming.resource_group.name_unique
+  location = jsondecode(local_file.region_sku_cache.content).name
 
-#create a keyvault for storing the credential with RBAC for the deployment user
+  lifecycle {
+    ignore_changes = [tags, location]
+  }
+}
+
 module "avm-res-keyvault-vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
   version                = ">=0.3.0"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this[0].name
-  location               = azurerm_resource_group.this[0].location
+  resource_group_name    = azurerm_resource_group.this.name
+  location               = azurerm_resource_group.this.location
   enabled_for_deployment = true
   network_acls = {
     default_action = "Allow"
@@ -108,19 +97,18 @@ module "avm-res-keyvault-vault" {
   }
 }
 
-#create a NAT gateway and public IP associate it to the Subnet where the DC will be created
 resource "azurerm_public_ip" "nat_gateway" {
   name                = "${module.naming.nat_gateway.name_unique}-pip"
-  location            = azurerm_resource_group.this[0].location
-  resource_group_name = azurerm_resource_group.this[0].name
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
   sku                 = "Standard"
 }
 
 resource "azurerm_nat_gateway" "this_nat_gateway" {
   name                = module.naming.nat_gateway.name_unique
-  location            = azurerm_resource_group.this[0].location
-  resource_group_name = azurerm_resource_group.this[0].name
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   sku_name            = "Standard"
 }
 
@@ -129,15 +117,14 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
   public_ip_address_id = azurerm_public_ip.nat_gateway.id
 }
 
-#create a simple vnet for the expressroute gateway
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = ">=0.1.3"
 
-  resource_group_name           = azurerm_resource_group.this[0].name
+  resource_group_name           = azurerm_resource_group.this.name
   virtual_network_address_space = ["10.100.0.0/16"]
   vnet_name                     = "GatewayHubVnet"
-  vnet_location                 = azurerm_resource_group.this[0].location
+  vnet_location                 = azurerm_resource_group.this.location
 
   subnets = {
     GatewaySubnet = {
@@ -170,47 +157,51 @@ module "gateway_vnet" {
   }
 }
 
-#create DC and Bastion
 module "create_dc" {
-  source = "../../modules/create_test_domain_controller"
+  source = "../../modules/create_test_domain_controllers"
 
-  resource_group_name         = azurerm_resource_group.this[0].name
-  resource_group_location     = azurerm_resource_group.this[0].location
+  resource_group_name         = azurerm_resource_group.this.name
+  resource_group_location     = azurerm_resource_group.this.location
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
+  dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
   key_vault_resource_id       = module.avm-res-keyvault-vault.resource.id
   create_bastion              = true
   bastion_name                = module.naming.bastion_host.name_unique
   bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
   bastion_subnet_resource_id  = module.gateway_vnet.subnets["AzureBastionSubnet"].id
   dc_subnet_resource_id       = module.gateway_vnet.subnets["DCSubnet"].id
-  dc_vm_sku                   = "Standard_D2_v4"
-  domain_fqdn                 = "test.local"
-  domain_netbios_name         = "test"
-  domain_distinguished_name   = "dc=test,dc=local"
-  ldap_user                   = "ldapuser"
-  dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
+  dc_vm_sku                   = local.dc_vm_sku
+  domain_fqdn                 = local.test_domain_name
+  domain_netbios_name         = local.test_domain_netbios
+  domain_distinguished_name   = local.test_domain_dn
+  ldap_user                   = local.ldap_user_name
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
-  virtual_network_resource_id = module.gateway_vnet.vnet_resource.id
+  virtual_network_resource_id = module.gateway_vnet.vnet-resource.id
 
   depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
-
 }
 
-#Create a public IP
+resource "azurerm_log_analytics_workspace" "this_workspace" {
+  name                = module.naming.log_analytics_workspace.name_unique
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
 resource "azurerm_public_ip" "gatewaypip" {
   name                = module.naming.public_ip.name_unique
-  resource_group_name = azurerm_resource_group.this[0].name
-  location            = azurerm_resource_group.this[0].location
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
   allocation_method   = "Static"
   sku                 = "Standard" #required for an ultraperformance gateway
 
 }
 
-#create an expressRoute gateway
 resource "azurerm_virtual_network_gateway" "gateway" {
   name                = module.naming.express_route_gateway.name_unique
-  resource_group_name = azurerm_resource_group.this[0].name
-  location            = azurerm_resource_group.this[0].location
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
 
   type = "ExpressRoute"
   sku  = "ErGw1AZ"
@@ -223,48 +214,97 @@ resource "azurerm_virtual_network_gateway" "gateway" {
   }
 }
 
-# Create the private cloud and connect it to a vnet expressroute gateway
+module "create_anf_volume" {
+  source = "../../modules/create_test_netapp_volume"
+
+  resource_group_name     = azurerm_resource_group.this.name
+  resource_group_location = azurerm_resource_group.this.location
+  anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
+  anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
+  anf_pool_size           = 2
+  anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
+  anf_volume_size         = 2048
+  anf_subnet_resource_id  = module.gateway_vnet.subnets["ANFSubnet"].id
+  anf_zone_number         = module.test_private_cloud.private_cloud.properties.availability.zone
+  anf_nfs_allowed_clients = ["0.0.0.0/0"]
+}
+
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-
-  count = length(local.with_quota) > 0 ? 1 : 0 #fails if we don't have quota
+  # version            = "0.1.0"
 
   enable_telemetry        = var.enable_telemetry
-  resource_group_name     = azurerm_resource_group.this[0].name
-  location                = azurerm_resource_group.this[0].location
+  resource_group_name     = azurerm_resource_group.this.name
+  location                = azurerm_resource_group.this.location
   name                    = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-  sku_name                = "av36"
+  sku_name                = jsondecode(local_file.region_sku_cache.content).sku
   avs_network_cidr        = "10.0.0.0/22"
   internet_enabled        = false
   management_cluster_size = 3
   hcx_enabled             = true
-  hcx_key_names           = ["test_site_key_1"] #requires the HCX addon to be configured
+  hcx_key_names           = ["test_site_key_1"]
   ldap_user               = "${module.create_dc.ldap_user}@${module.create_dc.domain_fqdn}"
   ldap_user_password      = module.create_dc.ldap_user_password
 
-  #define the expressroute connections
+  clusters = {
+    Cluster_2 = {
+      cluster_node_count = 3
+      sku_name           = jsondecode(local_file.region_sku_cache.content).sku
+    }
+  }
+
+  diagnostic_settings = {
+    avs_diags = {
+      name                  = module.naming.monitor_diagnostic_setting.name_unique
+      workspace_resource_id = azurerm_log_analytics_workspace.this_workspace.id
+      metric_categories     = ["AllMetrics"]
+      log_groups            = ["allLogs"]
+    }
+  }
+
+  dns_forwarder_zones = {
+    test_local = {
+      display_name               = local.test_domain_name
+      dns_server_ips             = [module.create_dc.dc_details.private_ip_address]
+      domain_names               = [module.create_dc.domain_fqdn]
+      add_to_default_dns_service = true
+    }
+  }
+
   expressroute_connections = {
     default = {
       expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
     }
   }
 
-  dns_forwarder_zones = {
-    test_local = {
-      display_name               = "test.local"
-      dns_server_ips             = [module.create_dc.dc_details.private_ip_address]
-      domain_names               = [module.create_dc.domain_fqdn]
-      add_to_default_dns_service = true
-    }
-    second_domain = {
-      display_name   = "test2.local"
-      dns_server_ips = ["192.168.0.4"]
-      domain_names   = ["test2.local"]
+  lock = {
+    name = "lock-avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
+    type = "CanNotDelete"
+  }
+
+  managed_identities = {
+    system_assigned = true
+  }
+
+  netapp_files_datastores = {
+    anf_datastore_cluster1 = {
+      netapp_volume_resource_id = module.create_anf_volume.volume_id
+      cluster_names             = ["Cluster-1"]
     }
   }
 
-  #configure the Domain controllers used for Vcenter connectivity
+  role_assignments = {
+    deployment_user_secrets = {
+      role_definition_id_or_name = "Contributor"
+      principal_id               = data.azurerm_client_config.current.client_id
+    }
+  }
+
+  tags = {
+    scenario = "avs_full_example"
+  }
+
   vcenter_identity_sources = {
     test_local = {
       alias            = module.create_dc.domain_netbios_name
@@ -279,44 +319,5 @@ module "test_private_cloud" {
     }
   }
 
-  netapp_files_datastores = {
-    anf_datastore_cluster1 = {
-      netapp_volume_resource_id = module.create_anf_volume.volume_id
-      cluster_names             = ["Cluster-1"]
-    }
-  }
 
-  #define the tags
-  tags = {
-    scenario = "avs_sddc_ldap"
-  }
-}
-
-module "create_anf_volume" {
-  source = "../../modules/create_test_netapp_volume"
-
-  resource_group_name     = azurerm_resource_group.this[0].name
-  resource_group_location = azurerm_resource_group.this[0].location
-  anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
-  anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
-  anf_pool_size           = 2
-  anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
-  anf_volume_size         = 2048
-  anf_subnet_resource_id  = module.gateway_vnet.subnets["ANFSubnet"].id
-  anf_zone_number         = module.test_private_cloud[0].private_cloud.properties.availability.zone
-  #anf_nfs_allowed_clients = [module.test_private_cloud[0].private_cloud.properties.networkBlock]
-  anf_nfs_allowed_clients = ["0.0.0.0/0"]
-}
-
-output "dc_values" {
-  value     = module.create_dc.dc_details
-  sensitive = true
-}
-
-output "id" {
-  value = module.test_private_cloud[0].id
-}
-
-output "private_cloud" {
-  value = module.test_private_cloud[0].private_cloud
 }

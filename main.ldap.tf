@@ -118,7 +118,7 @@ resource "azapi_resource" "configure_identity_sources" {
 
   type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
   # if SSL is enabled use the LDAPS cmdlet, else use the LDAP cmdlet
-  name = ( try(local.identity_matches[each.key], true) == false ?
+  name = (try(local.identity_matches[each.key], true) == false ?
     (
       each.value.ssl == "Enabled" ?
       "New-LDAPSIdentitySource-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["New-LDAPSIdentitySource"]) + 1)}" :
@@ -129,7 +129,7 @@ resource "azapi_resource" "configure_identity_sources" {
     )
   )
   parent_id = azapi_resource.this_private_cloud.id
-  body = ( try(local.identity_matches[each.key], true) != false ?
+  body = (try(local.identity_matches[each.key], true) != false ?
     ( #Nothing needs to change, run the get action
       jsonencode({
         properties = {

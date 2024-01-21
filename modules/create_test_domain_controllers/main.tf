@@ -93,6 +93,7 @@ data "template_file" "run_script" {
     script_url                   = var.dc_dsc_script_url
     ldap_user                    = var.ldap_user
     ldap_user_password           = random_password.ldap_password.result
+    primary_admin_password       = module.testvm.admin_password
   }
 }
 
@@ -201,7 +202,9 @@ resource "azurerm_key_vault_secret" "admin_password" {
 
 resource "azurerm_virtual_network_dns_servers" "dc_dns" {
   virtual_network_id = var.virtual_network_resource_id
-  dns_servers        = [var.private_ip_address]
+  dns_servers        = [module.testvm.virtual_machine.private_ip_address]
+
+  depends_on = [module.testvm]
 }
 
 
@@ -269,8 +272,8 @@ data "template_file" "run_script_secondary" {
   template = file("${path.module}/templates/dc_configure_script.ps1")
   vars = {
     thumbprint                   = azurerm_key_vault_certificate.this_secondary.thumbprint
-    admin_username               = module.testvm.virtual_machine.admin_username
-    admin_password               = module.testvm.admin_password
+    admin_username               = module.testvm_secondary.virtual_machine.admin_username
+    admin_password               = module.testvm_secondary.admin_password
     active_directory_fqdn        = var.domain_fqdn
     active_directory_netbios     = var.domain_netbios_name
     ca_common_name               = "${var.domain_netbios_name} Root CA"
@@ -278,6 +281,7 @@ data "template_file" "run_script_secondary" {
     script_url                   = var.dc_dsc_script_url_secondary
     ldap_user                    = var.ldap_user
     ldap_user_password           = random_password.ldap_password.result
+    primary_admin_password       = module.testvm.admin_password
   }
 }
 
@@ -294,8 +298,8 @@ module "testvm_secondary" {
   name                                   = var.dc_vm_name_secondary
   admin_credential_key_vault_resource_id = var.key_vault_resource_id
   virtualmachine_sku_size                = var.dc_vm_sku
-  admin_password                         = module.testvm.admin_password
-  generate_admin_password_or_ssh_key     = false
+  #admin_password                         = module.testvm.admin_password
+  #generate_admin_password_or_ssh_key     = false
 
   source_image_reference = {
     publisher = "MicrosoftWindowsServer"
@@ -352,7 +356,7 @@ module "testvm_secondary" {
     }
   }
 
-  depends_on = [module.testvm, azurerm_virtual_network_dns_servers.dc_dns]
+  depends_on = [module.testvm, azurerm_virtual_network_dns_servers.dc_dns, time_sleep.wait_600_seconds, data.azurerm_virtual_machine.this_vm]
 }
 
 #adding sleep wait to give the DC time to install the features and configure itself
