@@ -82,7 +82,7 @@ variable "key_vault_resource_id" {
 variable "dc_dsc_script_url" {
   type        = string
   description = "the github url for the raw DSC configuration script that will be used by the custom script extension."
-  default     = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/modules/create_test_domain_controller/templates/dc_windows_dsc.ps1"
+  default     = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/modules/create_test_domain_controllers/templates/dc_windows_dsc.ps1"
 }
 
 variable "ldap_user" {
@@ -99,7 +99,7 @@ variable "dc_vm_name_secondary" {
 variable "dc_dsc_script_url_secondary" {
   type        = string
   description = "the github url for the raw DSC configuration script that will be used by the custom script extension."
-  default     = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/modules/create_test_domain_controller/templates/dc_secondary_windows_dsc.ps1"
+  default     = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/initial_development/modules/create_test_domain_controllers/templates/dc_secondary_windows_dsc.ps1"
 }
 
 variable "private_ip_address" {
