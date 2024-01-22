@@ -83,7 +83,7 @@ Configuration dc {
 
         #ADDomainController resource wasn't working on server 2022 vm in Azure, use custom script with powershell instead.
         script 'configureDomainController' {
-            PsDscRunAsCredential = $credObjectLocal
+            PsDscRunAsCredential = if(try{(get-ADDomainController).enabled} catch {$false}) { $credObject } else { $credObjectLocal }
             DependsOn            = '[WaitForADDomain]WaitForestAvailability'
             GetScript            = { return @{result = 'Installing Domain Controller' } }
             TestScript           = {                
