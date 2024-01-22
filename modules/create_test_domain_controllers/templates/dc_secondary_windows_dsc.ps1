@@ -26,6 +26,9 @@ Set-DscLocalConfigurationManager -Path .\lcmConfig -Verbose
 
 [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ("$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME", (ConvertTo-SecureString "$env:PRIMARYADMINPASSWORD" -AsPlainText -Force))
 [pscredential]$credObjectLocal = New-Object System.Management.Automation.PSCredential ($env:ADMINUSERNAME, (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force))
+$isDC = try{(get-ADDomainController).enabled} catch {$false}
+$runAsCred = if ($isDC) {$credObject} else {$credObjectLocal}
+
 $adminUser = "$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME"
 Configuration dc {
    
@@ -83,7 +86,7 @@ Configuration dc {
 
         #ADDomainController resource wasn't working on server 2022 vm in Azure, use custom script with powershell instead.
         script 'configureDomainController' {
-            PsDscRunAsCredential = if(try{(get-ADDomainController).enabled} catch {$false}) { $credObject } else { $credObjectLocal }
+            PsDscRunAsCredential = $runAsCred
             DependsOn            = '[WaitForADDomain]WaitForestAvailability'
             GetScript            = { return @{result = 'Installing Domain Controller' } }
             TestScript           = {                
