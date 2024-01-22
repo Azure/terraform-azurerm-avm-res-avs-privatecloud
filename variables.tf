@@ -263,8 +263,8 @@ variable "clusters" {
     This object describes additional clusters in the private cloud in addition to the management cluster. The map key will be used as the cluster name
     map(object({
       cluster_node_count = (required) - Integer number of nodes to include in this cluster between 3 and 16
-      sku_name           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created.
-
+      sku_name           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created
+      
     Example Input:
     ```terraform
        cluster1 = {

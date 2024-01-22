@@ -71,10 +71,10 @@ data "azapi_resource_action" "avs_dns" {
 #resource "azapi_update_resource" "dns_service" {
 resource "azapi_resource_action" "dns_service" {
   #check to see if the fqdn_zones match.  If they don't, update the zones. The API doesn't handle this nicely if they match and the update is null
-  #count = try(jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.fqdnZones, []) != ([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]) ? 1 : 0
 
   type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2022-05-01"
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
+  #if zone information is defined populate the properties. Otherwise send an empty body
   body = try(jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.fqdnZones, []) != ([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]) ? jsonencode({
     properties = {
       defaultDnsZone = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.defaultDnsZone
@@ -83,13 +83,9 @@ resource "azapi_resource_action" "dns_service" {
       fqdnZones      = [for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]
       logLevel       = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.logLevel
       revision       = 0
-
-      #revision       = ((jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.revision))
-      #fqdnZones = ["test_local"]
-
     }
   }) : "{}"
-
+  #if zone information is defined, use the PATCH method.  Otherwise perform a GET operation to just do a read
   method = try(jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.fqdnZones, []) != ([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]) ? "PATCH" : "GET"
 
 

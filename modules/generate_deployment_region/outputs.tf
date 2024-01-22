@@ -23,8 +23,7 @@ locals {
   }
 }
 output "deployment_region" {
-  #value = try((local.with_quota[random_integer.region_index[0].result]), local.region)
-  value = local.region
+  value = try(local.with_quota[random_integer.region_index[0].result], local.region)
 }
 
 output "regions_with_quota" {

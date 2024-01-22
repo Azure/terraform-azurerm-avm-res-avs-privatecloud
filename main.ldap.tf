@@ -113,7 +113,6 @@ resource "azapi_resource" "remove_existing_identity_source" {
 # Configure LDAP(s)
 #####################################################################################################################################
 resource "azapi_resource" "configure_identity_sources" {
-  #for_each = {for k,v in var.vcenter_identity_sources : k =>v if local.identity_matches[k] == false }
   for_each = var.vcenter_identity_sources
 
   type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"

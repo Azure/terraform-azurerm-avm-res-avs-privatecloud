@@ -29,18 +29,6 @@ locals {
 
 data "azurerm_subscription" "current" {}
 
-#file resource that depends on the resource group
-#set the file values during initial deployment
-#lifecycle don't modify content
-
-#have a cache file in the module example that sets the default values to null
-#query the quantity of private clouds in the current resource group
-#if the private clouds quantity is 0 then update the default values to the quota values
-#if the private clouds quantity is 1 then leave the existing values
-
-
-#if quantity > 0 then read the private cloud details
-
 #query the quota api for each test region
 data "azapi_resource_action" "quota" {
   for_each = toset(local.test_regions)
