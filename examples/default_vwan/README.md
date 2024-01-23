@@ -217,7 +217,9 @@ module "test_private_cloud" {
 
   expressroute_connections = {
     default = {
+      vwan_hub_connection              = true
       expressroute_gateway_resource_id = azurerm_express_route_gateway.vwan_express_route_gateway.id
+      authorization_key_name           = "test_auth_key"
     }
   }
 
