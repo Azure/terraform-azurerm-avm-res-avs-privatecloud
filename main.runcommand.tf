@@ -7,7 +7,7 @@ data "azapi_resource_list" "avs_run_command_executions" {
 
 #get a list of the current Microsoft Runcommands
 data "azapi_resource_list" "valid_run_commands_microsoft_avs" {
-  type = "Microsoft.AVS/privateClouds/scriptPackages/scriptCmdlets@2022-05-01"
+  type                   = "Microsoft.AVS/privateClouds/scriptPackages/scriptCmdlets@2022-05-01"
   parent_id              = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*"
   response_export_values = ["value"]
 }

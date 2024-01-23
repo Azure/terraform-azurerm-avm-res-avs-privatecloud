@@ -1,3 +1,30 @@
+<!-- BEGIN_TF_DOCS -->
+# Default AVS example with Vnet ExpressRoute Gateway
+
+This example demonstrates most of the deployment inputs using a single Azure VMware Solution private cloud with the following features and supporting test resources:
+
+    - A 3-node management cluster and an additional 3-node cluster
+    - The HCX Addon enabled with the Enterprise license sku
+    - An example HCX site key
+    - Diagnostic Settings to send the syslog and metrics to a Log Analytics workspace.
+    - Two domain controllers running a simple test active directory domain for use in demonstrating identity provider and dns functionality including
+        - Nat Gateway enabled for outbound internet access to download the configuration script from github
+        - Bastion enabled for accessing the domain controllers to use them for connecting to vcenter and nsxt for validation and testing
+    - A DNS forwarder zone for the test domain
+    - An update to the default NSX-T DNS service adding the custom domain forwarder zone
+    - An ExpressRoute authorization key
+    - An ExpressRoute Gateway connection to an example ExpressRoute gateway in a virtual network.
+    - A delete lock on the private cloud resource
+    - The system-managed identity enabled
+    - An Azure Netapp Files (ANF) Account, Pool, and Volume created in the same availalbility zone for testing external storage
+    - An external storage datastore created using the ANF volume and associated to the management cluster
+    - A role assignment assigning Contributor rights on the private cloud resource to the deployment user to demonstrate resource level RBAC
+    - A tags block to demonstrate the assignment of resource level tags
+    - A Vcenter identity sources block to demonstrate the use of the test domain for ldaps       
+
+The following example code uses several test modules, so be sure to include them and update the deployment regions if copying verbatim.
+
+```hcl
 terraform {
   required_version = ">= 1.6.0"
   required_providers {
@@ -321,3 +348,120 @@ module "test_private_cloud" {
 
 
 }
+```
+
+<!-- markdownlint-disable MD033 -->
+## Requirements
+
+The following requirements are needed by this module:
+
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.6.0)
+
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>=1.9.0)
+
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
+
+- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
+
+## Providers
+
+The following providers are used by this module:
+
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.7.0, < 4.0.0)
+
+- <a name="provider_local"></a> [local](#provider\_local)
+
+## Resources
+
+The following resources are used by this module:
+
+- [azurerm_log_analytics_workspace.this_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
+- [azurerm_nat_gateway.this_nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
+- [azurerm_nat_gateway_public_ip_association.this_nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_association) (resource)
+- [azurerm_public_ip.gatewaypip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_public_ip.nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_virtual_network_gateway.gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_gateway) (resource)
+- [local_file.region_sku_cache](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+
+<!-- markdownlint-disable MD013 -->
+## Required Inputs
+
+No required inputs.
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see https://aka.ms/avm/telemetryinfo.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+## Outputs
+
+No outputs.
+
+## Modules
+
+The following Modules are called:
+
+### <a name="module_avm-res-keyvault-vault"></a> [avm-res-keyvault-vault](#module\_avm-res-keyvault-vault)
+
+Source: Azure/avm-res-keyvault-vault/azurerm
+
+Version: >=0.3.0
+
+### <a name="module_create_anf_volume"></a> [create\_anf\_volume](#module\_create\_anf\_volume)
+
+Source: ../../modules/create_test_netapp_volume
+
+Version:
+
+### <a name="module_create_dc"></a> [create\_dc](#module\_create\_dc)
+
+Source: ../../modules/create_test_domain_controllers
+
+Version:
+
+### <a name="module_gateway_vnet"></a> [gateway\_vnet](#module\_gateway\_vnet)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm
+
+Version: >=0.1.3
+
+### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
+
+Source: ../../modules/generate_deployment_region
+
+Version:
+
+### <a name="module_naming"></a> [naming](#module\_naming)
+
+Source: Azure/naming/azurerm
+
+Version: >= 0.3.0
+
+### <a name="module_regions"></a> [regions](#module\_regions)
+
+Source: Azure/regions/azurerm
+
+Version: >= 0.4.0
+
+### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
+
+Source: ../../
+
+Version:
+
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+<!-- END_TF_DOCS -->

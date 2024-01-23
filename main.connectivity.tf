@@ -75,9 +75,9 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   name                             = each.key
   express_route_gateway_id         = each.value.expressroute_gateway_resource_id
   express_route_circuit_peering_id = data.azurerm_vmware_private_cloud.this_private_cloud.circuit[0].express_route_private_peering_id
-  authorization_key        = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
-  enable_internet_security = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
-  routing_weight           = each.value.routing_weight
+  authorization_key                = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+  enable_internet_security         = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
+  routing_weight                   = each.value.routing_weight
 
   dynamic "routing" {
     for_each = each.value.routing

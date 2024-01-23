@@ -3,6 +3,10 @@
 
 This repo is used for the Azure Verified Modules version of an Azure VMWare Solution Private Cloud resource.  It includes definitions for the following common AVM interface types: Tags, Locks, Resource Level Role Assignments, Diagnostic Settings, Managed Identity, and Customer Managed Keys.
 
+It leverages both the AzAPI and AzureRM providers to implement the child-level resources.
+
+> **\_NOTE:\_**  This module is not currently fully idempotent. Because run commands are used to implement the configuration of identity sources and run-commands don't have an effective data provider to do standard reads, we currently redeploy the run-command resource to get the identity provider state. Based on the output of the read, the delete and configure resources are also re-run and either set/update the identity values or run a second and/or third Get call to avoid making unnecessary changes.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -32,23 +36,39 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azapi_resource.addons](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.clusters](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.configure_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.current_status_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.dns_forwarder_zones](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.globalreach_connections](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.hcx_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.remove_existing_identity_source](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.srm_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.vr_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.dns_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.customer_managed_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azapi_update_resource.managed_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azurerm_express_route_connection.avs_private_cloud_connection](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
 - [azurerm_management_lock.this_private_cloud](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this_private_cloud_diags](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this_private_cloud](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_virtual_network_gateway_connection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_gateway_connection) (resource)
 - [azurerm_vmware_express_route_authorization.this_authorization_key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/vmware_express_route_authorization) (resource)
+- [azurerm_vmware_netapp_volume_attachment.attach_datastores](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/vmware_netapp_volume_attachment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [random_password.nsxt](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [random_password.vcenter](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [azapi_resource_action.avs_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_action.sddc_creds](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_list.avs_run_command_executions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azapi_resource_list.valid_run_commands_microsoft_avs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azurerm_key_vault.this_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) (data source)
 - [azurerm_resource_group.sddc_deployment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
+- [azurerm_vmware_private_cloud.this_private_cloud](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/vmware_private_cloud) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -83,49 +103,21 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_addons"></a> [addons](#input\_addons)
+### <a name="input_arc_enabled"></a> [arc\_enabled](#input\_arc\_enabled)
 
-Description:   A map of objects representing addons to include with the private cloud. The map key will be used as the name for the addon resource
+Description: Enable the ARC addon toggle value
 
-    map(object({  
-      addon\_type              = (Required) - A string designating the addon type to add. Valid values are Arc, HCX, SRM, and VR.  
-      vcenter\_resource\_id     = (Optional) - If the addon\_type is Arc, then this value should be included and represents the VMware Vcenter Resource ID for arc.  
-      offer                   = (Optional) - If the addon\_type is HCX, then this value should be configured.  Example text is "VMware MaaS Cloud Provider".  
-      license\_key             = (Optional) - If the addon\_type is SRM, then this value should be configured with the SRM license key value.  
-      vrs\_count               = (Optional) - If the addon\_type is VR, then this value should be set to the Vsphere Replication server count.
-    }))
+Type: `bool`
 
-    Example Input:
-    ```terraform
-      {
-        hcx = {
-        addon_type = "HCX"
-        offer      = "VMware MaaS Cloud Provider"
-        }
-      }
-```
-
-Type:
-
-```hcl
-map(object({
-    addon_type          = string
-    vcenter_resource_id = optional(string, null)
-    offer               = optional(string, null)
-    license_key         = optional(string, null)
-    vrs_count           = optional(number, 0)
-  }))
-```
-
-Default: `{}`
+Default: `false`
 
 ### <a name="input_clusters"></a> [clusters](#input\_clusters)
 
 Description:     This object describes additional clusters in the private cloud in addition to the management cluster. The map key will be used as the cluster name  
     map(object({  
       cluster\_node\_count = (required) - Integer number of nodes to include in this cluster between 3 and 16  
-      sku\_name           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created.
-
+      sku\_name           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created  
+    
     Example Input:
     ```terraform
        cluster1 = {
@@ -217,6 +209,44 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_dns_forwarder_zones"></a> [dns\_forwarder\_zones](#input\_dns\_forwarder\_zones)
+
+Description:     Map of string objects describing one or more dns forwarder zones for NSX within the private cloud. Up to 5 additional forwarder zone can be configured.   
+    This is primarily useful for identity source configurations or in cases where NSX DHCP is providing DNS configurations.  
+    map(object({  
+    display\_name   = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.  
+    dns\_server\_ips = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.  
+    domain\_names   = (Required) - A list of domain names that will be forwarded as part of this zone.  
+    revision       = (Optional) - NSX Revision number.  Defaults to 0  
+    source\_ip      = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
+  }))
+
+  Example Input:
+    ```terraform
+    {
+      exr_region_1 = {
+        expressroute_gateway_resource_id                     = "<expressRoute Gateway Resource ID>"
+        peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
+      }
+    }
+
+```
+
+Type:
+
+```hcl
+map(object({
+    display_name               = string
+    dns_server_ips             = list(string)
+    domain_names               = list(string)
+    revision                   = optional(number, 0)
+    source_ip                  = optional(string, "")
+    add_to_default_dns_service = optional(bool, false)
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_enable_stretch_cluster"></a> [enable\_stretch\_cluster](#input\_enable\_stretch\_cluster)
 
 Description: Set this value to true if deploying an AVS stretch cluster.
@@ -243,6 +273,93 @@ Type: `set(string)`
 
 Default: `[]`
 
+### <a name="input_expressroute_connections"></a> [expressroute\_connections](#input\_expressroute\_connections)
+
+Description:     Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.  
+    map(object({  
+    vwan\_hub\_connection                                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.  
+    expressroute\_gateway\_resource\_id                     = (Required) - The Azure Resource ID for the ExpressRoute gateway where the connection will be made.  
+    authorization\_key\_name                               = (Optional) - The authorization key name that should be used from the auth key map. If no key is provided a name will be generated from the map key.  
+    fast\_path\_enabled                                    = (Optional) - Should fast path gateway bypass be enabled. There are sku and cost considerations to be aware of when enabling fast path. Defaults to false  
+    routing\_weight                                       = (Optional) - The routing weight value to use for this connection.  Defaults to 0.  
+    enable\_internet\_security                             = (Optional) - Set this to true if connecting to a secure VWAN hub and you want the hub NVA to publish a default route to AVS.  
+    routing                                              = optional(map(object({  
+      associated\_route\_table\_resource\_id = (Optional) - The Azure Resource ID of the Virtual Hub Route Table associated with this Express Route Connection.  
+      inbound\_route\_map\_resource\_id      = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for inbound learned routes  
+      outbound\_route\_map\_resource\_id     = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for outbound advertised routes  
+      propagated\_route\_table = object({   
+        labels = (Optional) - The list of labels for route tables where the routes will be propagated to  
+        ids    = (Optional) - The list of Azure Resource IDs for route tables where the routes will be propagated to
+      })
+    })), null)
+  }))
+
+  Example Input:
+    ```terraform
+    {
+      exr_region_1 = {
+        expressroute_gateway_resource_id                     = "<expressRoute Gateway Resource ID>"
+        peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
+      }
+    }
+
+```
+
+Type:
+
+```hcl
+map(object({
+    vwan_hub_connection              = optional(bool, false)
+    expressroute_gateway_resource_id = string
+    authorization_key_name           = optional(string, null)
+    fast_path_enabled                = optional(bool, false)
+    routing_weight                   = optional(number, 0)
+    enable_internet_security         = optional(bool, false)
+    routing = optional(map(object({
+      associated_route_table_resource_id = optional(string, null)
+      inbound_route_map_resource_id      = optional(string, null)
+      outbound_route_map_resource_id     = optional(string, null)
+      propagated_route_table = optional(object({
+        labels = optional(list(string), [])
+        ids    = optional(list(string), [])
+      }), {})
+    })), {})
+  }))
+```
+
+Default: `{}`
+
+### <a name="input_global_reach_connections"></a> [global\_reach\_connections](#input\_global\_reach\_connections)
+
+Description:     Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.  
+    map(object({  
+      authorization\_key                     = (Required) - The authorization key from the peer expressroute   
+      peer\_expressroute\_circuit\_resource\_id = (Optional) - Identifier of the ExpressRoute Circuit to peer within the global reach connection
+      })
+    )
+
+  Example Input:
+    ```terraform
+    {
+      gr_region_1 = {
+        authorization_key                     = "<auth key value>"
+        peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
+      }
+    }
+
+```
+
+Type:
+
+```hcl
+map(object({
+    authorization_key                     = string
+    peer_expressroute_circuit_resource_id = string
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_hcx_enabled"></a> [hcx\_enabled](#input\_hcx\_enabled)
 
 Description: Enable the HCX addon toggle value
@@ -259,6 +376,14 @@ Type: `list(string)`
 
 Default: `[]`
 
+### <a name="input_hcx_license_type"></a> [hcx\_license\_type](#input\_hcx\_license\_type)
+
+Description: Describes which HCX license option to use.  Valid values are Advanced or Enterprise.
+
+Type: `string`
+
+Default: `"Advanced"`
+
 ### <a name="input_internet_enabled"></a> [internet\_enabled](#input\_internet\_enabled)
 
 Description: Configure the internet SNAT option to be on or off. Defaults to off.
@@ -266,6 +391,22 @@ Description: Configure the internet SNAT option to be on or off. Defaults to off
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_ldap_user"></a> [ldap\_user](#input\_ldap\_user)
+
+Description: The username for the domain user the vcenter will use to query LDAP(s)
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_ldap_user_password"></a> [ldap\_user\_password](#input\_ldap\_user\_password)
+
+Description: Password to use for the domain user the vcenter will use to query LDAP(s)
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -321,9 +462,9 @@ Type: `number`
 
 Default: `3`
 
-### <a name="input_netapp_files_attachments"></a> [netapp\_files\_attachments](#input\_netapp\_files\_attachments)
+### <a name="input_netapp_files_datastores"></a> [netapp\_files\_datastores](#input\_netapp\_files\_datastores)
 
-Description:     This map of objects describes one or more netapp volume attachments.  The map key will be used for the attachment name and should be unique.
+Description:     This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique.
 
     map(object({  
       netapp\_volume\_resource\_id = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.  
@@ -332,7 +473,7 @@ Description:     This map of objects describes one or more netapp volume attachm
 
     Example Input:
     ```terraform
-      cluster1_volume1 = {
+      anf_datastore_cluster1 = {
         netapp_volume_resource_id = azurerm_netapp_volume.test.id
         cluster_names             = ["Cluster-1"]
       }
@@ -418,6 +559,22 @@ Type: `number`
 
 Default: `null`
 
+### <a name="input_srm_enabled"></a> [srm\_enabled](#input\_srm\_enabled)
+
+Description: Enable the SRM addon toggle value
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_srm_license_key"></a> [srm\_license\_key](#input\_srm\_license\_key)
+
+Description: The license key to use for the SRM installation
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to this resource
@@ -435,37 +592,26 @@ Description:   A map of objects representing a list of 0-2 identity sources for 
       base\_group\_dn           = (Required) - The base distinguished name for groups  
       base\_user\_dn            = (Required) - The base distinguished name for users  
       domain                  = (Required) - The fully qualified domain name for the identity source  
+      group\_name              = (Optional) - The name of the LDAP group that will be added to the cloudadmins role  
+      name                    = (Required) - The name to give the identity source  
       password                = (Required) - Password to use for the domain user the vcenter will use to query LDAP(s)  
       primary\_server          = (Required) - The URI of the primary server. (Ex: ldaps://server.domain.local:636)  
       secondary\_server        = (Optional) - The URI of the secondary server. (Ex: ldaps://server.domain.local:636)  
-      ssl                     = (Optional) - Determines if ldap is configured to use ssl. Default to Enabled, valid values are "Enabled" and "Disabled"  
-      username                = (Required) - The username for the domain user the vcenter will use to query LDAP(s)
+      ssl                     = (Optional) - Determines if ldap is configured to use ssl. Default to Enabled, valid values are "Enabled" and "Disabled"
     }))
 
     Example Input:
     ```terraform
       {
-        dc01 = {
-          alias                   = "testdomain"
-          base_group_dn           = "dc=testdomain,dc=local"
-          base_user_dn            = "dc=testdomain,dc=local"
-          domain                  = "testdomain.local"
-          password                = "supersecretldapuserpassword"
+        test.local = {
+          alias                   = "test.local"
+          base_group_dn           = "dc=test,dc=local"
+          base_user_dn            = "dc=test,dc=local"
+          domain                  = "test.local"
+          name                    = "test.local"
           primary_server          = "ldaps://dc01.testdomain.local:636"
-          secondary_server        = "ldaps://dc01.testdomain.local:636"
-          ssl                     = "Enabled"
-          username                = "ldapuser"
-        },
-        dc02 = {
-          alias                   = "testdomain"
-          base_group_dn           = "dc=testdomain,dc=local"
-          base_user_dn            = "dc=testdomain,dc=local"
-          domain                  = "testdomain.local"
-          password                = "supersecretldapuserpassword"
-          primary_server          = "ldaps://dc02.testdomain.local:636"
           secondary_server        = "ldaps://dc02.testdomain.local:636"
           ssl                     = "Enabled"
-          username                = "ldapuser"
         }
       }
 ```
@@ -478,11 +624,12 @@ map(object({
     base_group_dn    = string
     base_user_dn     = string
     domain           = string
-    password         = string
+    group_name       = optional(string, null)
+    name             = string
     primary_server   = string
     secondary_server = optional(string, null)
     ssl              = optional(string, "Enabled")
-    username         = string
+    timeout          = optional(string, "10m")
   }))
 ```
 
@@ -496,13 +643,41 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_vr_enabled"></a> [vr\_enabled](#input\_vr\_enabled)
+
+Description: Enable the Vsphere Replication (VR) addon toggle value
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_vrs_count"></a> [vrs\_count](#input\_vrs\_count)
+
+Description: The total number of vsphere replication servers to deploy
+
+Type: `number`
+
+Default: `null`
+
 ## Outputs
 
 The following outputs are exported:
 
+### <a name="output_credentials"></a> [credentials](#output\_credentials)
+
+Description: n/a
+
+### <a name="output_id"></a> [id](#output\_id)
+
+Description: n/a
+
+### <a name="output_identity"></a> [identity](#output\_identity)
+
+Description: n/a
+
 ### <a name="output_private_cloud"></a> [private\_cloud](#output\_private\_cloud)
 
-Description: TODO: insert outputs here.
+Description: n/a
 
 ## Modules
 

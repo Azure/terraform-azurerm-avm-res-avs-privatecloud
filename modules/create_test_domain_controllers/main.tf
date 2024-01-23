@@ -102,7 +102,7 @@ data "template_file" "run_script" {
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = ">=0.4.0"
+  version = "=0.4.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
@@ -290,7 +290,7 @@ data "template_file" "run_script_secondary" {
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = ">=0.4.0"
+  version = "=0.4.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location

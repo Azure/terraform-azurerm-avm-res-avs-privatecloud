@@ -1,6 +1,7 @@
 # Default AVS example with Vnet ExpressRoute Gateway
 
-This example demonstrate a deployment with a single Azure VMware Solution private cloud with the following features.
+This example demonstrates a deployment with a single Azure VMware Solution private cloud with the following features:
+
     - A single 3-node management cluster
     - The HCX Addon enabled with the Enterprise license sku
     - An example HCX site key
