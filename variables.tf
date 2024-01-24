@@ -461,15 +461,96 @@ variable "dns_forwarder_zones" {
   Example Input:
     ```terraform
     {
-      exr_region_1 = {
-        expressroute_gateway_resource_id                     = "<expressRoute Gateway Resource ID>"
-        peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
+      test_local = {
+        display_name               = local.test_domain_name
+        dns_server_ips             = ["10.0.1.53","10.0.2.53"]
+        domain_names               = ["test.local"]
+        add_to_default_dns_service = true
       }
     }
 
   DNS_FORWARDER_ZONES
 
 }
+
+variable "dhcp_configuration" {
+  type = map(object({
+    display_name           = string
+    dhcp_type              = string
+    revision               = optional(number, 0)
+    relay_server_addresses = optional(list(string), [])
+    server_lease_time      = optional(number, 86400)
+    server_address         = optional(string, null)
+  }))
+  default     = {}
+  description = <<DHCP
+    This map object describes the DHCP configuration to use for the private cloud. It can remain unconfigured or define a RELAY or SERVER based configuration. Defaults to unconfigured. 
+    This allows for new segments to define DHCP ranges as part of their definition. Only one DHCP configuration is allowed.
+    map(object({
+    display_name   = (Required) - The display name for the dhcp configuration being created
+    dhcp_type      = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.
+    revision       = (Optional) - NSX Revision number.  Defaults to 0
+    relay_server_addresses = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.    
+    server_lease_time      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations
+    server_address         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
+  }))
+
+  Example Input:
+    ```terraform
+    #RELAY example
+    relay_config = {
+      display_name           = "relay_example"
+      dhcp_type              = "RELAY"
+      relay_server_addresses = ["10.0.1.50", "10.0.2.50"]      
+    }
+
+    #SERVER example
+    server_config = {
+      display_name      = "server_example"
+      dhcp_type         = "SERVER"
+      server_lease_time = 14400
+      server_address    = "10.1.0.1/24"
+    }
+
+  DHCP
+}
+
+variable "segments" {
+  type = map(object({
+    display_name      = string
+    gateway_address   = string
+    revision          = optional(number, 0)
+    dhcp_ranges       = optional(list(string), [])
+    connected_gateway = optional(string, null)
+  }))
+  default     = {}
+  description = <<SEGMENTS
+    This map object describes the additional segments to configure on the private cloud. It can remain unconfigured or define one or more new network segments. Defaults to unconfigured. 
+    If the connected_gateway value is left undefined, the configuration will default to using the default T1 gateway provisioned as part of the managed service.
+    map(object({
+    display_name       = (Required) - The display name for the dhcp configuration being created
+    gateway_address    = (Required) - The CIDR range to use for the segment
+    revision           = (Optional) - NSX Revision number.  Defaults to 0
+    dhcp_ranges        = (Optional) - One or more ranges of IP addresses or CIDR blocks entered as a list of string
+    connected_gateway  = (Optional) - The name of the T1 gateway to connect this segment to.  Defaults to the managed t1 gateway if left unconfigured.
+  }))
+
+  Example Input:
+    ```terraform
+    segment_1 = {
+      display_name    = "segment_1"
+      gateway_address = "10.20.0.1/24"
+      dhcp_ranges     = ["10.20.0.5-10.20.0.100"]      
+    }
+    segment_2 = {
+      display_name    = "segment_2"
+      gateway_address = "10.30.0.1/24"
+      dhcp_ranges     = ["10.30.0.0/24"]
+    }
+  SEGMENTS
+}
+
+
 
 variable "netapp_files_datastores" {
   type = map(object({
@@ -493,4 +574,26 @@ variable "netapp_files_datastores" {
       }
     ```
   NETAPP_FILES_ATTACHMENTS
+}
+
+variable "internet_inbound_public_ips" {
+  type = map(object({
+    number_of_ip_addresses = number
+  }))
+  default     = {}
+  description = <<PUBLIC_IPS
+    This map object that describes the public IP configuration. Configure this value in the event you need direct inbound access to the private cloud from the internet. The code uses the map key as the display name for each configuration.
+
+    map(object({
+      number_of_ip_addresses = (required) - The number of IP addresses to assign to this private cloud.
+    }))
+
+    Example Input:
+    ```terraform
+      public_ip_config = {
+        display_name = "public_ip_configuration"
+        number_of_ip_addresses = 1
+      }
+    ```
+  PUBLIC_IPS
 }

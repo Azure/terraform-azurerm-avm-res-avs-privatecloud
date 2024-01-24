@@ -1,17 +1,17 @@
 terraform {
-  required_version = ">= 1.6.0"
+  required_version = "~> 1.6.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.7.0, < 4.0.0"
+      version = "~> 3.74.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
+      version = "~> 3.5.0"
     }
     azapi = {
       source  = "Azure/azapi"
-      version = ">=1.9.0"
+      version = "~> 1.9.0"
     }
   }
 }
@@ -37,7 +37,7 @@ module "naming" {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = ">= 0.4.0"
+  version = "= 0.4.0"
 }
 
 locals {
@@ -57,7 +57,7 @@ module "generate_deployment_region" {
 
 resource "local_file" "region_sku_cache" {
   content  = jsonencode(module.generate_deployment_region.deployment_region)
-  filename = "${path.module}/region_cache.txt"
+  filename = "${path.module}/region_cache.cache"
   lifecycle {
     ignore_changes = [content]
   }
@@ -84,12 +84,40 @@ module "avm-res-keyvault-vault" {
     default_action = "Allow"
     bypass         = "AzureServices"
   }
+  keys = {
+    cmk_key = {
+      name     = "cmk-disk-key"
+      key_type = "RSA"
+      key_size = 2048
+
+      key_opts = [
+        "decrypt",
+        "encrypt",
+        "sign",
+        "unwrapKey",
+        "verify",
+        "wrapKey",
+      ]
+    }
+  }
 
   role_assignments = {
     deployment_user_secrets = {
       role_definition_id_or_name = "Key Vault Administrator"
       principal_id               = data.azurerm_client_config.current.object_id
     }
+    deployment_user_keys = { #give the deployment user access to keys
+      role_definition_id_or_name = "Key Vault Crypto Officer"
+      principal_id               = data.azurerm_client_config.current.object_id
+    }
+    system_managed_identity_keys = { #give the system assigned managed identity for the disk encryption set access to keys
+      role_definition_id_or_name = "Key Vault Crypto Officer"
+      principal_id               = module.test_private_cloud.identity.identity.principalId
+    }
+  }
+
+  wait_for_rbac_before_key_operations = {
+    create = "60s"
   }
 
   wait_for_rbac_before_secret_operations = {
@@ -119,7 +147,7 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = ">=0.1.3"
+  version = "=0.1.3"
 
   resource_group_name           = azurerm_resource_group.this.name
   virtual_network_address_space = ["10.100.0.0/16"]
@@ -232,7 +260,7 @@ module "create_anf_volume" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "0.1.0"
+  # version            = "=0.1.0"
 
   enable_telemetry        = var.enable_telemetry
   resource_group_name     = azurerm_resource_group.this.name
@@ -251,6 +279,21 @@ module "test_private_cloud" {
     Cluster_2 = {
       cluster_node_count = 3
       sku_name           = jsondecode(local_file.region_sku_cache.content).sku
+    }
+  }
+
+  customer_managed_key = {
+    key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
+    key_name              = module.avm-res-keyvault-vault.resource_keys.cmk_key.name
+    key_version           = module.avm-res-keyvault-vault.resource_keys.cmk_key.version
+  }
+
+  dhcp_configuration = {
+    server_config = {
+      display_name      = "test_dhcp"
+      dhcp_type         = "SERVER"
+      server_lease_time = 14400
+      server_address    = "10.101.0.1/24"
     }
   }
 
@@ -279,6 +322,12 @@ module "test_private_cloud" {
     }
   }
 
+  internet_inbound_public_ips = {
+    public_ip_config = {
+      number_of_ip_addresses = 1
+    }
+  }
+
   lock = {
     name = "lock-avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
     type = "CanNotDelete"
@@ -302,6 +351,18 @@ module "test_private_cloud" {
     }
   }
 
+  segments = {
+    segment_1 = {
+      display_name    = "segment_5"
+      gateway_address = "10.20.0.1/24"
+      dhcp_ranges     = ["10.20.0.5-10.20.0.100"]
+    }
+    segment_2 = {
+      display_name    = "segment_2"
+      gateway_address = "10.30.0.1/24"
+    }
+  }
+
   tags = {
     scenario = "avs_full_example"
   }
@@ -319,6 +380,4 @@ module "test_private_cloud" {
       ssl              = "Enabled"
     }
   }
-
-
 }

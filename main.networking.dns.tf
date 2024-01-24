@@ -30,6 +30,7 @@ resource "azapi_resource" "dns_forwarder_zones" {
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
@@ -60,6 +61,7 @@ data "azapi_resource_action" "avs_dns" {
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
@@ -71,13 +73,17 @@ data "azapi_resource_action" "avs_dns" {
 
 #modify the existing DNS Service (only allowing addition of FQDN zones currently)
 #resource "azapi_update_resource" "dns_service" {
+
+
+
 resource "azapi_resource_action" "dns_service" {
   #check to see if the fqdn_zones match.  If they don't, update the zones. The API doesn't handle this nicely if they match and the update is null
 
   type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2022-05-01"
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
   #if zone information is defined populate the properties. Otherwise send an empty body
-  body = try(jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.fqdnZones, []) != ([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]) ? jsonencode({
+  #body = try(jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.fqdnZones, []) != ([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]) ? jsonencode({
+  body = jsonencode({
     properties = {
       defaultDnsZone = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.defaultDnsZone
       displayName    = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.displayName
@@ -86,9 +92,11 @@ resource "azapi_resource_action" "dns_service" {
       logLevel       = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.logLevel
       revision       = 0
     }
-  }) : "{}"
+  })
+  #}) : "{}"
   #if zone information is defined, use the PATCH method.  Otherwise perform a GET operation to just do a read
-  method = try(jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.fqdnZones, []) != ([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]) ? "PATCH" : "GET"
+  #method = try(jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.fqdnZones, []) != ([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service]) ? "PATCH" : "GET"
+  method = "PATCH"
 
 
   depends_on = [
@@ -99,13 +107,13 @@ resource "azapi_resource_action" "dns_service" {
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
-    azapi_resource.dns_forwarder_zones,
-    azapi_resource_action.avs_dns
+    azapi_resource.dns_forwarder_zones
   ]
 
   timeouts {

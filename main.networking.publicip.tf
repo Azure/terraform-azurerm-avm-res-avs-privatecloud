@@ -1,19 +1,16 @@
-locals {
-  netapp_attachments = flatten([for ds_key, datastore in var.netapp_files_datastores : [
-    for cluster_name in datastore.cluster_names : {
-      attachment_name           = "${ds_key}-${cluster_name}"
-      netapp_volume_resource_id = datastore.netapp_volume_resource_id
-      cluster_name              = cluster_name
+#Create the segments
+resource "azapi_resource" "public_ip" {
+  for_each = var.internet_inbound_public_ips
+
+  type      = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2022-05-01"
+  name      = each.key
+  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  body = jsonencode({
+    properties = {
+      displayName       = each.key
+      numberOfPublicIPs = each.value.number_of_ip_addresses
     }
-  ]])
-}
-
-resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
-  for_each = { for datastore in local.netapp_attachments : datastore.attachment_name => datastore }
-
-  name              = each.value.attachment_name
-  netapp_volume_id  = each.value.netapp_volume_resource_id
-  vmware_cluster_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
+  })
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -35,6 +32,13 @@ resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
     azapi_resource.segments,
     azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
-    azapi_resource.configure_identity_sources
+    azapi_resource.configure_identity_sources,
+    azurerm_vmware_netapp_volume_attachment.attach_datastores
   ]
+
+  timeouts {
+    create = "4h"
+    delete = "4h"
+    update = "4h"
+  }
 }

@@ -11,6 +11,7 @@ This example demonstrates most of the deployment inputs using a single Azure VMw
         - Nat Gateway enabled for outbound internet access to download the configuration script from github
         - Bastion enabled for accessing the domain controllers to use them for connecting to vcenter and nsxt for validation and testing
     - A DNS forwarder zone for the test domain
+    - A DHCP server configured in NSX-T
     - An update to the default NSX-T DNS service adding the custom domain forwarder zone
     - An ExpressRoute authorization key
     - An ExpressRoute Gateway connection to an example ExpressRoute gateway in a virtual network.
@@ -26,19 +27,19 @@ The following example code uses several test modules, so be sure to include them
 
 ```hcl
 terraform {
-  required_version = ">= 1.6.0"
+  required_version = "~> 1.6.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.7.0, < 4.0.0"
+      version = "~> 3.74.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
+      version = "~> 3.5.0"
     }
     azapi = {
       source  = "Azure/azapi"
-      version = ">=1.9.0"
+      version = "~> 1.9.0"
     }
   }
 }
@@ -64,7 +65,7 @@ module "naming" {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = ">= 0.4.0"
+  version = "= 0.4.0"
 }
 
 locals {
@@ -111,12 +112,40 @@ module "avm-res-keyvault-vault" {
     default_action = "Allow"
     bypass         = "AzureServices"
   }
+  keys = {
+    cmk_key = {
+      name     = "cmk-disk-key"
+      key_type = "RSA"
+      key_size = 2048
+
+      key_opts = [
+        "decrypt",
+        "encrypt",
+        "sign",
+        "unwrapKey",
+        "verify",
+        "wrapKey",
+      ]
+    }
+  }
 
   role_assignments = {
     deployment_user_secrets = {
       role_definition_id_or_name = "Key Vault Administrator"
       principal_id               = data.azurerm_client_config.current.object_id
     }
+    deployment_user_keys = { #give the deployment user access to keys
+      role_definition_id_or_name = "Key Vault Crypto Officer"
+      principal_id               = data.azurerm_client_config.current.object_id
+    }
+    system_managed_identity_keys = { #give the system assigned managed identity for the disk encryption set access to keys
+      role_definition_id_or_name = "Key Vault Crypto Officer"
+      principal_id               = module.test_private_cloud.identity.id
+    }
+  }
+
+  wait_for_rbac_before_key_operations = {
+    create = "60s"
   }
 
   wait_for_rbac_before_secret_operations = {
@@ -146,7 +175,7 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = ">=0.1.3"
+  version = "=0.1.3"
 
   resource_group_name           = azurerm_resource_group.this.name
   virtual_network_address_space = ["10.100.0.0/16"]
@@ -259,7 +288,7 @@ module "create_anf_volume" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "0.1.0"
+  # version            = "=0.1.0"
 
   enable_telemetry        = var.enable_telemetry
   resource_group_name     = azurerm_resource_group.this.name
@@ -278,6 +307,21 @@ module "test_private_cloud" {
     Cluster_2 = {
       cluster_node_count = 3
       sku_name           = jsondecode(local_file.region_sku_cache.content).sku
+    }
+  }
+
+  customer_managed_key = {
+    key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
+    key_name              = module.avm-res-keyvault-vault.resource_keys.cmk_key.name
+    key_version           = module.avm-res-keyvault-vault.resource_keys.cmk_key.version
+  }
+
+  dhcp_configuration = {
+    server_config = {
+      display_name      = "test_dhcp"
+      dhcp_type         = "SERVER"
+      server_lease_time = 14400
+      server_address    = "10.101.0.1/24"
     }
   }
 
@@ -346,8 +390,6 @@ module "test_private_cloud" {
       ssl              = "Enabled"
     }
   }
-
-
 }
 ```
 
@@ -356,19 +398,19 @@ module "test_private_cloud" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.6.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>=1.9.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.9.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74.0)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5.0)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.7.0, < 4.0.0)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74.0)
 
 - <a name="provider_local"></a> [local](#provider\_local)
 
@@ -435,7 +477,7 @@ Version:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: >=0.1.3
+Version: =0.1.3
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
@@ -453,7 +495,7 @@ Version: >= 0.3.0
 
 Source: Azure/regions/azurerm
 
-Version: >= 0.4.0
+Version: = 0.4.0
 
 ### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
 

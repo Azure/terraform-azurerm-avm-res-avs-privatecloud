@@ -10,6 +10,7 @@ This example demonstrates most of the deployment inputs using a single Azure VMw
         - Nat Gateway enabled for outbound internet access to download the configuration script from github
         - Bastion enabled for accessing the domain controllers to use them for connecting to vcenter and nsxt for validation and testing
     - A DNS forwarder zone for the test domain
+    - A DHCP server configured in NSX-T
     - An update to the default NSX-T DNS service adding the custom domain forwarder zone
     - An ExpressRoute authorization key
     - An ExpressRoute Gateway connection to an example ExpressRoute gateway in a virtual network.

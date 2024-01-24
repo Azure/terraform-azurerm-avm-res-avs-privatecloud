@@ -141,6 +141,7 @@ Configuration dc {
             Password   = $Node.ldapUserPassword
             DomainName = $Node.ActiveDirectoryFQDN
             Path       = "CN=Users,$env:CADistinguishedNameSuffix"
+            DependsOn = '[WindowsFeature]ADCSCA' 
         }
     }
 }

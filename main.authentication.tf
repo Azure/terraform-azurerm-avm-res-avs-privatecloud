@@ -53,7 +53,7 @@ resource "azapi_update_resource" "managed_identity" {
       type = "systemassigned"
     }
   })
-  response_export_values = ["*"]
+  response_export_values = ["identity"]
 
   depends_on = [
     azapi_resource.this_private_cloud,

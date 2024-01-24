@@ -28,6 +28,7 @@ resource "azapi_resource" "globalreach_connections" {
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
     azapi_resource.vr_addon
   ]
@@ -56,6 +57,7 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
     azapi_resource.vr_addon
   ]
@@ -101,6 +103,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
     azapi_resource.vr_addon
   ]

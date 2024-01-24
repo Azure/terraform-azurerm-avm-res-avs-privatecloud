@@ -99,7 +99,8 @@ resource "azapi_resource" "srm_addon" {
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
-    azapi_resource.hcx_addon
+    azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys
   ]
 
   timeouts {
@@ -143,6 +144,7 @@ resource "azapi_resource" "vr_addon" {
     azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
     azapi_resource.srm_addon
   ]
 

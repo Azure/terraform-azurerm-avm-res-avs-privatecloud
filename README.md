@@ -39,6 +39,7 @@ The following resources are used by this module:
 - [azapi_resource.clusters](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.configure_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.current_status_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.dhcp](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.dns_forwarder_zones](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.globalreach_connections](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -164,6 +165,53 @@ object({
 
 Default: `null`
 
+### <a name="input_dhcp_configuration"></a> [dhcp\_configuration](#input\_dhcp\_configuration)
+
+Description:     This map object describes the DHCP configuration to use for the private cloud. It can remain unconfigured or define a RELAY or SERVER based configuration. Defaults to unconfigured.   
+    This allows for new segments to define DHCP ranges as part of their definition. Only one DHCP configuration is allowed.  
+    map(object({  
+    display\_name   = (Required) - The display name for the dhcp configuration being created  
+    dhcp\_type      = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.  
+    revision       = (Optional) - NSX Revision number.  Defaults to 0  
+    relay\_server\_addresses = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.    
+    server\_lease\_time      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations  
+    server\_address         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
+  }))
+
+  Example Input:
+    ```terraform
+    #RELAY example
+    relay_config = {
+      display_name           = "relay_example"
+      dhcp_type              = "RELAY"
+      relay_server_addresses = ["10.0.1.50", "10.0.2.50"]      
+    }
+
+    #SERVER example
+    server_config = {
+      display_name      = "server_example"
+      dhcp_type         = "SERVER"
+      server_lease_time = 14400
+      server_address    = "10.1.0.1/24"
+    }
+
+```
+
+Type:
+
+```hcl
+map(object({
+    display_name           = string
+    dhcp_type              = string
+    revision               = optional(number, 0)
+    relay_server_addresses = optional(list(string), [])
+    server_lease_time      = optional(number, 86400)
+    server_address         = optional(string, null)
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
 Description:   This map object is used to define the diagnostic settings on the virtual machine.  This functionality does not implement the diagnostic settings extension, but instead can be used to configure sending the vm metrics to one of the standard targets.  
@@ -224,9 +272,11 @@ Description:     Map of string objects describing one or more dns forwarder zone
   Example Input:
     ```terraform
     {
-      exr_region_1 = {
-        expressroute_gateway_resource_id                     = "<expressRoute Gateway Resource ID>"
-        peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
+      test_local = {
+        display_name               = local.test_domain_name
+        dns_server_ips             = ["10.0.1.53","10.0.2.53"]
+        domain_names               = ["test.local"]
+        add_to_default_dns_service = true
       }
     }
 

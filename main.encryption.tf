@@ -10,12 +10,13 @@ data "azurerm_key_vault" "this_vault" {
 resource "azapi_update_resource" "customer_managed_key" {
   count = var.customer_managed_key != null ? 1 : 0
 
-  type      = "Microsoft.AVS/privateClouds@2022-05-01"
-  name      = "${azapi_resource.this_private_cloud.name}-${var.customer_managed_key.key_name}"
-  parent_id = azapi_resource.this_private_cloud.id
+  type = "Microsoft.AVS/privateClouds@2022-05-01"
+  #name      = "${azapi_resource.this_private_cloud.name}-${var.customer_managed_key.key_name}"
+  resource_id = azapi_resource.this_private_cloud.id
   body = jsonencode({
     properties = {
       encryption = {
+        status = "Enabled"
         keyVaultProperties = {
           keyName     = var.customer_managed_key.key_name
           keyVaultUrl = data.azurerm_key_vault.this_vault[0].vault_uri

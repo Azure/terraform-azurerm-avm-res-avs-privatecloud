@@ -1,17 +1,17 @@
 terraform {
-  required_version = ">= 1.6.0"
+  required_version = "~>1.6.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.7.0, < 4.0.0"
+      version = "~> 3.7.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
+      version = "~> 3.5.0"
     }
     azapi = {
       source  = "Azure/azapi"
-      version = ">=1.9.0"
+      version = "~> 1.9.0"
     }
   }
 }
@@ -36,12 +36,12 @@ locals {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  version = "= 0.3.0"
 }
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = ">= 0.4.0"
+  version = "= 0.4.0"
 }
 
 data "azurerm_client_config" "current" {}
@@ -115,7 +115,7 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "vm_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = ">=0.1.3"
+  version = "=0.1.3"
 
   resource_group_name           = azurerm_resource_group.this.name
   virtual_network_address_space = ["10.100.0.0/16"]
@@ -177,7 +177,7 @@ module "avm-res-keyvault-vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "0.1.0"
+  # version            = "=0.1.0"
 
   enable_telemetry        = var.enable_telemetry
   resource_group_name     = azurerm_resource_group.this.name

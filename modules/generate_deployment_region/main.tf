@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~>1.9"
+    }
+  }
+}
 locals {
   test_regions     = ["southafricanorth", "eastasia", "canadacentral"]
   with_quota_av36  = try([for region in data.azapi_resource_action.quota : { name = split("/", region.resource_id)[6], sku = "av36" } if jsondecode(region.output).hostsRemaining.he >= var.total_quota_required], [])
