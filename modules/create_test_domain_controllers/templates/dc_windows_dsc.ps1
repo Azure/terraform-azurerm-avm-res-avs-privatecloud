@@ -168,6 +168,7 @@ Configuration dc {
             Category = 'Security'
             Path = "CN=Users,$env:CADistinguishedNameSuffix"
             DependsOn = '[ADUser]testAdmin' 
+            MembershipAttribute = 'DistinguishedName'
             Members = @(
                 "CN=" + $Node.testAdmin + ",CN=Users,$env:CADistinguishedNameSuffix"
             )
