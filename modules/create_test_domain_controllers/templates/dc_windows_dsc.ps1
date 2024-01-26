@@ -166,7 +166,7 @@ Configuration dc {
             Path = "CN=Users,$env:CADistinguishedNameSuffix"
             DependsOn = '[ADUser]testAdmin' 
             Members = @(
-                "CN=" + $Node.testAdmin + ",CN=Domain Users,CN=Users,$env:CADistinguishedNameSuffix"
+                "CN=" + $Node.testAdmin + ",CN=Users,$env:CADistinguishedNameSuffix"
             )
 
         }
