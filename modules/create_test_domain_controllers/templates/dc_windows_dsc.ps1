@@ -141,7 +141,7 @@ Configuration dc {
             UserName   = $Node.ldapUser
             Password   = $Node.ldapUserPassword
             DomainName = $Node.ActiveDirectoryFQDN
-            Path       = "CN=Domain Users,CN=Users,$env:CADistinguishedNameSuffix"
+            Path       = "CN=Users,$env:CADistinguishedNameSuffix"
             PasswordNeverExpires = $true
             DependsOn = '[WindowsFeature]ADCSCA' 
         }
@@ -153,7 +153,7 @@ Configuration dc {
             UserName   = $Node.testAdmin
             Password   = $Node.testAdminPassword 
             DomainName = $Node.ActiveDirectoryFQDN
-            Path       = "CN=Domain Users,CN=Users,$env:CADistinguishedNameSuffix"
+            Path       = "CN=Users,$env:CADistinguishedNameSuffix"
             PasswordNeverExpires = $true
             DependsOn = '[WindowsFeature]ADCSCA' 
         }
