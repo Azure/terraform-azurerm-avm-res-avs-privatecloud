@@ -137,6 +137,7 @@ Configuration dc {
         #create a regular user account for LDAP lookups
         ADUser 'ldapUser'
         {
+            PsDscRunAsCredential = $credObject
             Ensure     = 'Present'
             UserName   = $Node.ldapUser
             Password   = $Node.ldapUserPassword
@@ -149,6 +150,7 @@ Configuration dc {
         #create a regular user account for LDAP lookups
         ADUser 'testAdmin'
         {
+            PsDscRunAsCredential = $credObject
             Ensure     = 'Present'
             UserName   = $Node.testAdmin
             Password   = $Node.testAdminPassword 
@@ -160,6 +162,7 @@ Configuration dc {
 
         ADGroup 'vmwareAdmins' 
         {
+            PsDscRunAsCredential = $credObject
             GroupName = $Node.adminGroupName
             GroupScope = 'Global'
             Category = 'Security'
