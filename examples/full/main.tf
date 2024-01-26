@@ -268,12 +268,14 @@ module "test_private_cloud" {
   name                    = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
   sku_name                = jsondecode(local_file.region_sku_cache.content).sku
   avs_network_cidr        = "10.0.0.0/22"
-  internet_enabled        = false
+  internet_enabled        = true
   management_cluster_size = 3
   hcx_enabled             = true
   hcx_key_names           = ["test_site_key_1"]
-  ldap_user               = "${module.create_dc.ldap_user}@${module.create_dc.domain_fqdn}"
-  ldap_user_password      = module.create_dc.ldap_user_password
+  #ldap_user               = "${module.create_dc.ldap_user}@${module.create_dc.domain_fqdn}"
+  #ldap_user_password      = module.create_dc.ldap_user_password
+  ldap_user = "azureuser@test.local"
+  ldap_user_password = "V3VIZn[k!_H9Tpe|9|@9%|"
 
   clusters = {
     Cluster_2 = {
@@ -322,12 +324,6 @@ module "test_private_cloud" {
     }
   }
 
-  internet_inbound_public_ips = {
-    public_ip_config = {
-      number_of_ip_addresses = 1
-    }
-  }
-
   lock = {
     name = "lock-avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
     type = "CanNotDelete"
@@ -367,13 +363,15 @@ module "test_private_cloud" {
     scenario = "avs_full_example"
   }
 
+
   vcenter_identity_sources = {
     test_local = {
       alias            = module.create_dc.domain_netbios_name
       base_group_dn    = module.create_dc.domain_distinguished_name
       base_user_dn     = module.create_dc.domain_distinguished_name
       domain           = module.create_dc.domain_fqdn
-      group_name       = "Domain Users"
+      #group_name       = "Domain Users"
+      group_name        = "testgroup"
       name             = module.create_dc.domain_fqdn
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"

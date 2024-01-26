@@ -5,6 +5,7 @@
 resource "azapi_resource" "current_status_identity_sources" {
   type      = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
   name      = "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}" #increment the index number for the run command name using indexes
+  #name = "TF-AVM-GetIdentitySources"
   parent_id = azapi_resource.this_private_cloud.id
   body = jsonencode({
     properties = {
@@ -29,6 +30,7 @@ resource "azapi_resource" "current_status_identity_sources" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
     azapi_resource.dhcp,
@@ -69,12 +71,15 @@ resource "azapi_resource" "remove_existing_identity_source" {
   type                   = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
   parent_id              = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
+  /*
   name = ((try(local.identity_matches[each.key], true) == false &&                                                                            #the current values don't match the expected values
     try(local.cleaned_identity_sources_to_map["PrimaryUrl"], null) != null) ?                                                                 #And the primaryURL is currently configured
     "Remove-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Remove-ExternalIdentitySources"]) + 1)}" #Remove the identity sources    
     :
     "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 2)}" #Else run the Get command (increment by two in case the previous command also used get)
   )
+  */
+  name = "TF-AVM-RemoveIdentitySources"
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = (try(local.identity_matches[each.key], true) == false && #the current values don't match the expected values
     try(local.cleaned_identity_sources_to_map["PrimaryUrl"], null) != null) ? (
@@ -108,6 +113,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
     azapi_resource.dhcp,
@@ -125,6 +131,7 @@ resource "azapi_resource" "configure_identity_sources" {
 
   type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
   # if SSL is enabled use the LDAPS cmdlet, else use the LDAP cmdlet
+  /*
   name = (try(local.identity_matches[each.key], true) == false ?
     (
       each.value.ssl == "Enabled" ?
@@ -135,6 +142,8 @@ resource "azapi_resource" "configure_identity_sources" {
       "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 3)}"
     )
   )
+  */
+  name = "TF-AVM-SetIdentitySources"
   parent_id = azapi_resource.this_private_cloud.id
   body = (try(local.identity_matches[each.key], true) != false ?
     ( #Nothing needs to change, run the get action
@@ -261,6 +270,7 @@ resource "azapi_resource" "configure_identity_sources" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
     azapi_resource.dhcp,

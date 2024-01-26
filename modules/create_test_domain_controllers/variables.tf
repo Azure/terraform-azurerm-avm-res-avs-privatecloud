@@ -91,6 +91,12 @@ variable "ldap_user" {
   default     = "ldapuser"
 }
 
+variable "test_admin_user" {
+  type        = string
+  description = "the username to use for the account used to query ldap."
+  default     = "testAdmin"
+}
+
 variable "dc_vm_name_secondary" {
   type        = string
   description = "The name of the domain controller virtual machine."

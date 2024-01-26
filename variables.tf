@@ -386,6 +386,29 @@ variable "global_reach_connections" {
   GLOBAL_REACH_CONNECTIONS
 }
 
+variable "avs_interconnect_connections" {
+  type = map(object({
+    linked_private_cloud_resource_id = string
+  }))
+  default     = {}
+  description = <<INTERCONNECT
+    Map of string objects describing one or more private cloud interconnect connections for private clouds in the same region.  The map key will be used for the connection name.
+    map(object({
+      linked_private_cloud_resource_id = (Required) - The resource ID of the private cloud on the other side of the interconnect. Must be in the same region.
+      })
+    )
+
+  Example Input:
+    ```terraform
+    {
+      interconnect_sddc_1 = {
+        linked_private_cloud_resource_id = "<SDDC resource ID>"
+      }
+    }
+
+  INTERCONNECT
+}
+
 variable "expressroute_connections" {
   type = map(object({
     vwan_hub_connection              = optional(bool, false)

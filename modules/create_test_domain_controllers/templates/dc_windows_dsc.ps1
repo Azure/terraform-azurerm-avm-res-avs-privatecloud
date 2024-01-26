@@ -26,7 +26,7 @@ Set-DscLocalConfigurationManager -Path .\lcmConfig -Verbose
 
 [pscredential]$credObject = New-Object System.Management.Automation.PSCredential ("$env:ACTIVEDIRECTORYNETBIOS\$env:ADMINUSERNAME", (ConvertTo-SecureString "$env:ADMINPASSWORD" -AsPlainText -Force))
 [pscredential]$ldapUserPassword = New-Object System.Management.Automation.PSCredential("$env:ACTIVEDIRECTORYNETBIOS\$env:LDAPUSER", (ConvertTo-SecureString "$env:LDAPUSERPASSWORD" -AsPlainText -Force))
-
+[pscredential]$testAdminPassword = New-Object System.Management.Automation.PSCredential("$env:ACTIVEDIRECTORYNETBIOS\$env:TESTADMIN", (ConvertTo-SecureString "$env:TESTADMINPASSWORD" -AsPlainText -Force))
 Configuration dc {
    
     Import-DscResource -ModuleName PSDesiredStateConfiguration
@@ -133,6 +133,7 @@ Configuration dc {
             Name = 'RSAT-ADCS-Mgmt' 
             DependsOn = '[WindowsFeature]ADCSCA' 
         } 
+
         #create a regular user account for LDAP lookups
         ADUser 'ldapUser'
         {
@@ -140,8 +141,34 @@ Configuration dc {
             UserName   = $Node.ldapUser
             Password   = $Node.ldapUserPassword
             DomainName = $Node.ActiveDirectoryFQDN
-            Path       = "CN=Users,$env:CADistinguishedNameSuffix"
+            Path       = "CN=Domain Users,CN=Users,$env:CADistinguishedNameSuffix"
+            PasswordNeverExpires = $true
             DependsOn = '[WindowsFeature]ADCSCA' 
+        }
+
+        #create a regular user account for LDAP lookups
+        ADUser 'testAdmin'
+        {
+            Ensure     = 'Present'
+            UserName   = $Node.testAdmin
+            Password   = $Node.testAdminPassword 
+            DomainName = $Node.ActiveDirectoryFQDN
+            Path       = "CN=Domain Users,CN=Users,$env:CADistinguishedNameSuffix"
+            PasswordNeverExpires = $true
+            DependsOn = '[WindowsFeature]ADCSCA' 
+        }
+
+        ADGroup 'vmwareAdmins' 
+        {
+            GroupName = 'vmwareAdmins'
+            GroupScope = 'Global'
+            Category = 'Security'
+            Path = "CN=Users,$env:CADistinguishedNameSuffix"
+            DependsOn = '[ADUser]testAdmin' 
+            Members = @(
+                "CN=" + $Node.testAdmin + ",CN=Domain Users,CN=Users,$env:CADistinguishedNameSuffix"
+            )
+
         }
     }
 }
@@ -158,6 +185,8 @@ $cd = @{
             CADistinguishedNameSuffix = $env:CADISTINGUISHEDNAMESUFFIX
             ldapUser                  = $env:LDAPUSER
             ldapUserPassword          = $ldapUserPassword
+            testAdmin                 = $env:TESTADMIN
+            testAdminPassword         = $testAdminPassword
         }
     ) 
 }

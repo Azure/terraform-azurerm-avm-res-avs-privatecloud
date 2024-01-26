@@ -39,6 +39,7 @@ resource "azapi_resource" "segments" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
     azapi_resource.dhcp

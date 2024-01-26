@@ -59,7 +59,8 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
-    azapi_resource.vr_addon
+    azapi_resource.vr_addon,
+    azapi_resource.globalreach_connections
   ]
 
   lifecycle { ignore_changes = [express_route_circuit_id] } #TODO - determine why this is returning 'known after apply'
@@ -105,8 +106,40 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
     azapi_resource.srm_addon,
-    azapi_resource.vr_addon
+    azapi_resource.vr_addon,
+    azapi_resource.globalreach_connections,
+    azurerm_virtual_network_gateway_connection.this
   ]
 
   lifecycle { ignore_changes = [express_route_circuit_peering_id] } #TODO - determine why this is returning 'known after apply'
+}
+
+#create one or more cross SDDC regional connections
+resource "azapi_resource" "avs_interconnect" {
+  for_each = var.global_reach_connections
+
+  type      = "Microsoft.AVS/privateClouds/cloudLinks@2022-05-01"
+  name      = each.key
+  parent_id = azapi_resource.this_private_cloud.id
+  body = jsonencode({
+    properties = {
+      linkedCloud = each.value.linked_private_cloud_resource_id
+    }
+  })
+
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azapi_resource.globalreach_connections,
+    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection
+  ]
 }

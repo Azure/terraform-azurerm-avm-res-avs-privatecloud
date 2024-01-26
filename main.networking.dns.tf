@@ -28,7 +28,8 @@ resource "azapi_resource" "dns_forwarder_zones" {
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
-    azapi_resource.globalreach_connections
+    azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect
   ]
 
   timeouts {
@@ -60,6 +61,7 @@ data "azapi_resource_action" "avs_dns" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones
   ]
 }
@@ -99,6 +101,7 @@ resource "azapi_resource_action" "dns_service" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones
   ]
 
@@ -144,6 +147,7 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
     azurerm_express_route_connection.avs_private_cloud_connection,
     azurerm_virtual_network_gateway_connection.this,
     azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones
   ]
 
