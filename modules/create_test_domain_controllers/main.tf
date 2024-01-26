@@ -95,6 +95,7 @@ data "template_file" "run_script" {
     ldap_user_password           = random_password.ldap_password.result
     test_admin                   = var.test_admin_user
     test_admin_password          = random_password.test_admin_password.result
+    admin_group_name             = var.admin_group_name
     primary_admin_password       = module.testvm.admin_password
   }
 }
@@ -213,7 +214,7 @@ resource "azurerm_key_vault_secret" "ldap_password" {
 
 #store the testadmin user account in the key vault as a secret
 resource "azurerm_key_vault_secret" "test_admin_password" {
-  name         = "${var.test_admin}-password"
+  name         = "${var.test_admin_user}-password"
   value        = random_password.test_admin_password.result
   key_vault_id = var.key_vault_resource_id
 }
@@ -299,8 +300,9 @@ data "template_file" "run_script_secondary" {
     script_url                   = var.dc_dsc_script_url_secondary
     ldap_user                    = var.ldap_user
     ldap_user_password           = random_password.ldap_password.result
-    test_admin                   = var.ldap_user
-    test_admin_password          = random_password.ldap_password.result
+    test_admin                   = var.test_admin_user
+    test_admin_password          = random_password.test_admin_password.result
+    admin_group_name             = var.admin_group_name
     primary_admin_password       = module.testvm.admin_password
   }
 }

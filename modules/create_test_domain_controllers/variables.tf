@@ -97,6 +97,13 @@ variable "test_admin_user" {
   default     = "testAdmin"
 }
 
+variable "admin_group_name" {
+  type        = string
+  description = "the username to use for the account used to query ldap."
+  default     = "vcenterAdmins"
+  
+}
+
 variable "dc_vm_name_secondary" {
   type        = string
   description = "The name of the domain controller virtual machine."

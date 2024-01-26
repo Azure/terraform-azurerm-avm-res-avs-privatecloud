@@ -45,6 +45,8 @@ locals {
   test_domain_netbios = "test"
   test_domain_dn      = "dc=test,dc=local"
   ldap_user_name      = "ldapuser"
+  test_admin_user_name = "testadmin"
+  test_admin_group_name = "vcenterAdmins"
   dc_vm_sku           = "Standard_D2_v4"
 }
 
@@ -203,11 +205,14 @@ module "create_dc" {
   domain_netbios_name         = local.test_domain_netbios
   domain_distinguished_name   = local.test_domain_dn
   ldap_user                   = local.ldap_user_name
+  test_admin_user             = local.test_admin_user_name
+  admin_group_name            = local.test_admin_group_name
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
   virtual_network_resource_id = module.gateway_vnet.vnet-resource.id
 
   depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
 }
+
 
 resource "azurerm_log_analytics_workspace" "this_workspace" {
   name                = module.naming.log_analytics_workspace.name_unique
@@ -272,10 +277,8 @@ module "test_private_cloud" {
   management_cluster_size = 3
   hcx_enabled             = true
   hcx_key_names           = ["test_site_key_1"]
-  #ldap_user               = "${module.create_dc.ldap_user}@${module.create_dc.domain_fqdn}"
-  #ldap_user_password      = module.create_dc.ldap_user_password
-  ldap_user = "azureuser@test.local"
-  ldap_user_password = "V3VIZn[k!_H9Tpe|9|@9%|"
+  ldap_user               = "${module.create_dc.ldap_user}@${module.create_dc.domain_fqdn}"
+  ldap_user_password      = module.create_dc.ldap_user_password
 
   clusters = {
     Cluster_2 = {
@@ -308,6 +311,7 @@ module "test_private_cloud" {
     }
   }
 
+  
   dns_forwarder_zones = {
     test_local = {
       display_name               = local.test_domain_name
@@ -316,6 +320,7 @@ module "test_private_cloud" {
       add_to_default_dns_service = true
     }
   }
+  
 
   expressroute_connections = {
     default = {
@@ -363,7 +368,7 @@ module "test_private_cloud" {
     scenario = "avs_full_example"
   }
 
-
+  
   vcenter_identity_sources = {
     test_local = {
       alias            = module.create_dc.domain_netbios_name
@@ -371,11 +376,12 @@ module "test_private_cloud" {
       base_user_dn     = module.create_dc.domain_distinguished_name
       domain           = module.create_dc.domain_fqdn
       #group_name       = "Domain Users"
-      group_name        = "testgroup"
+      group_name        = "vcenterAdmins"
       name             = module.create_dc.domain_fqdn
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
       ssl              = "Enabled"
     }
   }
+  
 }

@@ -160,7 +160,7 @@ Configuration dc {
 
         ADGroup 'vmwareAdmins' 
         {
-            GroupName = 'vmwareAdmins'
+            GroupName = $Node.adminGroupName
             GroupScope = 'Global'
             Category = 'Security'
             Path = "CN=Users,$env:CADistinguishedNameSuffix"
@@ -187,6 +187,7 @@ $cd = @{
             ldapUserPassword          = $ldapUserPassword
             testAdmin                 = $env:TESTADMIN
             testAdminPassword         = $testAdminPassword
+            adminGroupName            = $env:ADMINGROUPNAME
         }
     ) 
 }

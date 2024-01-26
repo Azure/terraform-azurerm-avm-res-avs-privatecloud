@@ -10,10 +10,8 @@ $env:LDAPUSER = "${ldap_user}"
 $env:LDAPUSERPASSWORD = "${ldap_user_password}"
 $env:TESTADMIN = "${test_admin}"
 $env:TESTADMINPASSWORD = "${test_admin_password}"
+$env:ADMINGROUPNAME = "${admin_group_name}"
 $env:PRIMARYADMINPASSWORD = "${primary_admin_password}"
-
-
-
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
