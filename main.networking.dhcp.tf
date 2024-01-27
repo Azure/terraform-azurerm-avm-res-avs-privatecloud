@@ -10,7 +10,6 @@ resource "azapi_resource" "dhcp" {
       properties = {
         displayName     = each.value.display_name
         dhcpType        = upper(each.value.dhcp_type)
-        revision        = each.value.revision
         serverAddresses = each.value.relay_server_addresses
       }
     })
@@ -20,7 +19,6 @@ resource "azapi_resource" "dhcp" {
         displayName   = each.value.display_name
         dhcpType      = upper(each.value.dhcp_type)
         leaseTime     = each.value.server_lease_time
-        revision      = each.value.revision
         serverAddress = each.value.server_address
       }
     })

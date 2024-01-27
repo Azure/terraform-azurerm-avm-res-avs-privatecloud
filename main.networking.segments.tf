@@ -17,7 +17,6 @@ resource "azapi_resource" "segments" {
     properties = {
       connectedGateway = each.value.connected_gateway == null ? [for value in jsondecode(data.azapi_resource_action.avs_gateways.output).value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
       displayName      = each.value.display_name
-      revision         = each.value.revision
       subnet = {
         dhcpRanges     = each.value.dhcp_ranges
         gatewayAddress = each.value.gateway_address

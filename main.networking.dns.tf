@@ -10,8 +10,8 @@ resource "azapi_resource" "dns_forwarder_zones" {
       displayName  = each.value.display_name
       dnsServerIps = each.value.dns_server_ips
       domain       = each.value.domain_names
-      #revision     = each.value.revision
       sourceIp     = each.value.source_ip
+      #revision     = each.value.revision
     }
   })
 
@@ -79,7 +79,6 @@ resource "azapi_resource_action" "dns_service" {
       dnsServiceIp   = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.dnsServiceIp
       fqdnZones      = try([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service], [])
       logLevel       = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.logLevel
-      #revision       = 0
     }
   })
 
