@@ -41,13 +41,13 @@ module "regions" {
 }
 
 locals {
-  test_domain_name    = "test.local"
-  test_domain_netbios = "test"
-  test_domain_dn      = "dc=test,dc=local"
-  ldap_user_name      = "ldapuser"
-  test_admin_user_name = "testadmin"
+  test_domain_name      = "test.local"
+  test_domain_netbios   = "test"
+  test_domain_dn        = "dc=test,dc=local"
+  ldap_user_name        = "ldapuser"
+  test_admin_user_name  = "testadmin"
   test_admin_group_name = "vcenterAdmins"
-  dc_vm_sku           = "Standard_D2_v4"
+  dc_vm_sku             = "Standard_D2_v4"
 }
 
 data "azurerm_client_config" "current" {}
@@ -311,7 +311,7 @@ module "test_private_cloud" {
     }
   }
 
-  
+
   dns_forwarder_zones = {
     test_local = {
       display_name               = local.test_domain_name
@@ -320,7 +320,7 @@ module "test_private_cloud" {
       add_to_default_dns_service = true
     }
   }
-  
+
 
   expressroute_connections = {
     default = {
@@ -368,20 +368,20 @@ module "test_private_cloud" {
     scenario = "avs_full_example"
   }
 
-  
+
   vcenter_identity_sources = {
     test_local = {
-      alias            = module.create_dc.domain_netbios_name
-      base_group_dn    = module.create_dc.domain_distinguished_name
-      base_user_dn     = module.create_dc.domain_distinguished_name
-      domain           = module.create_dc.domain_fqdn
+      alias         = module.create_dc.domain_netbios_name
+      base_group_dn = module.create_dc.domain_distinguished_name
+      base_user_dn  = module.create_dc.domain_distinguished_name
+      domain        = module.create_dc.domain_fqdn
       #group_name       = "Domain Users"
-      group_name        = "vcenterAdmins"
+      group_name       = "vcenterAdmins"
       name             = module.create_dc.domain_fqdn
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
       ssl              = "Enabled"
     }
   }
-  
+
 }

@@ -127,11 +127,11 @@ variable "role_assignments" {
     delegated_managed_identity_resource_id = optional(string)
     }
   ))
-  default = {}
+  default  = {}
   nullable = false
 
-  description = <<VIRTUAL_MACHINE_ROLE_ASSIGNMENTS
-  A list of role definitions and scopes to be assigned as part of this resources implementation.  Two forms are supported. Assignments against this virtual machine resource scope and assignments to external resource scopes using the system managed identity.
+  description = <<ROLE_ASSIGNMENTS
+  A list of role definitions and scopes to be assigned as part of this resources implementation.  
   list(object({
 
     - `principal_id`                               = (optional) - The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to. Changing this forces a new resource to be created.
@@ -147,17 +147,15 @@ variable "role_assignments" {
   Example Inputs:
 
   ```terraform
-    #typical assignment example. It is also common for the scope resource ID to be a terraform resource reference like azurerm_resource_group.example.id
     role_assignments = {
       role_assignment_1 = {
-        #assign a built-in role to the virtual machine
-        role_definition_id_or_name                 = "Storage Blob Data Contributor"
+        role_definition_id_or_name                 = "Contributor"
         principal_id                               = data.azuread_client_config.current.object_id
-        description                                = "Example for assigning a role to an existing principal for the virtual machine scope"        
+        description                                = "Example for assigning a role to an existing principal for the Private Cloud scope"        
       }
     }
   ```
-  VIRTUAL_MACHINE_ROLE_ASSIGNMENTS
+  ROLE_ASSIGNMENTS
 }
 
 #Diagnostic Settings
@@ -165,9 +163,9 @@ variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
     log_categories                           = optional(set(string), [])
-    log_groups                               = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
     metric_categories                        = optional(set(string), ["AllMetrics"])
-    log_analytics_destination_type           = optional(string, null)
+    log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
     storage_account_resource_id              = optional(string, null)
     event_hub_authorization_rule_resource_id = optional(string, null)
@@ -182,8 +180,9 @@ variable "diagnostic_settings" {
     
     - `name`                                     = (required) - Name to use for the Diagnostic setting configuration.  Changing this creates a new resource
     - `log_categories_and_groups`                = (Optional) - List of strings used to define log categories and groups. Currently not valid for the VM resource
+    - `log_groups`                               = (Optional) - A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`
     - `metric_categories`                        = (Optional) - List of strings used to define metric categories. Currently only AllMetrics is valid
-    - `log_analytics_destination_type`           = (Optional) - Valid values are null, AzureDiagnostics, and Dedicated.  Defaults to null
+    - `log_analytics_destination_type`           = (Optional) - Valid values are null, AzureDiagnostics, and Dedicated.  Defaults to Dedicated
     - `workspace_resource_id`                    = (Optional) - The Log Analytics Workspace Azure Resource ID when sending logs or metrics to a Log Analytics Workspace
     - `storage_account_resource_id`              = (Optional) - The Storage Account Azure Resource ID when sending logs or metrics to a Storage Account
     - `event_hub_authorization_rule_resource_id` = (Optional) - The Event Hub Namespace Authorization Rule Resource ID when sending logs or metrics to an Event Hub Namespace
@@ -210,7 +209,9 @@ variable "managed_identities" {
   type = object({
     system_assigned = optional(bool, false)
   })
-  default = {}
+  default     = {}
+  nullable    = false
+  description = "This value toggles the system managed identity to on for use with customer managed keys. User Managed identities are currently unsupported for this resource. Defaults to false."
 }
 
 variable "lock" {
@@ -409,7 +410,7 @@ variable "avs_interconnect_connections" {
     linked_private_cloud_resource_id = string
   }))
   default     = {}
-  nullable = false
+  nullable    = false
   description = <<INTERCONNECT
     Map of string objects describing one or more private cloud interconnect connections for private clouds in the same region.  The map key will be used for the connection name.
     map(object({
@@ -449,8 +450,8 @@ variable "expressroute_connections" {
     })), {})
   }))
   default     = {}
-  nullable = false
-  description = <<GLOBAL_REACH_CONNECTIONS
+  nullable    = false
+  description = <<EXPRESSROUTE_CONNECTIONS
     Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
     map(object({
 
@@ -481,7 +482,7 @@ variable "expressroute_connections" {
       }
     }
     ```
-  GLOBAL_REACH_CONNECTIONS
+  EXPRESSROUTE_CONNECTIONS
 }
 
 variable "dns_forwarder_zones" {
@@ -493,7 +494,7 @@ variable "dns_forwarder_zones" {
     add_to_default_dns_service = optional(bool, false)
   }))
   default     = {}
-  nullable = false
+  nullable    = false
   description = <<DNS_FORWARDER_ZONES
     Map of string objects describing one or more dns forwarder zones for NSX within the private cloud. Up to 5 additional forwarder zone can be configured. 
     This is primarily useful for identity source configurations or in cases where NSX DHCP is providing DNS configurations.
@@ -531,7 +532,7 @@ variable "dhcp_configuration" {
     server_address         = optional(string, null)
   }))
   default     = {}
-  nullable = false
+  nullable    = false
   description = <<DHCP
     This map object describes the DHCP configuration to use for the private cloud. It can remain unconfigured or define a RELAY or SERVER based configuration. Defaults to unconfigured. 
     This allows for new segments to define DHCP ranges as part of their definition. Only one DHCP configuration is allowed.
@@ -573,7 +574,7 @@ variable "segments" {
     connected_gateway = optional(string, null)
   }))
   default     = {}
-  nullable = false
+  nullable    = false
   description = <<SEGMENTS
     This map object describes the additional segments to configure on the private cloud. It can remain unconfigured or define one or more new network segments. Defaults to unconfigured. 
     If the connected_gateway value is left undefined, the configuration will default to using the default T1 gateway provisioned as part of the managed service.
@@ -610,7 +611,7 @@ variable "netapp_files_datastores" {
     cluster_names             = set(string)
   }))
   default     = {}
-  nullable = false
+  nullable    = false
   description = <<NETAPP_FILES_ATTACHMENTS
     This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique. 
     map(object({
@@ -635,7 +636,7 @@ variable "internet_inbound_public_ips" {
     number_of_ip_addresses = number
   }))
   default     = {}
-  nullable = false
+  nullable    = false
   description = <<PUBLIC_IPS
     This map object that describes the public IP configuration. Configure this value in the event you need direct inbound access to the private cloud from the internet. The code uses the map key as the display name for each configuration.
     map(object({

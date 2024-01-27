@@ -15,19 +15,19 @@ This example demonstrates a deployment with a single Azure VMware Solution priva
 
 ```hcl
 terraform {
-  required_version = "~>1.6.0"
+  required_version = "~>1.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.7.0"
+      version = "~> 3.74"
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.5.0"
+      version = "~> 3.5"
     }
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 1.9.0"
+      version = "~> 1.9"
     }
   }
 }
@@ -52,7 +52,7 @@ locals {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "= 0.3.0"
+  version = "= 0.4.0"
 }
 
 module "regions" {
@@ -251,19 +251,19 @@ module "create_jump_vm" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.6.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.6)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.9.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.9)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.7.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5.0)
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.7.0)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
 
 - <a name="provider_local"></a> [local](#provider\_local)
 
@@ -332,7 +332,7 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: = 0.3.0
+Version: = 0.4.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 

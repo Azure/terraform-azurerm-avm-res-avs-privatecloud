@@ -101,7 +101,7 @@ variable "admin_group_name" {
   type        = string
   description = "the username to use for the account used to query ldap."
   default     = "vcenterAdmins"
-  
+
 }
 
 variable "dc_vm_name_secondary" {

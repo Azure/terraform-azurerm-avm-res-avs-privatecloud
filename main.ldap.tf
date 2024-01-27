@@ -3,8 +3,8 @@
 #####################################################################################################################################
 #get the current identity sources configuration
 resource "azapi_resource" "current_status_identity_sources" {
-  type      = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
-  name      = "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}" #increment the index number for the run command name using indexes
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
+  name = "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 1)}" #increment the index number for the run command name using indexes
   #name = "TF-AVM-GetIdentitySources"
   parent_id = azapi_resource.this_private_cloud.id
   body = jsonencode({
@@ -77,7 +77,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
     :
     "Get-ExternalIdentitySources-Exec${tostring(tonumber(local.run_command_microsoft_avs_indexes["Get-ExternalIdentitySources"]) + 2)}" #Else run the Get command (increment by two in case the previous command also used get)
   )
-  
+
   #name = "TF-AVM-RemoveIdentitySources"
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = (try(local.identity_matches[each.key], true) == false && #the current values don't match the expected values

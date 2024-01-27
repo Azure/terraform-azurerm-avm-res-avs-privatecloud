@@ -12,23 +12,23 @@ It leverages both the AzAPI and AzureRM providers to implement the child-level r
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.3.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (>=1.9.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.12)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0)
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (>=1.9.0)
+- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 1.12)
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.71.0)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
 
-- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0)
+- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
 - <a name="provider_time"></a> [time](#provider\_time)
 
@@ -36,6 +36,7 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.avs_interconnect](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.clusters](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.configure_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.current_status_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -44,11 +45,14 @@ The following resources are used by this module:
 - [azapi_resource.globalreach_connections](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.remove_existing_identity_source](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.segments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.srm_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vr_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.dns_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azapi_resource_action.dns_service_destroy_non_empty_start](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.customer_managed_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azapi_update_resource.managed_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_express_route_connection.avs_private_cloud_connection](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
@@ -64,6 +68,7 @@ The following resources are used by this module:
 - [random_password.vcenter](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_resource_action.avs_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_action.avs_gateways](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.sddc_creds](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_list.avs_run_command_executions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azapi_resource_list.valid_run_commands_microsoft_avs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
@@ -112,13 +117,45 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_avs_interconnect_connections"></a> [avs\_interconnect\_connections](#input\_avs\_interconnect\_connections)
+
+Description:     Map of string objects describing one or more private cloud interconnect connections for private clouds in the same region.  The map key will be used for the connection name.  
+    map(object({
+
+      - `linked_private_cloud_resource_id` = (Required) - The resource ID of the private cloud on the other side of the interconnect. Must be in the same region.
+
+      })
+    )
+
+  Example Input:
+    ```terraform
+    {
+      interconnect_sddc_1 = {
+        linked_private_cloud_resource_id = "<SDDC resource ID>"
+      }
+    }
+    
+```
+
+Type:
+
+```hcl
+map(object({
+    linked_private_cloud_resource_id = string
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_clusters"></a> [clusters](#input\_clusters)
 
 Description:     This object describes additional clusters in the private cloud in addition to the management cluster. The map key will be used as the cluster name  
-    map(object({  
-      cluster\_node\_count = (required) - Integer number of nodes to include in this cluster between 3 and 16  
-      sku\_name           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created  
+    map(object({
+
+      - `cluster_node_count` = (required) - Integer number of nodes to include in this cluster between 3 and 16
+      - `sku_name`           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created
     
+    ))}  
     Example Input:
     ```terraform
        cluster1 = {
@@ -142,6 +179,10 @@ Default: `{}`
 ### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
 
 Description:     This object defines the customer managed key details to use when encrypting the VSAN datastore.
+   
+    - `key_vault_resource_id` = (Required) - The full Azure resource ID of the key vault where the encryption key will be sourced from
+    - `key_name`              = (Required) - The name for the encryption key
+    - `key_version`           = (Optional) - The key version value for the encryption key.
 
     Example Inputs:
     ```terraform
@@ -157,25 +198,26 @@ Type:
 
 ```hcl
 object({
-    key_vault_resource_id = string
-    key_name              = string
+    key_vault_resource_id = optional(string, null)
+    key_name              = optional(string, null)
     key_version           = optional(string, null)
   })
 ```
 
-Default: `null`
+Default: `{}`
 
 ### <a name="input_dhcp_configuration"></a> [dhcp\_configuration](#input\_dhcp\_configuration)
 
 Description:     This map object describes the DHCP configuration to use for the private cloud. It can remain unconfigured or define a RELAY or SERVER based configuration. Defaults to unconfigured.   
     This allows for new segments to define DHCP ranges as part of their definition. Only one DHCP configuration is allowed.  
-    map(object({  
-    display\_name   = (Required) - The display name for the dhcp configuration being created  
-    dhcp\_type      = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.  
-    revision       = (Optional) - NSX Revision number.  Defaults to 0  
-    relay\_server\_addresses = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.    
-    server\_lease\_time      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations  
-    server\_address         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
+    map(object({
+
+    - `display_name`           = (Required) - The display name for the dhcp configuration being created
+    - `dhcp_type`              = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.
+    - `relay_server_addresses` = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.  
+    - `server_lease_time`      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations
+    - `server_address`         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
+
   }))
 
   Example Input:
@@ -194,7 +236,7 @@ Description:     This map object describes the DHCP configuration to use for the
       server_lease_time = 14400
       server_address    = "10.1.0.1/24"
     }
-
+    
 ```
 
 Type:
@@ -203,7 +245,6 @@ Type:
 map(object({
     display_name           = string
     dhcp_type              = string
-    revision               = optional(number, 0)
     relay_server_addresses = optional(list(string), [])
     server_lease_time      = optional(number, 86400)
     server_address         = optional(string, null)
@@ -215,16 +256,19 @@ Default: `{}`
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
 Description:   This map object is used to define the diagnostic settings on the virtual machine.  This functionality does not implement the diagnostic settings extension, but instead can be used to configure sending the vm metrics to one of the standard targets.  
-  map(object({  
-    name                                     = (required) - Name to use for the Diagnostic setting configuration.  Changing this creates a new resource  
-    log\_categories\_and\_groups                = (Optional) - List of strings used to define log categories and groups. Currently not valid for the VM resource  
-    metric\_categories                        = (Optional) - List of strings used to define metric categories. Currently only AllMetrics is valid  
-    log\_analytics\_destination\_type           = (Optional) - Valid values are null, AzureDiagnostics, and Dedicated.  Defaults to null  
-    workspace\_resource\_id                    = (Optional) - The Log Analytics Workspace Azure Resource ID when sending logs or metrics to a Log Analytics Workspace  
-    storage\_account\_resource\_id              = (Optional) - The Storage Account Azure Resource ID when sending logs or metrics to a Storage Account  
-    event\_hub\_authorization\_rule\_resource\_id = (Optional) - The Event Hub Namespace Authorization Rule Resource ID when sending logs or metrics to an Event Hub Namespace  
-    event\_hub\_name                           = (Optional) - The Event Hub name when sending logs or metrics to an Event Hub  
-    marketplace\_partner\_resource\_id          = (Optional) - The marketplace partner solution Azure Resource ID when sending logs or metrics to a partner integration
+  map(object({
+
+    - `name`                                     = (required) - Name to use for the Diagnostic setting configuration.  Changing this creates a new resource
+    - `log_categories_and_groups`                = (Optional) - List of strings used to define log categories and groups. Currently not valid for the VM resource
+    - `log_groups`                               = (Optional) - A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`
+    - `metric_categories`                        = (Optional) - List of strings used to define metric categories. Currently only AllMetrics is valid
+    - `log_analytics_destination_type`           = (Optional) - Valid values are null, AzureDiagnostics, and Dedicated.  Defaults to Dedicated
+    - `workspace_resource_id`                    = (Optional) - The Log Analytics Workspace Azure Resource ID when sending logs or metrics to a Log Analytics Workspace
+    - `storage_account_resource_id`              = (Optional) - The Storage Account Azure Resource ID when sending logs or metrics to a Storage Account
+    - `event_hub_authorization_rule_resource_id` = (Optional) - The Event Hub Namespace Authorization Rule Resource ID when sending logs or metrics to an Event Hub Namespace
+    - `event_hub_name`                           = (Optional) - The Event Hub name when sending logs or metrics to an Event Hub
+    - `marketplace_partner_resource_id`          = (Optional) - The marketplace partner solution Azure Resource ID when sending logs or metrics to a partner integration
+
   }))
 
   ```terraform
@@ -244,9 +288,9 @@ Type:
 map(object({
     name                                     = optional(string, null)
     log_categories                           = optional(set(string), [])
-    log_groups                               = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
     metric_categories                        = optional(set(string), ["AllMetrics"])
-    log_analytics_destination_type           = optional(string, null)
+    log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
     storage_account_resource_id              = optional(string, null)
     event_hub_authorization_rule_resource_id = optional(string, null)
@@ -261,12 +305,14 @@ Default: `{}`
 
 Description:     Map of string objects describing one or more dns forwarder zones for NSX within the private cloud. Up to 5 additional forwarder zone can be configured.   
     This is primarily useful for identity source configurations or in cases where NSX DHCP is providing DNS configurations.  
-    map(object({  
-    display\_name   = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.  
-    dns\_server\_ips = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.  
-    domain\_names   = (Required) - A list of domain names that will be forwarded as part of this zone.  
-    revision       = (Optional) - NSX Revision number.  Defaults to 0  
-    source\_ip      = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
+    map(object({
+
+    - `display_name`               = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.
+    - `dns_server_ips`             = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.
+    - `domain_names`               = (Required) - A list of domain names that will be forwarded as part of this zone.
+    - `source_ip`                  = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
+    - 'add\_to\_default\_dns\_service' = (Optional) - Set to try to associate this zone with the default DNS service.  Up to 5 zones can be linked.
+
   }))
 
   Example Input:
@@ -279,7 +325,7 @@ Description:     Map of string objects describing one or more dns forwarder zone
         add_to_default_dns_service = true
       }
     }
-
+    
 ```
 
 Type:
@@ -289,7 +335,6 @@ map(object({
     display_name               = string
     dns_server_ips             = list(string)
     domain_names               = list(string)
-    revision                   = optional(number, 0)
     source_ip                  = optional(string, "")
     add_to_default_dns_service = optional(bool, false)
   }))
@@ -326,20 +371,22 @@ Default: `[]`
 ### <a name="input_expressroute_connections"></a> [expressroute\_connections](#input\_expressroute\_connections)
 
 Description:     Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.  
-    map(object({  
-    vwan\_hub\_connection                                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.  
-    expressroute\_gateway\_resource\_id                     = (Required) - The Azure Resource ID for the ExpressRoute gateway where the connection will be made.  
-    authorization\_key\_name                               = (Optional) - The authorization key name that should be used from the auth key map. If no key is provided a name will be generated from the map key.  
-    fast\_path\_enabled                                    = (Optional) - Should fast path gateway bypass be enabled. There are sku and cost considerations to be aware of when enabling fast path. Defaults to false  
-    routing\_weight                                       = (Optional) - The routing weight value to use for this connection.  Defaults to 0.  
-    enable\_internet\_security                             = (Optional) - Set this to true if connecting to a secure VWAN hub and you want the hub NVA to publish a default route to AVS.  
-    routing                                              = optional(map(object({  
-      associated\_route\_table\_resource\_id = (Optional) - The Azure Resource ID of the Virtual Hub Route Table associated with this Express Route Connection.  
-      inbound\_route\_map\_resource\_id      = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for inbound learned routes  
-      outbound\_route\_map\_resource\_id     = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for outbound advertised routes  
-      propagated\_route\_table = object({   
-        labels = (Optional) - The list of labels for route tables where the routes will be propagated to  
-        ids    = (Optional) - The list of Azure Resource IDs for route tables where the routes will be propagated to
+    map(object({
+
+    - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
+    - `expressroute_gateway_resource_id`     = (Required) - The Azure Resource ID for the ExpressRoute gateway where the connection will be made.
+    - `authorization_key_name`               = (Optional) - The authorization key name that should be used from the auth key map. If no key is provided a name will be generated from the map key.
+    - `fast_path_enabled`                    = (Optional) - Should fast path gateway bypass be enabled. There are sku and cost considerations to be aware of when enabling fast path. Defaults to false
+    - `routing_weight`                       = (Optional) - The routing weight value to use for this connection.  Defaults to 0.
+    - `enable_internet_security`             = (Optional) - Set this to true if connecting to a secure VWAN hub and you want the hub NVA to publish a default route to AVS.
+    - `routing`                              =  Optional( map ( object({
+      - `associated_route_table_resource_id` = (Optional) - The Azure Resource ID of the Virtual Hub Route Table associated with this Express Route Connection.
+      - `inbound_route_map_resource_id`      = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for inbound learned routes
+      - `outbound_route_map_resource_id`     = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for outbound advertised routes
+      - `propagated_route_table` = object({
+        - `labels` = (Optional) - The list of labels for route tables where the routes will be propagated to
+        - `ids`    = (Optional) - The list of Azure Resource IDs for route tables where the routes will be propagated to
+
       })
     })), null)
   }))
@@ -352,7 +399,7 @@ Description:     Map of string objects describing one or more global reach conne
         peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
       }
     }
-
+    
 ```
 
 Type:
@@ -382,9 +429,11 @@ Default: `{}`
 ### <a name="input_global_reach_connections"></a> [global\_reach\_connections](#input\_global\_reach\_connections)
 
 Description:     Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.  
-    map(object({  
-      authorization\_key                     = (Required) - The authorization key from the peer expressroute   
-      peer\_expressroute\_circuit\_resource\_id = (Optional) - Identifier of the ExpressRoute Circuit to peer within the global reach connection
+    map(object({
+
+      - `authorization_key`                     = (Required) - The authorization key from the peer expressroute
+      - `peer_expressroute_circuit_resource_id` = (Optional) - Identifier of the ExpressRoute Circuit to peer within the global reach connection
+    
       })
     )
 
@@ -396,7 +445,7 @@ Description:     Map of string objects describing one or more global reach conne
         peer_expressroute_circuit_resource_id = "Azure Resource ID for the peer expressRoute circuit"'
       }
     }
-
+    
 ```
 
 Type:
@@ -432,7 +481,7 @@ Description: Describes which HCX license option to use.  Valid values are Advanc
 
 Type: `string`
 
-Default: `"Advanced"`
+Default: `"Enterprise"`
 
 ### <a name="input_internet_enabled"></a> [internet\_enabled](#input\_internet\_enabled)
 
@@ -441,6 +490,34 @@ Description: Configure the internet SNAT option to be on or off. Defaults to off
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_internet_inbound_public_ips"></a> [internet\_inbound\_public\_ips](#input\_internet\_inbound\_public\_ips)
+
+Description:     This map object that describes the public IP configuration. Configure this value in the event you need direct inbound access to the private cloud from the internet. The code uses the map key as the display name for each configuration.  
+    map(object({
+
+      - `number_of_ip_addresses` = (required) - The number of IP addresses to assign to this private cloud.
+
+    }))
+
+    Example Input:
+    ```terraform
+      public_ip_config = {
+        display_name = "public_ip_configuration"
+        number_of_ip_addresses = 1
+      }
+    
+```
+
+Type:
+
+```hcl
+map(object({
+    number_of_ip_addresses = number
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_ldap_user"></a> [ldap\_user](#input\_ldap\_user)
 
@@ -492,7 +569,7 @@ Default: `{}`
 
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
-Description: resource doesn't support user-assigned managed identities.
+Description: This value toggles the system managed identity to on for use with customer managed keys. User Managed identities are currently unsupported for this resource. Defaults to false.
 
 Type:
 
@@ -514,11 +591,12 @@ Default: `3`
 
 ### <a name="input_netapp_files_datastores"></a> [netapp\_files\_datastores](#input\_netapp\_files\_datastores)
 
-Description:     This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique.
+Description:     This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique.   
+    map(object({
 
-    map(object({  
-      netapp\_volume\_resource\_id = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.  
-      cluster\_names             = (required) - A set of cluster name(s) where this volume should be attached
+      - `netapp_volume_resource_id` = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.
+      - `cluster_names`             = (required) - A set of cluster name(s) where this volume should be attached
+
     }))
 
     Example Input:
@@ -559,27 +637,27 @@ Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description:   A list of role definitions and scopes to be assigned as part of this resources implementation.  Two forms are supported. Assignments against this virtual machine resource scope and assignments to external resource scopes using the system managed identity.  
-  list(object({  
-    principal\_id                               = (optional) - The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to. Changing this forces a new resource to be created.  
-    role\_definition\_id\_or\_name                 = (Optional) - The Scoped-ID of the Role Definition or the built-in role name. Changing this forces a new resource to be created. Conflicts with role\_definition\_name   
-    condition                                  = (Optional) - The condition that limits the resources that the role can be assigned to. Changing this forces a new resource to be created.  
-    condition\_version                          = (Optional) - The version of the condition. Possible values are 1.0 or 2.0. Changing this forces a new resource to be created.  
-    description                                = (Optional) - The description for this Role Assignment. Changing this forces a new resource to be created.  
-    skip\_service\_principal\_aad\_check           = (Optional) - If the principal\_id is a newly provisioned Service Principal set this value to true to skip the Azure Active Directory check which may fail due to replication lag. This argument is only valid if the principal\_id is a Service Principal identity. Defaults to true.  
-    delegated\_managed\_identity\_resource\_id     = (Optional) - The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created.  
+Description:   A list of role definitions and scopes to be assigned as part of this resources implementation.  
+  list(object({
+
+    - `principal_id`                               = (optional) - The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to. Changing this forces a new resource to be created.
+    - `role_definition_id_or_name`                 = (Optional) - The Scoped-ID of the Role Definition or the built-in role name. Changing this forces a new resource to be created. Conflicts with role\_definition\_name
+    - `condition`                                  = (Optional) - The condition that limits the resources that the role can be assigned to. Changing this forces a new resource to be created.
+    - `condition_version`                          = (Optional) - The version of the condition. Possible values are 1.0 or 2.0. Changing this forces a new resource to be created.
+    - `description`                                = (Optional) - The description for this Role Assignment. Changing this forces a new resource to be created.
+    - `skip_service_principal_aad_check`           = (Optional) - If the principal\_id is a newly provisioned Service Principal set this value to true to skip the Azure Active Directory check which may fail due to replication lag. This argument is only valid if the principal\_id is a Service Principal identity. Defaults to true.
+    - `delegated_managed_identity_resource_id`     = (Optional) - The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created.
+
   }))
 
   Example Inputs:
 
   ```terraform
-    #typical assignment example. It is also common for the scope resource ID to be a terraform resource reference like azurerm_resource_group.example.id
     role_assignments = {
       role_assignment_1 = {
-        #assign a built-in role to the virtual machine
-        role_definition_id_or_name                 = "Storage Blob Data Contributor"
+        role_definition_id_or_name                 = "Contributor"
         principal_id                               = data.azuread_client_config.current.object_id
-        description                                = "Example for assigning a role to an existing principal for the virtual machine scope"        
+        description                                = "Example for assigning a role to an existing principal for the Private Cloud scope"        
       }
     }
 ```
@@ -609,6 +687,47 @@ Type: `number`
 
 Default: `null`
 
+### <a name="input_segments"></a> [segments](#input\_segments)
+
+Description:     This map object describes the additional segments to configure on the private cloud. It can remain unconfigured or define one or more new network segments. Defaults to unconfigured.   
+    If the connected\_gateway value is left undefined, the configuration will default to using the default T1 gateway provisioned as part of the managed service.  
+    map(object({
+
+    - `display_name`       = (Required) - The display name for the dhcp configuration being created
+    - `gateway_address`    = (Required) - The CIDR range to use for the segment
+    - `dhcp_ranges`        = (Optional) - One or more ranges of IP addresses or CIDR blocks entered as a list of string
+    - `connected_gateway`  = (Optional) - The name of the T1 gateway to connect this segment to.  Defaults to the managed t1 gateway if left unconfigured.
+
+  }))
+
+  Example Input:
+    ```terraform
+    segment_1 = {
+      display_name    = "segment_1"
+      gateway_address = "10.20.0.1/24"
+      dhcp_ranges     = ["10.20.0.5-10.20.0.100"]      
+    }
+    segment_2 = {
+      display_name    = "segment_2"
+      gateway_address = "10.30.0.1/24"
+      dhcp_ranges     = ["10.30.0.0/24"]
+    }
+    
+```
+
+Type:
+
+```hcl
+map(object({
+    display_name      = string
+    gateway_address   = string
+    dhcp_ranges       = optional(list(string), [])
+    connected_gateway = optional(string, null)
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_srm_enabled"></a> [srm\_enabled](#input\_srm\_enabled)
 
 Description: Enable the SRM addon toggle value
@@ -635,19 +754,20 @@ Default: `{}`
 
 ### <a name="input_vcenter_identity_sources"></a> [vcenter\_identity\_sources](#input\_vcenter\_identity\_sources)
 
-Description:   A map of objects representing a list of 0-2 identity sources for configuring LDAP or LDAPs on the private cloud. The map key will be used as the name value for the identity source.
+Description:   A map of objects representing a list of 0-2 identity sources for configuring LDAP or LDAPs on the private cloud. The map key will be used as the name value for the identity source.  
+    map(object({
 
-    map(object({  
-      alias                   = (Required) - The domains NETBIOS name  
-      base\_group\_dn           = (Required) - The base distinguished name for groups  
-      base\_user\_dn            = (Required) - The base distinguished name for users  
-      domain                  = (Required) - The fully qualified domain name for the identity source  
-      group\_name              = (Optional) - The name of the LDAP group that will be added to the cloudadmins role  
-      name                    = (Required) - The name to give the identity source  
-      password                = (Required) - Password to use for the domain user the vcenter will use to query LDAP(s)  
-      primary\_server          = (Required) - The URI of the primary server. (Ex: ldaps://server.domain.local:636)  
-      secondary\_server        = (Optional) - The URI of the secondary server. (Ex: ldaps://server.domain.local:636)  
-      ssl                     = (Optional) - Determines if ldap is configured to use ssl. Default to Enabled, valid values are "Enabled" and "Disabled"
+      - `alias`             = (Required) - The domains NETBIOS name
+      - `base_group_dn`     = (Required) - The base distinguished name for groups
+      - `base_user_dn`      = (Required) - The base distinguished name for users
+      - `domain`            = (Required) - The fully qualified domain name for the identity source
+      - `group_name`        = (Optional) - The name of the LDAP group that will be added to the cloudadmins role
+      - `name`              = (Required) - The name to give the identity source
+      - `primary_server`    = (Required) - The URI of the primary server. (Ex: ldaps://server.domain.local:636)
+      - `secondary_server`  = (Optional) - The URI of the secondary server. (Ex: ldaps://server.domain.local:636)
+      - `ssl`               = (Optional) - Determines if ldap is configured to use ssl. Default to Enabled, valid values are "Enabled" and "Disabled"
+      - 'timeout'           = (Optional) - The implementation timeout value.  Defaults to 10 minutes.
+
     }))
 
     Example Input:
@@ -726,6 +846,10 @@ Description: n/a
 Description: n/a
 
 ### <a name="output_private_cloud"></a> [private\_cloud](#output\_private\_cloud)
+
+Description: n/a
+
+### <a name="output_test"></a> [test](#output\_test)
 
 Description: n/a
 
