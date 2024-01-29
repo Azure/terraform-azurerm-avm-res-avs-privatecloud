@@ -12,6 +12,7 @@ output "domain_fqdn" {
 }
 
 output "domain_distinguished_name" {
+  #value = "cn=users,${var.domain_distinguished_name}"
   value = var.domain_distinguished_name
 }
 
@@ -20,11 +21,13 @@ output "domain_netbios_name" {
 }
 
 output "ldap_user" {
-  value = var.ldap_user
+  value = "azureuser@${var.domain_fqdn}"
+  #value = "${var.ldap_user}@${var.domain_fqdn}"
 }
 
 output "ldap_user_password" {
-  value     = random_password.ldap_password.result
+  value     = module.testvm.admin_password
+  #value = random_password.ldap_password.result
   sensitive = true
 }
 
