@@ -305,7 +305,7 @@ module "test_private_cloud" {
   management_cluster_size = 3
   hcx_enabled             = true
   hcx_key_names           = ["test_site_key_1"]
-  ldap_user               = "${module.create_dc.ldap_user}@${module.create_dc.domain_fqdn}"
+  ldap_user               = module.create_dc.ldap_user
   ldap_user_password      = module.create_dc.ldap_user_password
 
   clusters = {
@@ -399,11 +399,10 @@ module "test_private_cloud" {
 
   vcenter_identity_sources = {
     test_local = {
-      alias         = module.create_dc.domain_netbios_name
-      base_group_dn = module.create_dc.domain_distinguished_name
-      base_user_dn  = module.create_dc.domain_distinguished_name
-      domain        = module.create_dc.domain_fqdn
-      #group_name       = "Domain Users"
+      alias            = module.create_dc.domain_netbios_name
+      base_group_dn    = module.create_dc.domain_distinguished_name
+      base_user_dn     = module.create_dc.domain_distinguished_name
+      domain           = module.create_dc.domain_fqdn
       group_name       = "vcenterAdmins"
       name             = module.create_dc.domain_fqdn
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"

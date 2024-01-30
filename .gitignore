@@ -37,4 +37,4 @@ override.tf.json
 terraform.rc
 
 #Ignore cache files
-.cache
+*.cache

@@ -371,10 +371,10 @@ module "test_private_cloud" {
 
   vcenter_identity_sources = {
     test_local = {
-      alias         = module.create_dc.domain_netbios_name
-      base_group_dn = module.create_dc.domain_distinguished_name
-      base_user_dn  = module.create_dc.domain_distinguished_name
-      domain        = module.create_dc.domain_fqdn
+      alias            = module.create_dc.domain_netbios_name
+      base_group_dn    = module.create_dc.domain_distinguished_name
+      base_user_dn     = module.create_dc.domain_distinguished_name
+      domain           = module.create_dc.domain_fqdn
       group_name       = "vcenterAdmins"
       name             = module.create_dc.domain_fqdn
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"

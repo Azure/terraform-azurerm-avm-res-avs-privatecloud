@@ -26,7 +26,7 @@ output "ldap_user" {
 }
 
 output "ldap_user_password" {
-  value     = module.testvm.admin_password
+  value = module.testvm.admin_password
   #value = random_password.ldap_password.result
   sensitive = true
 }
