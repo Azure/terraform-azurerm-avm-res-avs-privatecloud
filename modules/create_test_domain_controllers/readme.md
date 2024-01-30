@@ -1,0 +1,5 @@
+# Create test domain controllers
+
+This module creates test Active Directory infrastructure using Azure virtual machines. It provisions two virtual machines with Active Directory Domain Services and Active Directory Certificate Services using windows Powershell DSC for the configuration. The configuration also provisions a Bastion resource for connecting to the virtual machines to access the AVS vcenter and nsx-t consoles. Additional resources include certificates for use by DSC, modification of the DNS in the Vnet to allow for the domain join, and wait timers to allow for domain configuration processes to complete.
+
+This resource is intended to deploy uninterrupted. If a deployment is interrupted during deployment, it is likely that full functionality won't implement properly.  This is due to the need for sequencing and waits that are built into the deployment graph. If the deployment is stopped or fails prior to all resources in the module deploying, then it recommended that the full module be redeployed. It may also be required that the Vnet DNS be reverted to use Azure DNS Prior to re-deploying.
