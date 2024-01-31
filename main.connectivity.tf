@@ -44,10 +44,11 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
   location                     = local.location
   resource_group_name          = data.azurerm_resource_group.sddc_deployment.name
   express_route_gateway_bypass = each.value.fast_path_enabled
+  authorization_key            = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+  virtual_network_gateway_id   = each.value.expressroute_gateway_resource_id
+  express_route_circuit_id     = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
+  tags                         = each.value.tags == {} ? var.tags : each.value.tags
 
-  authorization_key          = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
-  virtual_network_gateway_id = each.value.expressroute_gateway_resource_id
-  express_route_circuit_id   = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -116,7 +117,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
 
 #create one or more cross SDDC regional connections
 resource "azapi_resource" "avs_interconnect" {
-  for_each = var.global_reach_connections
+  for_each = var.avs_interconnect_connections
 
   type      = "Microsoft.AVS/privateClouds/cloudLinks@2022-05-01"
   name      = each.key

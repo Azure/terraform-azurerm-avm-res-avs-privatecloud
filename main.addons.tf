@@ -180,4 +180,11 @@ resource "azapi_resource" "arc_addon" {
     ]
   }
 }
+
+variable "arc_enabled" {
+  type        = bool
+  description = "Enable the ARC addon toggle value"
+  default     = false
+}
+
 */

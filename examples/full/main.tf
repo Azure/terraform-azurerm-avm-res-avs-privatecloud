@@ -13,6 +13,10 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 1.12"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.10"
+    }
   }
 }
 
@@ -311,7 +315,6 @@ module "test_private_cloud" {
     }
   }
 
-
   dns_forwarder_zones = {
     test_local = {
       display_name               = local.test_domain_name
@@ -320,7 +323,6 @@ module "test_private_cloud" {
       add_to_default_dns_service = true
     }
   }
-
 
   expressroute_connections = {
     default = {
@@ -367,7 +369,6 @@ module "test_private_cloud" {
   tags = {
     scenario = "avs_full_example"
   }
-
 
   vcenter_identity_sources = {
     test_local = {

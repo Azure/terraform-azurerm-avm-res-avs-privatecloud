@@ -20,6 +20,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.10)
+
 ## Providers
 
 The following providers are used by this module:
@@ -30,7 +32,7 @@ The following providers are used by this module:
 
 - <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
-- <a name="provider_time"></a> [time](#provider\_time)
+- <a name="provider_time"></a> [time](#provider\_time) (~> 0.10)
 
 ## Resources
 
@@ -108,14 +110,6 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
-
-### <a name="input_arc_enabled"></a> [arc\_enabled](#input\_arc\_enabled)
-
-Description: Enable the ARC addon toggle value
-
-Type: `bool`
-
-Default: `false`
 
 ### <a name="input_avs_interconnect_connections"></a> [avs\_interconnect\_connections](#input\_avs\_interconnect\_connections)
 
@@ -360,14 +354,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_expressroute_auth_keys"></a> [expressroute\_auth\_keys](#input\_expressroute\_auth\_keys)
-
-Description: This set of strings defines one or more names to creating new expressroute authorization keys for the private cloud
-
-Type: `set(string)`
-
-Default: `[]`
-
 ### <a name="input_expressroute_connections"></a> [expressroute\_connections](#input\_expressroute\_connections)
 
 Description:     Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.  
@@ -412,6 +398,7 @@ map(object({
     fast_path_enabled                = optional(bool, false)
     routing_weight                   = optional(number, 0)
     enable_internet_security         = optional(bool, false)
+    tags                             = optional(map(string), {})
     routing = optional(map(object({
       associated_route_table_resource_id = optional(string, null)
       inbound_route_map_resource_id      = optional(string, null)
@@ -835,23 +822,19 @@ The following outputs are exported:
 
 ### <a name="output_credentials"></a> [credentials](#output\_credentials)
 
-Description: n/a
-
-### <a name="output_id"></a> [id](#output\_id)
-
-Description: n/a
+Description: This value returns the vcenter and nsxt cloudadmin credential values.
 
 ### <a name="output_identity"></a> [identity](#output\_identity)
 
-Description: n/a
+Description: This output returns the managed identity values if the managed identityt has been enabled on the module.
 
 ### <a name="output_private_cloud"></a> [private\_cloud](#output\_private\_cloud)
 
-Description: n/a
+Description: This output returns the full private cloud resource object properties.
 
-### <a name="output_test"></a> [test](#output\_test)
+### <a name="output_private_cloud_resource_id"></a> [private\_cloud\_resource\_id](#output\_private\_cloud\_resource\_id)
 
-Description: n/a
+Description: The azure resource if of the private cloud.
 
 ## Modules
 
