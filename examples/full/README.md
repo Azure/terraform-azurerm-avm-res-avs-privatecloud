@@ -41,6 +41,10 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 1.12"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.10"
+    }
   }
 }
 
@@ -82,7 +86,7 @@ data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
   source               = "../../modules/generate_deployment_region"
-  total_quota_required = 6
+  total_quota_required = 3
 }
 
 resource "local_file" "region_sku_cache" {
@@ -308,12 +312,14 @@ module "test_private_cloud" {
   ldap_user               = module.create_dc.ldap_user
   ldap_user_password      = module.create_dc.ldap_user_password
 
+  /* example for adding additional clusters
   clusters = {
     Cluster_2 = {
       cluster_node_count = 3
       sku_name           = jsondecode(local_file.region_sku_cache.content).sku
     }
   }
+  */
 
   customer_managed_key = {
     key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
@@ -339,7 +345,6 @@ module "test_private_cloud" {
     }
   }
 
-
   dns_forwarder_zones = {
     test_local = {
       display_name               = local.test_domain_name
@@ -348,7 +353,6 @@ module "test_private_cloud" {
       add_to_default_dns_service = true
     }
   }
-
 
   expressroute_connections = {
     default = {
@@ -396,7 +400,6 @@ module "test_private_cloud" {
     scenario = "avs_full_example"
   }
 
-
   vcenter_identity_sources = {
     test_local = {
       alias            = module.create_dc.domain_netbios_name
@@ -426,6 +429,8 @@ The following requirements are needed by this module:
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.10)
 
 ## Providers
 

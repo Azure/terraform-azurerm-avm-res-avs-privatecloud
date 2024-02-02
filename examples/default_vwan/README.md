@@ -29,6 +29,10 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 1.9"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.10"
+    }
   }
 }
 
@@ -258,6 +262,8 @@ The following requirements are needed by this module:
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.10)
 
 ## Providers
 

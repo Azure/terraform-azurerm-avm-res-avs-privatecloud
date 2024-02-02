@@ -50,27 +50,3 @@ resource "azapi_resource" "segments" {
     update = "4h"
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-output "test" {
-  value = [for value in jsondecode(data.azapi_resource_action.avs_dns.output).value : upper(value.name) if strcontains(value.name, "tnt")][0]
-}
