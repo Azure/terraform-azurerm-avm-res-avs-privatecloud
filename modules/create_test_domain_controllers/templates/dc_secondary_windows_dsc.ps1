@@ -44,6 +44,15 @@ Configuration dc {
 
     Node localhost
     {
+        #prefer ipv4 over ipv6
+        Registry "ipv4" 
+        {
+            Ensure      = "Present"  # You can also set Ensure to "Absent"
+            Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters"
+            ValueName   = "DisabledComponents"
+            ValueType   = "Dword"
+            ValueData   = "32"
+        }
         #Add the domain services feature
         WindowsFeature 'ad-domain-services'
         {
@@ -63,6 +72,15 @@ Configuration dc {
             Name                 = 'rsat-ad-powershell'
             Ensure               = 'Present'
         }
+
+        # Check if a reboot is needed before installing Exchange
+        PendingReboot beforeForestCheck
+        {
+            Name       = 'beforeForestCheck'
+            DependsOn  = '[Registry]ipv4'
+        }
+
+
         WaitForADDomain 'WaitForestAvailability'
         {
             DomainName = $Node.ActiveDirectoryFQDN
@@ -70,7 +88,7 @@ Configuration dc {
             RestartCount = 3
 
 
-            DependsOn  = '[WindowsFeature]rsat-ad-powershell'
+            DependsOn  = '[PendingReboot]beforeForestCheck'
         }
 
         #ADDomainController 'DomainControllerUsingExistingDNSServer'

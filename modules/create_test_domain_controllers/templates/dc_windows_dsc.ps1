@@ -41,6 +41,16 @@ Configuration dc {
 
     Node localhost
     {
+        #prefer ipv4 over ipv6
+        Registry "ipv4" 
+        {
+            Ensure      = "Present"  # You can also set Ensure to "Absent"
+            Key         = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters"
+            ValueName   = "DisabledComponents"
+            ValueType   = "Dword"
+            ValueData   = "32"
+        }
+
         #Add the domain services feature
         WindowsFeature 'ad-domain-services'
         {

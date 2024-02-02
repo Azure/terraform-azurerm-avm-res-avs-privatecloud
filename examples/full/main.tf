@@ -58,7 +58,7 @@ data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
   source               = "../../modules/generate_deployment_region"
-  total_quota_required = 6
+  total_quota_required = 3
 }
 
 resource "local_file" "region_sku_cache" {
@@ -284,12 +284,14 @@ module "test_private_cloud" {
   ldap_user               = module.create_dc.ldap_user
   ldap_user_password      = module.create_dc.ldap_user_password
 
+  /* example for adding additional clusters
   clusters = {
     Cluster_2 = {
       cluster_node_count = 3
       sku_name           = jsondecode(local_file.region_sku_cache.content).sku
     }
   }
+  */
 
   customer_managed_key = {
     key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
