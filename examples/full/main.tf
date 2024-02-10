@@ -20,18 +20,13 @@ terraform {
   }
 }
 
+# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
 provider "azurerm" {
-  features {}
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 module "naming" {
@@ -41,7 +36,7 @@ module "naming" {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "= 0.4.0"
+  version = "= 0.5.2"
 }
 
 locals {
@@ -78,9 +73,9 @@ resource "azurerm_resource_group" "this" {
   }
 }
 
-module "avm-res-keyvault-vault" {
+module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = ">=0.3.0"
+  version                = "0.5.1"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
@@ -198,7 +193,7 @@ module "create_dc" {
   resource_group_location     = azurerm_resource_group.this.location
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id       = module.avm-res-keyvault-vault.resource.id
+  key_vault_resource_id       = module.avm_res_keyvault_vault.resource.id
   create_bastion              = true
   bastion_name                = module.naming.bastion_host.name_unique
   bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
@@ -214,7 +209,7 @@ module "create_dc" {
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
   virtual_network_resource_id = module.gateway_vnet.vnet-resource.id
 
-  depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
+  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
 }
 
 
@@ -262,14 +257,14 @@ module "create_anf_volume" {
   anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
   anf_volume_size         = 2048
   anf_subnet_resource_id  = module.gateway_vnet.subnets["ANFSubnet"].id
-  anf_zone_number         = module.test_private_cloud.private_cloud.properties.availability.zone
+  anf_zone_number         = module.test_private_cloud.resource.properties.availability.zone
   anf_nfs_allowed_clients = ["0.0.0.0/0"]
 }
 
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.1.0"
+  # version            = "=0.1.1"
 
   enable_telemetry        = var.enable_telemetry
   resource_group_name     = azurerm_resource_group.this.name
@@ -279,10 +274,14 @@ module "test_private_cloud" {
   avs_network_cidr        = "10.0.0.0/22"
   internet_enabled        = true
   management_cluster_size = 3
-  hcx_enabled             = true
-  hcx_key_names           = ["test_site_key_1"]
-  ldap_user               = module.create_dc.ldap_user
-  ldap_user_password      = module.create_dc.ldap_user_password
+
+
+  addons = {
+    HCX = {
+      hcx_key_names    = ["example_key_1", "example_key_2"]
+      hcx_license_type = "Enterprise"
+    }
+  }
 
   /* example for adding additional clusters
   clusters = {
@@ -294,9 +293,9 @@ module "test_private_cloud" {
   */
 
   customer_managed_key = {
-    key_vault_resource_id = module.avm-res-keyvault-vault.resource.id
-    key_name              = module.avm-res-keyvault-vault.resource_keys.cmk_key.name
-    key_version           = module.avm-res-keyvault-vault.resource_keys.cmk_key.version
+    key_vault_resource_id = module.avm_res_keyvault_vault.resource.id
+    key_name              = module.avm_res_keyvault_vault.resource_keys.cmk_key.name
+    key_version           = module.avm_res_keyvault_vault.resource_keys.cmk_key.version
   }
 
   dhcp_configuration = {
@@ -358,7 +357,7 @@ module "test_private_cloud" {
 
   segments = {
     segment_1 = {
-      display_name    = "segment_5"
+      display_name    = "segment_1"
       gateway_address = "10.20.0.1/24"
       dhcp_ranges     = ["10.20.0.5-10.20.0.100"]
     }
@@ -383,6 +382,13 @@ module "test_private_cloud" {
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
       ssl              = "Enabled"
+    }
+  }
+
+  vcenter_identity_sources_credentials = {
+    test_local = {
+      ldap_user          = module.create_dc.ldap_user
+      ldap_user_password = module.create_dc.ldap_user_password
     }
   }
 

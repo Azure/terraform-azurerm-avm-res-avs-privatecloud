@@ -1,4 +1,4 @@
-output "private_cloud" {
+output "resource" {
   value       = jsondecode(azapi_resource.this_private_cloud.output)
   description = "This output returns the full private cloud resource object properties."
 }
@@ -11,7 +11,7 @@ output "credentials" {
 
 output "identity" {
   value       = var.managed_identities.system_assigned ? jsondecode(azapi_update_resource.managed_identity[0].output) : null
-  description = "This output returns the managed identity values if the managed identityt has been enabled on the module."
+  description = "This output returns the managed identity values if the managed identity has been enabled on the module."
 }
 
 output "private_cloud_resource_id" {

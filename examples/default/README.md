@@ -36,18 +36,13 @@ terraform {
   }
 }
 
+# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
 provider "azurerm" {
-  features {}
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 locals {
@@ -165,9 +160,9 @@ resource "azurerm_virtual_network_gateway" "gateway" {
   }
 }
 
-module "avm-res-keyvault-vault" {
+module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = "=0.5.1"
+  version                = "0.5.1"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
@@ -233,7 +228,7 @@ module "create_jump_vm" {
   resource_group_name        = azurerm_resource_group.this.name
   resource_group_location    = azurerm_resource_group.this.location
   vm_name                    = "jump-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id      = module.avm-res-keyvault-vault.resource.id
+  key_vault_resource_id      = module.avm_res_keyvault_vault.resource.id
   create_bastion             = true
   bastion_name               = module.naming.bastion_host.name_unique
   bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
@@ -241,7 +236,7 @@ module "create_jump_vm" {
   vm_subnet_resource_id      = module.gateway_vnet.subnets["VMSubnet"].id
   vm_sku                     = local.vm_sku
 
-  depends_on = [module.avm-res-keyvault-vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
+  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
 }
 ```
 
@@ -309,11 +304,11 @@ No outputs.
 
 The following Modules are called:
 
-### <a name="module_avm-res-keyvault-vault"></a> [avm-res-keyvault-vault](#module\_avm-res-keyvault-vault)
+### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: =0.5.1
+Version: 0.5.1
 
 ### <a name="module_create_jump_vm"></a> [create\_jump\_vm](#module\_create\_jump\_vm)
 

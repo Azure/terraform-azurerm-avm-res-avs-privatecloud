@@ -20,18 +20,13 @@ terraform {
   }
 }
 
+# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
 provider "azurerm" {
-  features {}
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 locals {
@@ -153,9 +148,9 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
   retention_in_days   = 30
 }
 
-module "avm-res-keyvault-vault" {
+module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = ">=0.3.0"
+  version                = "0.5.1"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
@@ -222,7 +217,7 @@ module "create_jump_vm" {
   resource_group_name        = azurerm_resource_group.this.name
   resource_group_location    = azurerm_resource_group.this.location
   vm_name                    = "jump-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id      = module.avm-res-keyvault-vault.resource.id
+  key_vault_resource_id      = module.avm_res_keyvault_vault.resource.id
   create_bastion             = true
   bastion_name               = module.naming.bastion_host.name_unique
   bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
@@ -230,5 +225,5 @@ module "create_jump_vm" {
   vm_subnet_resource_id      = module.vm_vnet.subnets["VMSubnet"].id
   vm_sku                     = local.vm_sku
 
-  depends_on = [module.avm-res-keyvault-vault, module.vm_vnet, azurerm_nat_gateway.this_nat_gateway]
+  depends_on = [module.avm_res_keyvault_vault, module.vm_vnet, azurerm_nat_gateway.this_nat_gateway]
 }

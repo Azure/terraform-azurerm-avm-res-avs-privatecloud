@@ -53,7 +53,7 @@ locals {
     try(v.secondary_server, null) != try(local.cleaned_identity_sources_to_map["FailoverUrl"], null) ||
     try(v.base_group_dn, null) != try(local.cleaned_identity_sources_to_map["GroupBaseDN"], null) ||
     try(v.base_user_dn, null) != try(local.cleaned_identity_sources_to_map["UserBaseDN"], null) ||
-    try(var.ldap_user, null) != try(local.cleaned_identity_sources_to_map["AuthenticationUsername"], null) ||
+    try(var.vcenter_identity_sources_credentials[k].ldap_user, null) != try(local.cleaned_identity_sources_to_map["AuthenticationUsername"], null) ||
     try(v.name, null) != try(local.cleaned_identity_sources_to_map["Name"], null)
   ) }
 }
@@ -161,8 +161,8 @@ resource "azapi_resource" "configure_identity_sources" {
           hiddenParameters = [{
             name     = "Credential"
             type     = "Credential"
-            username = var.ldap_user
-            password = var.ldap_user_password
+            username = var.vcenter_identity_sources_credentials[each.key].ldap_user
+            password = var.vcenter_identity_sources_credentials[each.key].ldap_user_password
           }]
           parameters = each.value.secondary_server != null ? [ #list with a primary and secondary server value
             {

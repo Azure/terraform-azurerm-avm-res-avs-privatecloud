@@ -32,16 +32,18 @@ The following providers are used by this module:
 
 - <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
+- <a name="provider_terraform"></a> [terraform](#provider\_terraform)
+
 - <a name="provider_time"></a> [time](#provider\_time) (~> 0.10)
 
 ## Resources
 
 The following resources are used by this module:
 
+- [azapi_resource.arc_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.avs_interconnect](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.clusters](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.configure_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.current_status_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.dhcp](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.dns_forwarder_zones](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.globalreach_connections](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -68,6 +70,7 @@ The following resources are used by this module:
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 - [random_password.nsxt](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [random_password.vcenter](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
+- [terraform_data.rerun_get](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_resource_action.avs_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.avs_gateways](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
@@ -110,6 +113,53 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_addons"></a> [addons](#input\_addons)
+
+Description:     Map object containing configurations for the different addon types.  Each addon type has associated fields and specific naming requirements.  A full input example is provided below.  
+    map(objet({
+    
+      - `arc_vcenter` (Optional) - The vmware vcenter resource id as a string
+      - `hcx_key_names` (Optional) - A list of key names to create HCX keys for.
+      - `hcx_license_type` (Optional) - The type of license to configure for HCX.  Valid values are "Advanced" and "Enterprise".
+      - `srm_license_key` (Optional) - the license key to use when enabling the SRM addOn
+      - `vr_vrs_count` (Optional) - The Vsphere replication server count
+
+    }))
+
+    Example Input:
+    ```terraform
+    {
+      Arc = {
+        arc_vcenter = "<vcenter resource id>"
+      }
+      HCX = {
+        hcx_key_names = ["key1", "key2"]
+        hcx_license_type = "Enterprise"
+      }
+      SRM = {
+        srm_license_key = "<srm license key value>"
+      }
+      VR = {
+        vr_vrs_count = 2
+      }
+    }
+    
+```
+
+Type:
+
+```hcl
+map(object({
+    arc_vcenter      = optional(string)
+    hcx_key_names    = optional(list(string), [])
+    hcx_license_type = optional(string, "Enterprise")
+    srm_license_key  = optional(string)
+    vr_vrs_count     = optional(number, 0)
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_avs_interconnect_connections"></a> [avs\_interconnect\_connections](#input\_avs\_interconnect\_connections)
 
@@ -446,30 +496,6 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_hcx_enabled"></a> [hcx\_enabled](#input\_hcx\_enabled)
-
-Description: Enable the HCX addon toggle value
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_hcx_key_names"></a> [hcx\_key\_names](#input\_hcx\_key\_names)
-
-Description: list of key names to use when generating hcx site activation keys. Requires HCX add\_on to be enabled.
-
-Type: `list(string)`
-
-Default: `[]`
-
-### <a name="input_hcx_license_type"></a> [hcx\_license\_type](#input\_hcx\_license\_type)
-
-Description: Describes which HCX license option to use.  Valid values are Advanced or Enterprise.
-
-Type: `string`
-
-Default: `"Enterprise"`
-
 ### <a name="input_internet_enabled"></a> [internet\_enabled](#input\_internet\_enabled)
 
 Description: Configure the internet SNAT option to be on or off. Defaults to off.
@@ -505,22 +531,6 @@ map(object({
 ```
 
 Default: `{}`
-
-### <a name="input_ldap_user"></a> [ldap\_user](#input\_ldap\_user)
-
-Description: The username for the domain user the vcenter will use to query LDAP(s)
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_ldap_user_password"></a> [ldap\_user\_password](#input\_ldap\_user\_password)
-
-Description: Password to use for the domain user the vcenter will use to query LDAP(s)
-
-Type: `string`
-
-Default: `null`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -715,22 +725,6 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_srm_enabled"></a> [srm\_enabled](#input\_srm\_enabled)
-
-Description: Enable the SRM addon toggle value
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_srm_license_key"></a> [srm\_license\_key](#input\_srm\_license\_key)
-
-Description: The license key to use for the SRM installation
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to this resource
@@ -792,27 +786,42 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_vcenter_identity_sources_credentials"></a> [vcenter\_identity\_sources\_credentials](#input\_vcenter\_identity\_sources\_credentials)
+
+Description:   A map of objects representing the credentials used for the identity source connection. The map key should match the vcenter identity source that uses these values. Separating this to avoid terraform issues with apply on secrets.  
+    map(object({
+
+      - `ldap_user`          = (Required) - "The username for the domain user the vcenter will use to query LDAP(s)"
+      - `ldap_user_password` = (Required) - "Password to use for the domain user the vcenter will use to query LDAP(s)"
+
+    }))
+
+    Example Input:
+    ```terraform
+      {
+        test.local = {
+          ldap_user               = "user@test.local"
+          ldap_user_password      = module.create_dc.ldap_user_password
+        }
+      }
+```
+
+Type:
+
+```hcl
+map(object({
+    ldap_user          = string
+    ldap_user_password = string
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_vcenter_password"></a> [vcenter\_password](#input\_vcenter\_password)
 
 Description: The password value to use for the cloudadmin account password in the local domain in vcenter. If this is left as null a random password will be generated for the deployment
 
 Type: `string`
-
-Default: `null`
-
-### <a name="input_vr_enabled"></a> [vr\_enabled](#input\_vr\_enabled)
-
-Description: Enable the Vsphere Replication (VR) addon toggle value
-
-Type: `bool`
-
-Default: `false`
-
-### <a name="input_vrs_count"></a> [vrs\_count](#input\_vrs\_count)
-
-Description: The total number of vsphere replication servers to deploy
-
-Type: `number`
 
 Default: `null`
 
@@ -826,15 +835,15 @@ Description: This value returns the vcenter and nsxt cloudadmin credential value
 
 ### <a name="output_identity"></a> [identity](#output\_identity)
 
-Description: This output returns the managed identity values if the managed identityt has been enabled on the module.
-
-### <a name="output_private_cloud"></a> [private\_cloud](#output\_private\_cloud)
-
-Description: This output returns the full private cloud resource object properties.
+Description: This output returns the managed identity values if the managed identity has been enabled on the module.
 
 ### <a name="output_private_cloud_resource_id"></a> [private\_cloud\_resource\_id](#output\_private\_cloud\_resource\_id)
 
 Description: The azure resource if of the private cloud.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: This output returns the full private cloud resource object properties.
 
 ## Modules
 
