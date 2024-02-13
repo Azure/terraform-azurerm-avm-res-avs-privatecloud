@@ -52,7 +52,8 @@ locals {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  source               = "../../modules/generate_deployment_region"
+  #source               = "../../modules/generate_deployment_region"
+  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -187,7 +188,8 @@ module "gateway_vnet" {
 }
 
 module "create_dc" {
-  source = "../../modules/create_test_domain_controllers"
+  #source = "../../modules/create_test_domain_controllers"
+  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_domain_controllers"
 
   resource_group_name         = azurerm_resource_group.this.name
   resource_group_location     = azurerm_resource_group.this.location
@@ -247,7 +249,8 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 }
 
 module "create_anf_volume" {
-  source = "../../modules/create_test_netapp_volume"
+  #source = "../../modules/create_test_netapp_volume"
+  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_netapp_volume"
 
   resource_group_name     = azurerm_resource_group.this.name
   resource_group_location = azurerm_resource_group.this.location
@@ -382,7 +385,7 @@ module "test_private_cloud" {
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
       ssl              = "Enabled"
-    }    
+    }
   }
 
   vcenter_identity_sources_credentials = {

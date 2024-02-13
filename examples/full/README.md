@@ -80,7 +80,8 @@ locals {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  source               = "../../modules/generate_deployment_region"
+  #source               = "../../modules/generate_deployment_region"
+  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -215,7 +216,8 @@ module "gateway_vnet" {
 }
 
 module "create_dc" {
-  source = "../../modules/create_test_domain_controllers"
+  #source = "../../modules/create_test_domain_controllers"
+  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_domain_controllers"
 
   resource_group_name         = azurerm_resource_group.this.name
   resource_group_location     = azurerm_resource_group.this.location
@@ -275,7 +277,8 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 }
 
 module "create_anf_volume" {
-  source = "../../modules/create_test_netapp_volume"
+  #source = "../../modules/create_test_netapp_volume"
+  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_netapp_volume"
 
   resource_group_name     = azurerm_resource_group.this.name
   resource_group_location = azurerm_resource_group.this.location
@@ -495,13 +498,13 @@ Version: 0.5.1
 
 ### <a name="module_create_anf_volume"></a> [create\_anf\_volume](#module\_create\_anf\_volume)
 
-Source: ../../modules/create_test_netapp_volume
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_netapp_volume
 
 Version:
 
 ### <a name="module_create_dc"></a> [create\_dc](#module\_create\_dc)
 
-Source: ../../modules/create_test_domain_controllers
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_domain_controllers
 
 Version:
 
@@ -513,7 +516,7 @@ Version: =0.1.3
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
-Source: ../../modules/generate_deployment_region
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region
 
 Version:
 

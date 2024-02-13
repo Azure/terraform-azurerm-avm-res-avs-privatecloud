@@ -62,7 +62,8 @@ module "regions" {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  source               = "../../modules/generate_deployment_region"
+  #source               = "../../modules/generate_deployment_region"
+  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -192,7 +193,7 @@ module "avm_res_keyvault_vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.1.0"
+  # version            = "=0.1.1"
 
   enable_telemetry        = var.enable_telemetry
   resource_group_name     = azurerm_resource_group.this.name
@@ -202,8 +203,13 @@ module "test_private_cloud" {
   avs_network_cidr        = "10.0.0.0/22"
   internet_enabled        = false
   management_cluster_size = 3
-  hcx_enabled             = true
-  hcx_key_names           = ["test_site_key_1"]
+
+  addons = {
+    HCX = {
+      hcx_key_names    = ["example_key_1", "example_key_2"]
+      hcx_license_type = "Enterprise"
+    }
+  }
 
   diagnostic_settings = {
     avs_diags = {
@@ -228,7 +234,9 @@ module "test_private_cloud" {
 }
 
 module "create_jump_vm" {
-  source = "../../modules/create_jump_vm"
+  #source = "../../modules/create_jump_vm"
+  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm"
+
 
   resource_group_name        = azurerm_resource_group.this.name
   resource_group_location    = azurerm_resource_group.this.location
@@ -319,13 +327,13 @@ Version: 0.5.1
 
 ### <a name="module_create_jump_vm"></a> [create\_jump\_vm](#module\_create\_jump\_vm)
 
-Source: ../../modules/create_jump_vm
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm
 
 Version:
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
-Source: ../../modules/generate_deployment_region
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region
 
 Version:
 
