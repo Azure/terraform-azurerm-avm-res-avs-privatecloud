@@ -31,7 +31,7 @@ resource "azapi_resource" "public_ip" {
     azapi_resource_action.dns_service,
     azapi_resource.dhcp,
     azapi_resource.segments,
-    azapi_resource.current_status_identity_sources,
+    #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources,
     azurerm_vmware_netapp_volume_attachment.attach_datastores

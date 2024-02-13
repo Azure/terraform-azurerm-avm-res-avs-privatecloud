@@ -16,6 +16,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
   parent_id              = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
   name                   = "TF-AVM-RemoveIdentitySources-${each.key}"
+  schema_validation_enabled = false
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = (jsonencode({ #remove the current identity source
     properties = {
@@ -46,7 +47,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
     azapi_resource_action.dns_service,
     azapi_resource.dhcp,
     azapi_resource.segments,
-    azapi_resource.current_status_identity_sources
+    #azapi_resource.current_status_identity_sources
   ]
 
   lifecycle {
@@ -183,7 +184,7 @@ resource "azapi_resource" "configure_identity_sources" {
     azapi_resource_action.dns_service,
     azapi_resource.dhcp,
     azapi_resource.segments,
-    azapi_resource.current_status_identity_sources,
+    #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source
   ]
 

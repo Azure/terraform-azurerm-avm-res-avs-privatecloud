@@ -382,7 +382,7 @@ module "test_private_cloud" {
       primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
       secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
       ssl              = "Enabled"
-    }
+    }    
   }
 
   vcenter_identity_sources_credentials = {
