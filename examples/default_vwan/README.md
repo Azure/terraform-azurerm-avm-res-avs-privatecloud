@@ -36,18 +36,13 @@ terraform {
   }
 }
 
+# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
 provider "azurerm" {
-  features {}
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 locals {
@@ -67,7 +62,8 @@ module "regions" {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  source               = "../../modules/generate_deployment_region"
+  #source               = "../../modules/generate_deployment_region"
+  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -169,9 +165,9 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
   retention_in_days   = 30
 }
 
-module "avm-res-keyvault-vault" {
+module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = ">=0.3.0"
+  version                = "0.5.1"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
@@ -197,7 +193,7 @@ module "avm-res-keyvault-vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.1.0"
+  # version            = "=0.1.1"
 
   enable_telemetry        = var.enable_telemetry
   resource_group_name     = azurerm_resource_group.this.name
@@ -207,8 +203,13 @@ module "test_private_cloud" {
   avs_network_cidr        = "10.0.0.0/22"
   internet_enabled        = false
   management_cluster_size = 3
-  hcx_enabled             = true
-  hcx_key_names           = ["test_site_key_1"]
+
+  addons = {
+    HCX = {
+      hcx_key_names    = ["example_key_1", "example_key_2"]
+      hcx_license_type = "Enterprise"
+    }
+  }
 
   diagnostic_settings = {
     avs_diags = {
@@ -233,12 +234,14 @@ module "test_private_cloud" {
 }
 
 module "create_jump_vm" {
-  source = "../../modules/create_jump_vm"
+  #source = "../../modules/create_jump_vm"
+  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm"
+
 
   resource_group_name        = azurerm_resource_group.this.name
   resource_group_location    = azurerm_resource_group.this.location
   vm_name                    = "jump-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id      = module.avm-res-keyvault-vault.resource.id
+  key_vault_resource_id      = module.avm_res_keyvault_vault.resource.id
   create_bastion             = true
   bastion_name               = module.naming.bastion_host.name_unique
   bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
@@ -246,7 +249,7 @@ module "create_jump_vm" {
   vm_subnet_resource_id      = module.vm_vnet.subnets["VMSubnet"].id
   vm_sku                     = local.vm_sku
 
-  depends_on = [module.avm-res-keyvault-vault, module.vm_vnet, azurerm_nat_gateway.this_nat_gateway]
+  depends_on = [module.avm_res_keyvault_vault, module.vm_vnet, azurerm_nat_gateway.this_nat_gateway]
 }
 ```
 
@@ -316,21 +319,21 @@ No outputs.
 
 The following Modules are called:
 
-### <a name="module_avm-res-keyvault-vault"></a> [avm-res-keyvault-vault](#module\_avm-res-keyvault-vault)
+### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: >=0.3.0
+Version: 0.5.1
 
 ### <a name="module_create_jump_vm"></a> [create\_jump\_vm](#module\_create\_jump\_vm)
 
-Source: ../../modules/create_jump_vm
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm
 
 Version:
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
-Source: ../../modules/generate_deployment_region
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region
 
 Version:
 

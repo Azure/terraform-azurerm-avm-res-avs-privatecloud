@@ -2,7 +2,7 @@
 # Deploy and configure the HCX Addon
 #####################################################################################################################################
 resource "azapi_resource" "hcx_addon" {
-  count = var.hcx_enabled ? 1 : 0
+  for_each = { for k, v in var.addons : k => v if lower(k) == "hcx" }
 
   type = "Microsoft.AVS/privateClouds/addons@2022-05-01"
   #Resource Name must match the addonType
@@ -11,7 +11,7 @@ resource "azapi_resource" "hcx_addon" {
   body = jsonencode({
     properties = {
       addonType = "HCX"
-      offer     = lower(var.hcx_license_type) == "advanced" ? "VMware MaaS Cloud Provider" : "VMware MaaS Cloud Provider (Enterprise)"
+      offer     = lower(each.value.hcx_license_type) == "advanced" ? "VMware MaaS Cloud Provider" : "VMware MaaS Cloud Provider (Enterprise)"
     }
   })
 
@@ -47,7 +47,7 @@ resource "time_sleep" "wait_120_seconds" {
 
 #create the hcx key(s) if defined
 resource "azapi_resource" "hcx_keys" {
-  for_each = toset(var.hcx_key_names)
+  for_each = toset(try(var.addons.hcx.hcx_key_names, []))
 
   type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2022-05-01"
   name                   = each.key
@@ -72,7 +72,7 @@ resource "azapi_resource" "hcx_keys" {
 #####################################################################################################################################
 
 resource "azapi_resource" "srm_addon" {
-  count = var.srm_enabled ? 1 : 0
+  for_each = { for k, v in var.addons : k => v if lower(k) == "srm" }
 
   type = "Microsoft.AVS/privateClouds/addons@2022-05-01"
   #Resource Name must match the addonType
@@ -81,7 +81,7 @@ resource "azapi_resource" "srm_addon" {
   body = jsonencode({
     properties = {
       addonType  = "SRM"
-      licenseKey = var.srm_license_key
+      licenseKey = each.value.srm_license_key
     }
   })
 
@@ -116,7 +116,7 @@ resource "azapi_resource" "srm_addon" {
 #####################################################################################################################################
 
 resource "azapi_resource" "vr_addon" {
-  count = var.vr_enabled ? 1 : 0
+  for_each = { for k, v in var.addons : k => v if lower(k) == "vr" }
 
   type = "Microsoft.AVS/privateClouds/addons@2022-05-01"
   #Resource Name must match the addonType
@@ -125,7 +125,7 @@ resource "azapi_resource" "vr_addon" {
   body = jsonencode({
     properties = {
       addonType = "VR"
-      vrsCount  = var.vrs_count
+      vrsCount  = each.value.vr_vrs_count
     }
   })
 
@@ -155,12 +155,12 @@ resource "azapi_resource" "vr_addon" {
   }
 }
 
-/* "TODO: determine how to get the Vcenter resource ID"
+
 #####################################################################################################################################
 # Deploy and configure the ARC Addon
 #####################################################################################################################################
 resource "azapi_resource" "arc_addon" {
-  count = var.arc_enabled ? 1 : 0
+  for_each = { for k, v in var.addons : k => v if lower(k) == "arc" }
 
   type = "Microsoft.AVS/privateClouds/addons@2022-05-01"
   #Resource Name must match the addonType
@@ -168,8 +168,8 @@ resource "azapi_resource" "arc_addon" {
   parent_id = azapi_resource.this_private_cloud.id
   body = jsonencode({
     properties = {
-      addonType   = "Arc"
-      vCenter     = 
+      addonType = "Arc"
+      vCenter   = each.value.arc_vcenter
     }
   })
 
@@ -181,10 +181,4 @@ resource "azapi_resource" "arc_addon" {
   }
 }
 
-variable "arc_enabled" {
-  type        = bool
-  description = "Enable the ARC addon toggle value"
-  default     = false
-}
 
-*/

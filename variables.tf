@@ -33,6 +33,52 @@ variable "sku_name" {
 # Optional Variables
 ############################
 
+variable "addons" {
+  type = map(object({
+    arc_vcenter      = optional(string)
+    hcx_key_names    = optional(list(string), [])
+    hcx_license_type = optional(string, "Enterprise")
+    srm_license_key  = optional(string)
+    vr_vrs_count     = optional(number, 0)
+  }))
+  default     = {}
+  nullable    = false
+  description = <<ADDONS
+    Map object containing configurations for the different addon types.  Each addon type has associated fields and specific naming requirements.  A full input example is provided below.
+    map(objet({
+      
+      - `arc_vcenter` (Optional) - The vmware vcenter resource id as a string
+      - `hcx_key_names` (Optional) - A list of key names to create HCX keys for.
+      - `hcx_license_type` (Optional) - The type of license to configure for HCX.  Valid values are "Advanced" and "Enterprise".
+      - `srm_license_key` (Optional) - the license key to use when enabling the SRM addOn
+      - `vr_vrs_count` (Optional) - The Vsphere replication server count
+
+    }))
+
+    Example Input:
+    ```terraform 
+    {
+      Arc = {
+        arc_vcenter = "<vcenter resource id>"
+      }
+      HCX = {
+        hcx_key_names = ["key1", "key2"]
+        hcx_license_type = "Enterprise"
+      }
+      SRM = {
+        srm_license_key = "<srm license key value>"
+      }
+      VR = {
+        vr_vrs_count = 2
+      }
+    }
+    ```
+  ADDONS
+
+}
+
+
+
 variable "avs_interconnect_connections" {
   type = map(object({
     linked_private_cloud_resource_id = string
@@ -336,24 +382,6 @@ variable "global_reach_connections" {
   GLOBAL_REACH_CONNECTIONS
 }
 
-variable "hcx_enabled" {
-  type        = bool
-  description = "Enable the HCX addon toggle value"
-  default     = false
-}
-
-variable "hcx_key_names" {
-  type        = list(string)
-  description = "list of key names to use when generating hcx site activation keys. Requires HCX add_on to be enabled."
-  default     = []
-}
-
-variable "hcx_license_type" {
-  type        = string
-  description = "Describes which HCX license option to use.  Valid values are Advanced or Enterprise."
-  default     = "Enterprise"
-}
-
 variable "internet_enabled" {
   type        = bool
   description = "Configure the internet SNAT option to be on or off. Defaults to off."
@@ -382,19 +410,6 @@ variable "internet_inbound_public_ips" {
       }
     ```
   PUBLIC_IPS
-}
-
-variable "ldap_user" {
-  type        = string
-  description = "The username for the domain user the vcenter will use to query LDAP(s)"
-  default     = null
-}
-
-variable "ldap_user_password" {
-  type        = string
-  description = "Password to use for the domain user the vcenter will use to query LDAP(s)"
-  sensitive   = true
-  default     = null
 }
 
 variable "lock" {
@@ -561,18 +576,6 @@ variable "segments" {
   SEGMENTS
 }
 
-variable "srm_enabled" {
-  type        = bool
-  description = "Enable the SRM addon toggle value"
-  default     = false
-}
-
-variable "srm_license_key" {
-  type        = string
-  description = "The license key to use for the SRM installation"
-  default     = null
-}
-
 variable "tags" {
   type        = map(any)
   default     = {}
@@ -629,6 +632,35 @@ variable "vcenter_identity_sources" {
   VCENTER_IDENTITY_SOURCES
 }
 
+variable "vcenter_identity_sources_credentials" {
+  type = map(object({
+    ldap_user          = string
+    ldap_user_password = string
+  }))
+  default     = {}
+  nullable    = false
+  sensitive   = true
+  description = <<VCENTER_IDENTITY_SOURCES_CREDENTIALS
+  A map of objects representing the credentials used for the identity source connection. The map key should match the vcenter identity source that uses these values. Separating this to avoid terraform issues with apply on secrets.
+    map(object({
+
+      - `ldap_user`          = (Required) - "The username for the domain user the vcenter will use to query LDAP(s)"
+      - `ldap_user_password` = (Required) - "Password to use for the domain user the vcenter will use to query LDAP(s)"
+
+    }))
+
+    Example Input:
+    ```terraform
+      {
+        test.local = {
+          ldap_user               = "user@test.local"
+          ldap_user_password      = module.create_dc.ldap_user_password
+        }
+      }
+  ```
+  VCENTER_IDENTITY_SOURCES_CREDENTIALS
+}
+
 variable "vcenter_password" {
   type        = string
   description = "The password value to use for the cloudadmin account password in the local domain in vcenter. If this is left as null a random password will be generated for the deployment"
@@ -636,17 +668,6 @@ variable "vcenter_password" {
   sensitive   = true
 }
 
-variable "vr_enabled" {
-  type        = bool
-  description = "Enable the Vsphere Replication (VR) addon toggle value"
-  default     = false
-}
-
-variable "vrs_count" {
-  type        = number
-  description = "The total number of vsphere replication servers to deploy"
-  default     = null
-}
 
 
 
