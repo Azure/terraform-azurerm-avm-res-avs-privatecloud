@@ -837,13 +837,17 @@ Description: This value returns the vcenter and nsxt cloudadmin credential value
 
 Description: This output returns the managed identity values if the managed identity has been enabled on the module.
 
-### <a name="output_private_cloud_resource_id"></a> [private\_cloud\_resource\_id](#output\_private\_cloud\_resource\_id)
-
-Description: The azure resource if of the private cloud.
-
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: This output returns the full private cloud resource object properties.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The azure resource if of the private cloud.
+
+### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
+
+Description: The principal id of the system managed identity assigned to the virtual machine
 
 ## Modules
 
