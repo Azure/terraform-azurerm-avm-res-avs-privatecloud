@@ -191,12 +191,12 @@ Default: `{}`
 
 Description: This object describes additional clusters in the private cloud in addition to the management cluster. The map key will be used as the cluster name
 
-- `<map key> - Provide a custom key name that will be used as the cluster name
-  - `cluster\_node\_count` = (required) - Integer number of nodes to include in this cluster between 3 and 16
-  - `sku\_name`           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created
+- `<map key>` - Provide a custom key name that will be used as the cluster name
+  - `cluster_node_count` = (required) - Integer number of nodes to include in this cluster between 3 and 16
+  - `sku_name`           = (required) - String for the sku type to use for the cluster nodes. Changing this forces a new cluster to be created
 
 Example Input:
-````hcl
+```hcl
 cluster1 = {
   cluster_node_count = 3
   sku_name           = "av36p"
@@ -247,15 +247,15 @@ Default: `{}`
 
 Description: This map object describes the DHCP configuration to use for the private cloud. It can remain unconfigured or define a RELAY or SERVER based configuration. Defaults to unconfigured. This allows for new segments to define DHCP ranges as part of their definition. Only one DHCP configuration is allowed.
 
-- `<map key> - Provide a custom key value that will be used as the dhcp configuration name
-  - `display\_name`           = (Required) - The display name for the dhcp configuration being created
-  - `dhcp\_type`              = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.
-  - `relay\_server\_addresses` = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.  
-  - `server\_lease\_time`      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations
-  - `server\_address`         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
+- `<map key>` - Provide a custom key value that will be used as the dhcp configuration name
+  - `display_name`           = (Required) - The display name for the dhcp configuration being created
+  - `dhcp_type`              = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.
+  - `relay_server_addresses` = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.  
+  - `server_lease_time`      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations
+  - `server_address`         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
 
 Example Input:
-````hcl
+```hcl
 #RELAY example
 relay_config = {
   display_name           = "relay_example"
@@ -290,20 +290,20 @@ Default: `{}`
 
 Description: This map object is used to define the diagnostic settings on the virtual machine.  This functionality does not implement the diagnostic settings extension, but instead can be used to configure sending the vm metrics to one of the standard targets.
 
-- `<map key> - Provide a map key that will be used for the name of the diagnostic settings configuration  
+- `<map key>` - Provide a map key that will be used for the name of the diagnostic settings configuration  
   - `name`                                     = (required) - Name to use for the Diagnostic setting configuration.  Changing this creates a new resource
-  - `log\_categories\_and\_groups`                = (Optional) - List of strings used to define log categories and groups. Currently not valid for the VM resource
-  - `log\_groups`                               = (Optional) - A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`
-  - `metric\_categories`                        = (Optional) - List of strings used to define metric categories. Currently only AllMetrics is valid
-  - `log\_analytics\_destination\_type`           = (Optional) - Valid values are null, AzureDiagnostics, and Dedicated.  Defaults to Dedicated
-  - `workspace\_resource\_id`                    = (Optional) - The Log Analytics Workspace Azure Resource ID when sending logs or metrics to a Log Analytics Workspace
-  - `storage\_account\_resource\_id`              = (Optional) - The Storage Account Azure Resource ID when sending logs or metrics to a Storage Account
-  - `event\_hub\_authorization\_rule\_resource\_id` = (Optional) - The Event Hub Namespace Authorization Rule Resource ID when sending logs or metrics to an Event Hub Namespace
-  - `event\_hub\_name`                           = (Optional) - The Event Hub name when sending logs or metrics to an Event Hub
-  - `marketplace\_partner\_resource\_id`          = (Optional) - The marketplace partner solution Azure Resource ID when sending logs or metrics to a partner integration
+  - `log_categories_and_groups`                = (Optional) - List of strings used to define log categories and groups. Currently not valid for the VM resource
+  - `log_groups`                               = (Optional) - A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`
+  - `metric_categories`                        = (Optional) - List of strings used to define metric categories. Currently only AllMetrics is valid
+  - `log_analytics_destination_type`           = (Optional) - Valid values are null, AzureDiagnostics, and Dedicated.  Defaults to Dedicated
+  - `workspace_resource_id`                    = (Optional) - The Log Analytics Workspace Azure Resource ID when sending logs or metrics to a Log Analytics Workspace
+  - `storage_account_resource_id`              = (Optional) - The Storage Account Azure Resource ID when sending logs or metrics to a Storage Account
+  - `event_hub_authorization_rule_resource_id` = (Optional) - The Event Hub Namespace Authorization Rule Resource ID when sending logs or metrics to an Event Hub Namespace
+  - `event_hub_name`                           = (Optional) - The Event Hub name when sending logs or metrics to an Event Hub
+  - `marketplace_partner_resource_id`          = (Optional) - The marketplace partner solution Azure Resource ID when sending logs or metrics to a partner integration
 
 Example Input:
-````hcl
+```hcl
 diagnostic_settings = {
   nic_diags = {
     name                  = module.naming.monitor_diagnostic_setting.name_unique
@@ -336,15 +336,15 @@ Default: `{}`
 
 Description: Map of string objects describing one or more dns forwarder zones for NSX within the private cloud. Up to 5 additional forwarder zone can be configured. This is primarily useful for identity source configurations or in cases where NSX DHCP is providing DNS configurations.
 
-- `<map key> - Provide a key value that will be used as the name for the dns forwarder zone
-  - `display\_name`               = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.
-  - `dns\_server\_ips`             = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.
-  - `domain\_names`               = (Required) - A list of domain names that will be forwarded as part of this zone.
-  - `source\_ip`                  = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
-  - 'add_to_default_dns_service' = (Optional) - Set to try to associate this zone with the default DNS service.  Up to 5 zones can be linked.
+- `<map key>` - Provide a key value that will be used as the name for the dns forwarder zone
+  - `display_name`               = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.
+  - `dns_server_ips`             = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.
+  - `domain_names`               = (Required) - A list of domain names that will be forwarded as part of this zone.
+  - `source_ip`                  = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
+  - `add_to_default_dns_service` = (Optional) - Set to try to associate this zone with the default DNS service.  Up to 5 zones can be linked.
 
 Example Input:
-````hcl
+```hcl
 {
   test_local = {
     display_name               = local.test_domain_name
@@ -391,7 +391,7 @@ Default: `true`
 
 Description: Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
 
-- <map key> - Provide a key value that will be used as the expressroute connection name
+- `<map key>` - Provide a key value that will be used as the expressroute connection name
   - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
   - `expressroute_gateway_resource_id`     = (Required) - The Azure Resource ID for the ExpressRoute gateway where the connection will be made.
   - `authorization_key_name`               = (Optional) - The authorization key name that should be used from the auth key map. If no key is provided a name will be generated from the map key.
@@ -445,7 +445,7 @@ Default: `{}`
 
 Description: Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
 
-- <map key> - Provide a key value that will be used as the global reach connection name
+- `<map key>` - Provide a key value that will be used as the global reach connection name
   - `authorization_key`                     = (Required) - The authorization key from the peer expressroute
   - `peer_expressroute_circuit_resource_id` = (Optional) - Identifier of the ExpressRoute Circuit to peer within the global reach connection
 
@@ -482,7 +482,7 @@ Default: `false`
 
 Description: This map object that describes the public IP configuration. Configure this value in the event you need direct inbound access to the private cloud from the internet. The code uses the map key as the display name for each configuration.
 
-- <map key> - Provide a key value that will be used as the public ip configuration name
+- `<map key>` - Provide a key value that will be used as the public ip configuration name
   - `number_of_ip_addresses` = (required) - The number of IP addresses to assign to this private cloud.
 
 Example Input:
@@ -560,7 +560,7 @@ Default: `3`
 
 Description: This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique.
 
-- <map key> - Provide a key value that will be used as the netapp files datastore name
+- `<map key>` - Provide a key value that will be used as the netapp files datastore name
   - `netapp_volume_resource_id` = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.
   - `cluster_names`             = (required) - A set of cluster name(s) where this volume should be attached
 
@@ -603,7 +603,7 @@ Default: `null`
 
 Description: A list of role definitions and scopes to be assigned as part of this resources implementation.
 
-- <map key> - Provide a key value that will be used as the role assignments name
+- `<map key>` - Provide a key value that will be used as the role assignments name
   - `principal_id`                               = (optional) - The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to. Changing this forces a new resource to be created.
   - `role_definition_id_or_name`                 = (Optional) - The Scoped-ID of the Role Definition or the built-in role name. Changing this forces a new resource to be created. Conflicts with role\_definition\_name
   - `condition`                                  = (Optional) - The condition that limits the resources that the role can be assigned to. Changing this forces a new resource to be created.
@@ -652,7 +652,7 @@ Default: `null`
 
 Description: This map object describes the additional segments to configure on the private cloud. It can remain unconfigured or define one or more new network segments. Defaults to unconfigured. If the connected\_gateway value is left undefined, the configuration will default to using the default T1 gateway provisioned as part of the managed service.
 
-- <map key> - Provide a key value that will be used as the segment name
+- `<map key>` - Provide a key value that will be used as the segment name
   - `display_name`       = (Required) - The display name for the dhcp configuration being created
   - `gateway_address`    = (Required) - The CIDR range to use for the segment
   - `dhcp_ranges`        = (Optional) - One or more ranges of IP addresses or CIDR blocks entered as a list of string
@@ -697,7 +697,7 @@ Default: `{}`
 
 Description: A map of objects representing a list of 0-2 identity sources for configuring LDAP or LDAPs on the private cloud. The map key will be used as the name value for the identity source.
 
-- <map key> - Provide a key value that will be used as the vcenter identity source name
+- `<map key>` - Provide a key value that will be used as the vcenter identity source name
   - `alias`             = (Required) - The domains NETBIOS name
   - `base_group_dn`     = (Required) - The base distinguished name for groups
   - `base_user_dn`      = (Required) - The base distinguished name for users
@@ -748,7 +748,7 @@ Default: `{}`
 
 Description: A map of objects representing the credentials used for the identity source connection. The map key should match the vcenter identity source that uses these values. Separating this to avoid terraform issues with apply on secrets.
 
-- <map key> - Provide a key value that will be used as the identity source credentials name. This value should match the identity source key where the credential will be used.
+- `<map key>` - Provide a key value that will be used as the identity source credentials name. This value should match the identity source key where the credential will be used.
   - `ldap_user`          = (Required) - "The username for the domain user the vcenter will use to query LDAP(s)"
   - `ldap_user_password` = (Required) - "Password to use for the domain user the vcenter will use to query LDAP(s)"
 
