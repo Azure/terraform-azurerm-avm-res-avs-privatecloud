@@ -1,6 +1,6 @@
 #get the CMK vault
 data "azurerm_key_vault" "this_vault" {
-  count = var.customer_managed_key != null ? 1 : 0
+  count = var.customer_managed_key != {} ? 1 : 0
 
   name                = split("/", var.customer_managed_key.key_vault_resource_id)[8]
   resource_group_name = split("/", var.customer_managed_key.key_vault_resource_id)[4]
