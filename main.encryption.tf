@@ -1,6 +1,6 @@
 #get the CMK vault
 data "azurerm_key_vault" "this_vault" {
-  count = var.customer_managed_key != {} ? 1 : 0
+  count = var.customer_managed_key.key_vault_resource_id != null ? 1 : 0
 
   name                = split("/", var.customer_managed_key.key_vault_resource_id)[8]
   resource_group_name = split("/", var.customer_managed_key.key_vault_resource_id)[4]
@@ -8,7 +8,7 @@ data "azurerm_key_vault" "this_vault" {
 
 #update the private cloud resource to use a CMK
 resource "azapi_update_resource" "customer_managed_key" {
-  count = var.customer_managed_key != {} ? 1 : 0
+  count = var.customer_managed_key.key_vault_resource_id != null ? 1 : 0
 
   type = "Microsoft.AVS/privateClouds@2022-05-01"
   #name      = "${azapi_resource.this_private_cloud.name}-${var.customer_managed_key.key_name}"
