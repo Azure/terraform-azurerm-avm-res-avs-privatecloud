@@ -324,9 +324,11 @@ module "test_private_cloud" {
   */
 
   customer_managed_key = {
-    key_vault_resource_id = module.avm_res_keyvault_vault.resource.id
-    key_name              = module.avm_res_keyvault_vault.resource_keys.cmk_key.name
-    key_version           = module.avm_res_keyvault_vault.resource_keys.cmk_key.version
+    default_key = {
+      key_vault_resource_id = module.avm_res_keyvault_vault.resource.id
+      key_name              = module.avm_res_keyvault_vault.resource_keys.cmk_key.name
+      key_version           = module.avm_res_keyvault_vault.resource_keys.cmk_key.version
+    }
   }
 
   dhcp_configuration = {

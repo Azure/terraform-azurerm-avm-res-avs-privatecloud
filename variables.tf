@@ -125,19 +125,20 @@ CLUSTERS
 }
 
 variable "customer_managed_key" {
-  type = object({
+  type = map(object({
     key_vault_resource_id = optional(string, null)
     key_name              = optional(string, null)
     key_version           = optional(string, null)
-  })
+  }))
   default     = {}
   nullable    = false
   description = <<CUSTOMER_MANAGED_KEY
 This object defines the customer managed key details to use when encrypting the VSAN datastore. 
 
-- `key_vault_resource_id` = (Required) - The full Azure resource ID of the key vault where the encryption key will be sourced from
-- `key_name`              = (Required) - The name for the encryption key
-- `key_version`           = (Optional) - The key version value for the encryption key. 
+- `<map key>` - Provide a custom key value that will be used as the dhcp configuration name
+  - `key_vault_resource_id` = (Required) - The full Azure resource ID of the key vault where the encryption key will be sourced from
+  - `key_name`              = (Required) - The name for the encryption key
+  - `key_version`           = (Optional) - The key version value for the encryption key. 
 
 Example Inputs:
 ```hcl
