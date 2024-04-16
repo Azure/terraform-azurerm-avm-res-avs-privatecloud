@@ -8,8 +8,7 @@ variable "avs_network_cidr" {
 
 variable "location" {
   type        = string
-  description = "The Azure region where this and supporting resources should be deployed.  Defaults to the Resource Groups location if undefined."
-  default     = null
+  description = "The Azure region where this and supporting resources should be deployed.  "
 }
 
 variable "name" {
@@ -24,14 +23,15 @@ variable "resource_group_name" {
   description = "The resource group where the resources will be deployed."
 }
 
+variable "resource_group_resource_id" {
+  type        = string
+  description = "The resource group Azure Resource ID for the deployment resource group. Used for the AzAPI resource that deploys the private cloud."
+}
+
 variable "sku_name" {
   type        = string
   description = "The sku value for the AVS SDDC management cluster nodes. Valid values are av20, av36, av36t, av36pt, av52, av64."
 }
-
-############################
-# Optional Variables
-############################
 
 variable "addons" {
   type = map(object({
@@ -42,7 +42,6 @@ variable "addons" {
     vr_vrs_count     = optional(number, 0)
   }))
   default     = {}
-  nullable    = false
   description = <<ADDONS
 Map object containing configurations for the different addon types.  Each addon type has associated fields and specific naming requirements.  A full input example is provided below.
   
@@ -75,6 +74,7 @@ Example Input:
 }
 ```
 ADDONS
+  nullable    = false
 }
 
 variable "avs_interconnect_connections" {
@@ -82,7 +82,6 @@ variable "avs_interconnect_connections" {
     linked_private_cloud_resource_id = string
   }))
   default     = {}
-  nullable    = false
   description = <<INTERCONNECT
 Map of string objects describing one or more private cloud interconnect connections for private clouds in the same region.  The map key will be used for the connection name.
 
@@ -98,6 +97,7 @@ Example Input:
 }
 ```
 INTERCONNECT
+  nullable    = false
 }
 
 variable "clusters" {
@@ -106,7 +106,6 @@ variable "clusters" {
     sku_name           = string
   }))
   default     = {}
-  nullable    = false
   description = <<CLUSTERS
 This object describes additional clusters in the private cloud in addition to the management cluster. The map key will be used as the cluster name
 
@@ -122,6 +121,7 @@ cluster1 = {
 }
 ```
 CLUSTERS
+  nullable    = false
 }
 
 variable "customer_managed_key" {
@@ -131,7 +131,6 @@ variable "customer_managed_key" {
     key_version           = optional(string, null)
   }))
   default     = {}
-  nullable    = false
   description = <<CUSTOMER_MANAGED_KEY
 This object defines the customer managed key details to use when encrypting the VSAN datastore. 
 
@@ -149,6 +148,7 @@ Example Inputs:
 }
 ```
 CUSTOMER_MANAGED_KEY
+  nullable    = false
 }
 
 variable "dhcp_configuration" {
@@ -160,7 +160,6 @@ variable "dhcp_configuration" {
     server_address         = optional(string, null)
   }))
   default     = {}
-  nullable    = false
   description = <<DHCP
 This map object describes the DHCP configuration to use for the private cloud. It can remain unconfigured or define a RELAY or SERVER based configuration. Defaults to unconfigured. This allows for new segments to define DHCP ranges as part of their definition. Only one DHCP configuration is allowed.
 
@@ -189,6 +188,7 @@ server_config = {
 }
 ```
 DHCP
+  nullable    = false
 }
 
 variable "diagnostic_settings" {
@@ -205,7 +205,6 @@ variable "diagnostic_settings" {
     marketplace_partner_resource_id          = optional(string, null)
   }))
   default     = {}
-  nullable    = false
   description = <<DIAGNOSTIC_SETTINGS
 This map object is used to define the diagnostic settings on the virtual machine.  This functionality does not implement the diagnostic settings extension, but instead can be used to configure sending the vm metrics to one of the standard targets.
 
@@ -232,6 +231,7 @@ diagnostic_settings = {
 }
 ```
 DIAGNOSTIC_SETTINGS
+  nullable    = false
 }
 
 variable "dns_forwarder_zones" {
@@ -243,7 +243,6 @@ variable "dns_forwarder_zones" {
     add_to_default_dns_service = optional(bool, false)
   }))
   default     = {}
-  nullable    = false
   description = <<DNS_FORWARDER_ZONES
 Map of string objects describing one or more dns forwarder zones for NSX within the private cloud. Up to 5 additional forwarder zone can be configured. This is primarily useful for identity source configurations or in cases where NSX DHCP is providing DNS configurations.
 
@@ -266,7 +265,7 @@ Example Input:
 }
 ```
 DNS_FORWARDER_ZONES
-
+  nullable    = false
 }
 
 variable "enable_stretch_cluster" {
@@ -305,7 +304,6 @@ variable "expressroute_connections" {
     })), {})
   }))
   default     = {}
-  nullable    = false
   description = <<EXPRESSROUTE_CONNECTIONS
 Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
 
@@ -334,6 +332,13 @@ Example Input:
 }
 ```
 EXPRESSROUTE_CONNECTIONS
+  nullable    = false
+}
+
+variable "extended_network_blocks" {
+  type        = list(string)
+  default     = []
+  description = "If using AV64 sku's in non-management clusters it is required to provide one /23 CIDR block or three /23 CIDR blocks. Provide a list of CIDR strings if planning to use AV64 nodes."
 }
 
 variable "global_reach_connections" {
@@ -342,7 +347,6 @@ variable "global_reach_connections" {
     peer_expressroute_circuit_resource_id = string
   }))
   default     = {}
-  nullable    = false
   description = <<GLOBAL_REACH_CONNECTIONS
 Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
 
@@ -360,12 +364,13 @@ Example Input:
   }
 ```
 GLOBAL_REACH_CONNECTIONS
+  nullable    = false
 }
 
 variable "internet_enabled" {
   type        = bool
-  description = "Configure the internet SNAT option to be on or off. Defaults to off."
   default     = false
+  description = "Configure the internet SNAT option to be on or off. Defaults to off."
 }
 
 variable "internet_inbound_public_ips" {
@@ -373,7 +378,6 @@ variable "internet_inbound_public_ips" {
     number_of_ip_addresses = number
   }))
   default     = {}
-  nullable    = false
   description = <<PUBLIC_IPS
 This map object that describes the public IP configuration. Configure this value in the event you need direct inbound access to the private cloud from the internet. The code uses the map key as the display name for each configuration.
 
@@ -388,6 +392,7 @@ public_ip_config = {
 }
 ```
 PUBLIC_IPS
+  nullable    = false
 }
 
 variable "lock" {
@@ -395,6 +400,7 @@ variable "lock" {
     name = optional(string, null)
     kind = optional(string, "None")
   })
+  default     = {}
   description = <<LOCK
 "The lock level to apply to this virtual machine and all of it's child resources. The default value is none. Possible values are `None`, `CanNotDelete`, and `ReadOnly`. Set the lock value on child resource values explicitly to override any inherited locks." 
 
@@ -406,8 +412,8 @@ lock = {
 }
 ```
 LOCK
-  default     = {}
   nullable    = false
+
   validation {
     condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
     error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
@@ -420,14 +426,14 @@ variable "managed_identities" {
     system_assigned = optional(bool, false)
   })
   default     = {}
-  nullable    = false
   description = "This value toggles the system managed identity to on for use with customer managed keys. User Managed identities are currently unsupported for this resource. Defaults to false."
+  nullable    = false
 }
 
 variable "management_cluster_size" {
   type        = number
-  description = "The number of nodes to include in the management cluster. The minimum value is 3 and the current maximum is 16."
   default     = 3
+  description = "The number of nodes to include in the management cluster. The minimum value is 3 and the current maximum is 16."
 }
 
 variable "netapp_files_datastores" {
@@ -436,7 +442,6 @@ variable "netapp_files_datastores" {
     cluster_names             = set(string)
   }))
   default     = {}
-  nullable    = false
   description = <<NETAPP_FILES_ATTACHMENTS
 This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique. 
 
@@ -452,12 +457,13 @@ anf_datastore_cluster1 = {
 }
 ```
 NETAPP_FILES_ATTACHMENTS
+  nullable    = false
 }
 
 variable "nsxt_password" {
   type        = string
-  description = "The password value to use for the cloudadmin account password in the local domain in nsxt. If this is left as null a random password will be generated for the deployment"
   default     = null
+  description = "The password value to use for the cloudadmin account password in the local domain in nsxt. If this is left as null a random password will be generated for the deployment"
   sensitive   = true
 }
 
@@ -478,9 +484,7 @@ variable "role_assignments" {
     delegated_managed_identity_resource_id = optional(string)
     }
   ))
-  default  = {}
-  nullable = false
-
+  default     = {}
   description = <<ROLE_ASSIGNMENTS
 A list of role definitions and scopes to be assigned as part of this resources implementation.  
 
@@ -504,6 +508,7 @@ role_assignments = {
 }
 ```
 ROLE_ASSIGNMENTS
+  nullable    = false
 }
 
 variable "secondary_zone" {
@@ -520,7 +525,6 @@ variable "segments" {
     connected_gateway = optional(string, null)
   }))
   default     = {}
-  nullable    = false
   description = <<SEGMENTS
 This map object describes the additional segments to configure on the private cloud. It can remain unconfigured or define one or more new network segments. Defaults to unconfigured. If the connected_gateway value is left undefined, the configuration will default to using the default T1 gateway provisioned as part of the managed service.
 
@@ -544,6 +548,7 @@ segment_2 = {
 }
 ```
 SEGMENTS
+  nullable    = false
 }
 
 variable "tags" {
@@ -566,7 +571,6 @@ variable "vcenter_identity_sources" {
     timeout          = optional(string, "10m")
   }))
   default     = {}
-  nullable    = false
   description = <<VCENTER_IDENTITY_SOURCES
 A map of objects representing a list of 0-2 identity sources for configuring LDAP or LDAPs on the private cloud. The map key will be used as the name value for the identity source.
 
@@ -598,6 +602,7 @@ Example Input:
 }
 ```
 VCENTER_IDENTITY_SOURCES
+  nullable    = false
 }
 
 variable "vcenter_identity_sources_credentials" {
@@ -606,8 +611,6 @@ variable "vcenter_identity_sources_credentials" {
     ldap_user_password = string
   }))
   default     = {}
-  nullable    = false
-  sensitive   = true
   description = <<VCENTER_IDENTITY_SOURCES_CREDENTIALS
 A map of objects representing the credentials used for the identity source connection. The map key should match the vcenter identity source that uses these values. Separating this to avoid terraform issues with apply on secrets.
 
@@ -625,40 +628,13 @@ Example Input:
 }
 ```
 VCENTER_IDENTITY_SOURCES_CREDENTIALS
+  nullable    = false
+  sensitive   = true
 }
 
 variable "vcenter_password" {
   type        = string
-  description = "The password value to use for the cloudadmin account password in the local domain in vcenter. If this is left as null a random password will be generated for the deployment"
   default     = null
+  description = "The password value to use for the cloudadmin account password in the local domain in vcenter. If this is left as null a random password will be generated for the deployment"
   sensitive   = true
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

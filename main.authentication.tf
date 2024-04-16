@@ -1,40 +1,40 @@
 #generate a random password to use for the initial NSXT admin account password
 resource "random_password" "nsxt" {
   length           = 20
-  special          = true
+  min_lower        = 1
+  min_numeric      = 1
+  min_special      = 1
+  min_upper        = 1
   numeric          = true
   override_special = "!#$%&()*+,-./:;<=>?@[]^_{|}~"
-  min_special      = 1
-  min_numeric      = 1
-  min_upper        = 1
-  min_lower        = 1
+  special          = true
 }
 
 #generate a random password to use for the initial vcenter cloudadmin account password
 resource "random_password" "vcenter" {
   length           = 20
-  special          = true
+  min_lower        = 1
+  min_numeric      = 1
+  min_special      = 1
+  min_upper        = 1
   numeric          = true
   override_special = "!#$%&()*+,-./:;<=>?@[]^_{|}~"
-  min_special      = 1
-  min_numeric      = 1
-  min_upper        = 1
-  min_lower        = 1
+  special          = true
 }
 
 #assign permissions to the virtual machine if enabled and role assignments included
 resource "azurerm_role_assignment" "this_private_cloud" {
   for_each = var.role_assignments
 
-  scope                                  = azapi_resource.this_private_cloud.id
   principal_id                           = each.value.principal_id
-  role_definition_id                     = (length(split("/", each.value.role_definition_id_or_name))) > 3 ? each.value.role_definition_id_or_name : null
-  role_definition_name                   = (length(split("/", each.value.role_definition_id_or_name))) > 3 ? null : each.value.role_definition_id_or_name
+  scope                                  = azapi_resource.this_private_cloud.id
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
-  description                            = each.value.description
-  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
+  description                            = each.value.description
+  role_definition_id                     = (length(split("/", each.value.role_definition_id_or_name))) > 3 ? each.value.role_definition_id_or_name : null
+  role_definition_name                   = (length(split("/", each.value.role_definition_id_or_name))) > 3 ? null : each.value.role_definition_id_or_name
+  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -46,13 +46,13 @@ resource "azurerm_role_assignment" "this_private_cloud" {
 resource "azapi_update_resource" "managed_identity" {
   count = var.managed_identities.system_assigned ? 1 : 0
 
-  type        = "Microsoft.AVS/privateClouds@2022-05-01"
-  resource_id = azapi_resource.this_private_cloud.id
+  type = "Microsoft.AVS/privateClouds@2022-05-01"
   body = jsonencode({
     identity = {
       type = "systemassigned"
     }
   })
+  resource_id            = azapi_resource.this_private_cloud.id
   response_export_values = ["identity"]
 
   depends_on = [
@@ -84,7 +84,7 @@ resource "azapi_update_resource" "manual_passwords" {
 #get SDDC credentials for use with the credentials output
 data "azapi_resource_action" "sddc_creds" {
   type                   = "Microsoft.AVS/privateClouds@2022-05-01"
-  resource_id            = azapi_resource.this_private_cloud.id
   action                 = "listAdminCredentials"
+  resource_id            = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
 }

@@ -52,16 +52,17 @@ module "generate_deployment_region" {
 }
 
 resource "local_file" "region_sku_cache" {
-  content  = jsonencode(module.generate_deployment_region.deployment_region)
   filename = "${path.module}/region_cache.cache"
+  content  = jsonencode(module.generate_deployment_region.deployment_region)
+
   lifecycle {
     ignore_changes = [content]
   }
 }
 
 resource "azurerm_resource_group" "this" {
-  name     = module.naming.resource_group.name_unique
   location = jsondecode(local_file.region_sku_cache.content).name
+  name     = module.naming.resource_group.name_unique
 
   lifecycle {
     ignore_changes = [tags, location]
@@ -69,16 +70,16 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_public_ip" "nat_gateway" {
-  name                = "${module.naming.nat_gateway.name_unique}-pip"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.nat_gateway.name_unique}-pip"
+  resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard"
 }
 
 resource "azurerm_nat_gateway" "this_nat_gateway" {
-  name                = module.naming.nat_gateway.name_unique
   location            = azurerm_resource_group.this.location
+  name                = module.naming.nat_gateway.name_unique
   resource_group_name = azurerm_resource_group.this.name
   sku_name            = "Standard"
 }
@@ -114,34 +115,33 @@ module "gateway_vnet" {
 }
 
 resource "azurerm_log_analytics_workspace" "this_workspace" {
-  name                = module.naming.log_analytics_workspace.name_unique
   location            = azurerm_resource_group.this.location
+  name                = module.naming.log_analytics_workspace.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "PerGB2018"
   retention_in_days   = 30
+  sku                 = "PerGB2018"
 }
 
 resource "azurerm_public_ip" "gatewaypip" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
   name                = module.naming.public_ip.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  allocation_method   = "Static"
   sku                 = "Standard"
 }
 
 resource "azurerm_virtual_network_gateway" "gateway" {
+  location            = azurerm_resource_group.this.location
   name                = module.naming.express_route_gateway.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-
-  type = "ExpressRoute"
-  sku  = "ErGw1AZ"
+  sku                 = "ErGw1AZ"
+  type                = "ExpressRoute"
 
   ip_configuration {
-    name                          = "default"
     public_ip_address_id          = azurerm_public_ip.gatewaypip.id
-    private_ip_address_allocation = "Dynamic"
     subnet_id                     = module.gateway_vnet.subnets["GatewaySubnet"].id
+    name                          = "default"
+    private_ip_address_allocation = "Dynamic"
   }
 }
 
@@ -173,16 +173,17 @@ module "avm_res_keyvault_vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.1.0"
+  # version            = "=0.4.0"
 
-  enable_telemetry        = var.enable_telemetry
-  resource_group_name     = azurerm_resource_group.this.name
-  location                = azurerm_resource_group.this.location
-  name                    = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-  sku_name                = jsondecode(local_file.region_sku_cache.content).sku
-  avs_network_cidr        = "10.0.0.0/22"
-  internet_enabled        = false
-  management_cluster_size = 3
+  enable_telemetry           = var.enable_telemetry
+  resource_group_name        = azurerm_resource_group.this.name
+  resource_group_resource_id = azurerm_resource_group.this.id
+  location                   = azurerm_resource_group.this.location
+  name                       = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
+  sku_name                   = jsondecode(local_file.region_sku_cache.content).sku
+  avs_network_cidr           = "10.0.0.0/22"
+  internet_enabled           = false
+  management_cluster_size    = 3
 
   addons = {
     HCX = {

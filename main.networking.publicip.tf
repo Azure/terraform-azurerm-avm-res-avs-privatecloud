@@ -2,15 +2,21 @@
 resource "azapi_resource" "public_ip" {
   for_each = var.internet_inbound_public_ips
 
-  type      = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2022-05-01"
-  name      = each.key
-  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2022-05-01"
   body = jsonencode({
     properties = {
       displayName       = each.key
       numberOfPublicIPs = each.value.number_of_ip_addresses
     }
   })
+  name      = each.key
+  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+
+  timeouts {
+    create = "4h"
+    delete = "4h"
+    update = "4h"
+  }
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -36,10 +42,4 @@ resource "azapi_resource" "public_ip" {
     azapi_resource.configure_identity_sources,
     azurerm_vmware_netapp_volume_attachment.attach_datastores
   ]
-
-  timeouts {
-    create = "4h"
-    delete = "4h"
-    update = "4h"
-  }
 }

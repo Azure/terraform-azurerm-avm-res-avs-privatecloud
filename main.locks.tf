@@ -1,9 +1,10 @@
 #configure the resource locks
 resource "azurerm_management_lock" "this_private_cloud" {
-  count      = var.lock.kind != "None" ? 1 : 0
+  count = var.lock.kind != "None" ? 1 : 0
+
+  lock_level = var.lock.kind
   name       = coalesce(var.lock.name, "lock-${var.name}")
   scope      = azapi_resource.this_private_cloud.id
-  lock_level = var.lock.kind
 
   depends_on = [ #deploy all sub-resources before adding locks in case someone configures a read-only lock
     azapi_resource.this_private_cloud,

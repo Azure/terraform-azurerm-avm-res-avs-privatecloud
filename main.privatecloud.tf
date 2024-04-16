@@ -3,14 +3,7 @@
 
 #build a base private cloud resource then modify it as needed.
 resource "azapi_resource" "this_private_cloud" {
-
-  type      = "Microsoft.AVS/privateClouds@2022-05-01"
-  name      = var.name
-  parent_id = data.azurerm_resource_group.sddc_deployment.id
-  location  = local.location
-  tags      = var.tags
-
-
+  type = "Microsoft.AVS/privateClouds@2023-03-01"
   body = jsonencode({
     sku = {
       name = lower(var.sku_name)
@@ -20,10 +13,12 @@ resource "azapi_resource" "this_private_cloud" {
         clusterSize = var.management_cluster_size
       }
 
-      networkBlock    = var.avs_network_cidr
-      nsxtPassword    = local.nsxt_password
-      vcenterPassword = local.vcenter_password
-      internet        = var.internet_enabled ? "Enabled" : "Disabled"
+      extendedNetworkBlocks = var.extended_network_blocks
+      networkBlock          = var.avs_network_cidr
+      nsxtPassword          = local.nsxt_password
+      vcenterPassword       = local.vcenter_password
+      internet              = var.internet_enabled ? "Enabled" : "Disabled"
+
 
       availability = {
         secondaryZone = var.secondary_zone
@@ -32,6 +27,11 @@ resource "azapi_resource" "this_private_cloud" {
       }
     }
   })
+  location               = var.location
+  name                   = var.name
+  parent_id              = var.resource_group_resource_id
+  response_export_values = ["*"]
+  tags                   = var.tags
 
   #TODO: Test to see if a lifecycle block is needed when the NSXT or VCenter passwords change
   timeouts {
@@ -39,6 +39,4 @@ resource "azapi_resource" "this_private_cloud" {
     delete = "4h"
     update = "4h"
   }
-
-  response_export_values = ["*"]
 }
