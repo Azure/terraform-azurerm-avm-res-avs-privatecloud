@@ -92,6 +92,12 @@ Description: The full /22 or larger network CIDR summary for the private cloud m
 
 Type: `string`
 
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region where this and supporting resources should be deployed.  
+
+Type: `string`
+
 ### <a name="input_name"></a> [name](#input\_name)
 
 Description: The name to use when creating the avs sddc private cloud.
@@ -101,6 +107,12 @@ Type: `string`
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: The resource group where the resources will be deployed.
+
+Type: `string`
+
+### <a name="input_resource_group_resource_id"></a> [resource\_group\_resource\_id](#input\_resource\_group\_resource\_id)
+
+Description: The resource group Azure Resource ID for the deployment resource group. Used for the AzAPI resource that deploys the private cloud.
 
 Type: `string`
 
@@ -442,6 +454,14 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_extended_network_blocks"></a> [extended\_network\_blocks](#input\_extended\_network\_blocks)
+
+Description: If using AV64 sku's in non-management clusters it is required to provide one /23 CIDR block or three /23 CIDR blocks. Provide a list of CIDR strings if planning to use AV64 nodes.
+
+Type: `list(string)`
+
+Default: `[]`
+
 ### <a name="input_global_reach_connections"></a> [global\_reach\_connections](#input\_global\_reach\_connections)
 
 Description: Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
@@ -503,14 +523,6 @@ map(object({
 ```
 
 Default: `{}`
-
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: The Azure region where this and supporting resources should be deployed.  Defaults to the Resource Groups location if undefined.
-
-Type: `string`
-
-Default: `null`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 

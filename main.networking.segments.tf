@@ -1,18 +1,16 @@
 #Get the currently configured gateways
 data "azapi_resource_action" "avs_gateways" {
   type                   = "Microsoft.AVS/privateClouds/workloadNetworks/gateways@2022-05-01"
+  method                 = "GET"
   resource_id            = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/gateways"
   response_export_values = ["*"]
-  method                 = "GET"
 }
 
 #Create the segments
 resource "azapi_resource" "segments" {
   for_each = var.segments
 
-  type      = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2022-05-01"
-  name      = each.key
-  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2022-05-01"
   body = jsonencode({
     properties = {
       connectedGateway = each.value.connected_gateway == null ? [for value in jsondecode(data.azapi_resource_action.avs_gateways.output).value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
@@ -23,6 +21,14 @@ resource "azapi_resource" "segments" {
       }
     }
   })
+  name      = each.key
+  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+
+  timeouts {
+    create = "4h"
+    delete = "4h"
+    update = "4h"
+  }
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -43,10 +49,4 @@ resource "azapi_resource" "segments" {
     azapi_resource_action.dns_service,
     azapi_resource.dhcp
   ]
-
-  timeouts {
-    create = "4h"
-    delete = "4h"
-    update = "4h"
-  }
 }

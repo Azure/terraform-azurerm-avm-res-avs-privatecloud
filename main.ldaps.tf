@@ -12,11 +12,7 @@ resource "terraform_data" "rerun_get" {
 resource "azapi_resource" "remove_existing_identity_source" {
   for_each = var.vcenter_identity_sources
 
-  type                      = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
-  parent_id                 = azapi_resource.this_private_cloud.id
-  response_export_values    = ["*"]
-  name                      = "TF-AVM-RemoveIdentitySources-${each.key}"
-  schema_validation_enabled = false
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = (jsonencode({ #remove the current identity source
     properties = {
@@ -27,6 +23,10 @@ resource "azapi_resource" "remove_existing_identity_source" {
     }
     }
   ))
+  name                      = "TF-AVM-RemoveIdentitySources-${each.key}"
+  parent_id                 = azapi_resource.this_private_cloud.id
+  response_export_values    = ["*"]
+  schema_validation_enabled = false
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -51,8 +51,8 @@ resource "azapi_resource" "remove_existing_identity_source" {
   ]
 
   lifecycle {
-    replace_triggered_by = [terraform_data.rerun_get]
     ignore_changes       = [body]
+    replace_triggered_by = [terraform_data.rerun_get]
   }
 }
 
@@ -63,9 +63,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
 resource "azapi_resource" "configure_identity_sources" {
   for_each = var.vcenter_identity_sources
 
-  type      = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
-  name      = "TF-AVM-SetIdentitySources-${each.key}"
-  parent_id = azapi_resource.this_private_cloud.id
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
   body = (
     jsonencode({
       properties = {
@@ -159,10 +157,13 @@ resource "azapi_resource" "configure_identity_sources" {
       }
     })
   )
+  name      = "TF-AVM-SetIdentitySources-${each.key}"
+  parent_id = azapi_resource.this_private_cloud.id
 
-  lifecycle {
-    replace_triggered_by = [terraform_data.rerun_get]
-    ignore_changes       = [body]
+  timeouts {
+    create = "4h"
+    delete = "4h"
+    update = "4h"
   }
 
   depends_on = [
@@ -188,9 +189,8 @@ resource "azapi_resource" "configure_identity_sources" {
     azapi_resource.remove_existing_identity_source
   ]
 
-  timeouts {
-    create = "4h"
-    delete = "4h"
-    update = "4h"
+  lifecycle {
+    ignore_changes       = [body]
+    replace_triggered_by = [terraform_data.rerun_get]
   }
 }

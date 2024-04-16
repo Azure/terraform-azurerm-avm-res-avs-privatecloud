@@ -10,15 +10,15 @@ resource "azurerm_vmware_express_route_authorization" "this_authorization_key" {
 resource "azapi_resource" "globalreach_connections" {
   for_each = var.global_reach_connections
 
-  type      = "Microsoft.AVS/privateClouds/globalReachConnections@2022-05-01"
-  name      = each.key
-  parent_id = azapi_resource.this_private_cloud.id
+  type = "Microsoft.AVS/privateClouds/globalReachConnections@2022-05-01"
   body = jsonencode({
     properties = {
       authorizationKey        = each.value.authorization_key
       peerExpressRouteCircuit = each.value.peer_expressroute_circuit_resource_id
     }
   })
+  name      = each.key
+  parent_id = azapi_resource.this_private_cloud.id
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -38,17 +38,16 @@ resource "azapi_resource" "globalreach_connections" {
 resource "azurerm_virtual_network_gateway_connection" "this" {
   for_each = { for k, v in var.expressroute_connections : k => v if v.vwan_hub_connection == false }
 
-  type                         = "ExpressRoute"
-  enable_bgp                   = true
+  location                     = var.location
   name                         = each.key
-  location                     = local.location
   resource_group_name          = data.azurerm_resource_group.sddc_deployment.name
-  express_route_gateway_bypass = each.value.fast_path_enabled
-  authorization_key            = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+  type                         = "ExpressRoute"
   virtual_network_gateway_id   = each.value.expressroute_gateway_resource_id
+  authorization_key            = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+  enable_bgp                   = true
   express_route_circuit_id     = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
+  express_route_gateway_bypass = each.value.fast_path_enabled
   tags                         = each.value.tags == {} ? var.tags : each.value.tags
-
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -64,7 +63,9 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
     azapi_resource.globalreach_connections
   ]
 
-  lifecycle { ignore_changes = [express_route_circuit_id] } #TODO - determine why this is returning 'known after apply'
+  lifecycle {
+    ignore_changes = [express_route_circuit_id]
+  } #TODO - determine why this is returning 'known after apply'
 }
 
 data "azurerm_vmware_private_cloud" "this_private_cloud" {
@@ -76,9 +77,9 @@ data "azurerm_vmware_private_cloud" "this_private_cloud" {
 resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if v.vwan_hub_connection == true }
 
-  name                             = each.key
-  express_route_gateway_id         = each.value.expressroute_gateway_resource_id
   express_route_circuit_peering_id = data.azurerm_vmware_private_cloud.this_private_cloud.circuit[0].express_route_private_peering_id
+  express_route_gateway_id         = each.value.expressroute_gateway_resource_id
+  name                             = each.key
   authorization_key                = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
   enable_internet_security         = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
   routing_weight                   = each.value.routing_weight
@@ -90,6 +91,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
       associated_route_table_id = routing.value.associated_route_table_id
       inbound_route_map_id      = routing.value.inbound_route_map_id
       outbound_route_map_id     = routing.value.outbound_route_map_id
+
       propagated_route_table {
         labels          = routing.value.propagated_route_table.labels
         route_table_ids = routing.value.propagated_route_table.route_table_ids
@@ -112,21 +114,23 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     azurerm_virtual_network_gateway_connection.this
   ]
 
-  lifecycle { ignore_changes = [express_route_circuit_peering_id] } #TODO - determine why this is returning 'known after apply'
+  lifecycle {
+    ignore_changes = [express_route_circuit_peering_id]
+  } #TODO - determine why this is returning 'known after apply'
 }
 
 #create one or more cross SDDC regional connections
 resource "azapi_resource" "avs_interconnect" {
   for_each = var.avs_interconnect_connections
 
-  type      = "Microsoft.AVS/privateClouds/cloudLinks@2022-05-01"
-  name      = each.key
-  parent_id = azapi_resource.this_private_cloud.id
+  type = "Microsoft.AVS/privateClouds/cloudLinks@2022-05-01"
   body = jsonencode({
     properties = {
       linkedCloud = each.value.linked_private_cloud_resource_id
     }
   })
+  name      = each.key
+  parent_id = azapi_resource.this_private_cloud.id
 
   depends_on = [
     azapi_resource.this_private_cloud,

@@ -4,10 +4,7 @@
 resource "azapi_resource" "clusters" {
   for_each = var.clusters
 
-  type      = "Microsoft.AVS/privateClouds/clusters@2023-03-01"
-  name      = each.key
-  parent_id = azapi_resource.this_private_cloud.id
-
+  type = "Microsoft.AVS/privateClouds/clusters@2023-03-01"
   body = jsonencode({
     sku = {
       name = each.value.sku_name
@@ -17,13 +14,8 @@ resource "azapi_resource" "clusters" {
     }
 
   })
-
-  #adding lifecycle block to handle deployment issue with parent_id 
-  lifecycle {
-    ignore_changes = [
-      parent_id
-    ]
-  }
+  name      = each.key
+  parent_id = azapi_resource.this_private_cloud.id
 
   timeouts {
     create = "4h"
@@ -32,5 +24,12 @@ resource "azapi_resource" "clusters" {
   }
 
   depends_on = [azapi_resource.this_private_cloud] #setting explicit dependencies to force deployment order
+
+  #adding lifecycle block to handle deployment issue with parent_id 
+  lifecycle {
+    ignore_changes = [
+      parent_id
+    ]
+  }
 }
 
