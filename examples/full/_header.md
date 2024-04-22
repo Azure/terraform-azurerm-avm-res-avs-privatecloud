@@ -1,4 +1,4 @@
-# Default AVS example with Vnet ExpressRoute Gateway
+# Full AVS example with Vnet ExpressRoute Gateway
 
 This example demonstrates most of the deployment inputs using a single Azure VMware Solution private cloud with the following features and supporting test resources:
 
