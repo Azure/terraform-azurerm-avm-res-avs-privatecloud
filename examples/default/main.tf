@@ -173,7 +173,7 @@ module "avm_res_keyvault_vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.4.0"
+  # version            = "=0.4.1"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
