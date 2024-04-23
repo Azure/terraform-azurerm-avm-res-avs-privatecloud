@@ -34,6 +34,7 @@ module "jumpvm" {
   name                                   = var.vm_name
   admin_credential_key_vault_resource_id = var.key_vault_resource_id
   virtualmachine_sku_size                = var.vm_sku
+  zone                                   = "1"
 
   source_image_reference = {
     publisher = "MicrosoftWindowsServer"

@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Default AVS example with Vnet ExpressRoute Gateway
+# Full AVS example with Vnet ExpressRoute Gateway
 
 This example demonstrates most of the deployment inputs using a single Azure VMware Solution private cloud with the following features and supporting test resources:
 
@@ -294,7 +294,7 @@ module "create_anf_volume" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.4.0"
+  # version            = "=0.4.1"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
