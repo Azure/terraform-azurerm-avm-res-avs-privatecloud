@@ -39,7 +39,7 @@ terraform {
     }
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 1.12"
+      version = "~> 1.13, != 1.13.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -80,8 +80,8 @@ locals {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  #source               = "../../modules/generate_deployment_region"
-  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
+  source = "../../modules/generate_deployment_region"
+  #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -294,7 +294,7 @@ module "create_anf_volume" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.4.1"
+  # version            = "=0.5.0"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
@@ -406,15 +406,15 @@ module "test_private_cloud" {
 
   vcenter_identity_sources = {
     test_local = {
-      alias            = module.create_dc.domain_netbios_name
-      base_group_dn    = module.create_dc.domain_distinguished_name
-      base_user_dn     = module.create_dc.domain_distinguished_name
-      domain           = module.create_dc.domain_fqdn
-      group_name       = "vcenterAdmins"
-      name             = module.create_dc.domain_fqdn
-      primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
-      secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
-      ssl              = "Enabled"
+      alias          = module.create_dc.domain_netbios_name
+      base_group_dn  = module.create_dc.domain_distinguished_name
+      base_user_dn   = module.create_dc.domain_distinguished_name
+      domain         = module.create_dc.domain_fqdn
+      group_name     = "vcenterAdmins"
+      name           = module.create_dc.domain_fqdn
+      primary_server = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
+      #secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
+      ssl = "Enabled"
     }
   }
 
@@ -426,6 +426,7 @@ module "test_private_cloud" {
   }
 
 }
+
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -435,7 +436,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.12)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13, != 1.13.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
@@ -518,7 +519,7 @@ Version: =0.1.3
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
-Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region
+Source: ../../modules/generate_deployment_region
 
 Version:
 

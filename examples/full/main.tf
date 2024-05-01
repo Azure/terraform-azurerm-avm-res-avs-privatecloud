@@ -11,7 +11,7 @@ terraform {
     }
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 1.12"
+      version = "~> 1.13, != 1.13.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -52,8 +52,8 @@ locals {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  #source               = "../../modules/generate_deployment_region"
-  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
+  source = "../../modules/generate_deployment_region"
+  #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -266,7 +266,7 @@ module "create_anf_volume" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.4.1"
+  # version            = "=0.5.0"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
@@ -378,15 +378,15 @@ module "test_private_cloud" {
 
   vcenter_identity_sources = {
     test_local = {
-      alias            = module.create_dc.domain_netbios_name
-      base_group_dn    = module.create_dc.domain_distinguished_name
-      base_user_dn     = module.create_dc.domain_distinguished_name
-      domain           = module.create_dc.domain_fqdn
-      group_name       = "vcenterAdmins"
-      name             = module.create_dc.domain_fqdn
-      primary_server   = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
-      secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
-      ssl              = "Enabled"
+      alias          = module.create_dc.domain_netbios_name
+      base_group_dn  = module.create_dc.domain_distinguished_name
+      base_user_dn   = module.create_dc.domain_distinguished_name
+      domain         = module.create_dc.domain_fqdn
+      group_name     = "vcenterAdmins"
+      name           = module.create_dc.domain_fqdn
+      primary_server = "ldaps://${module.create_dc.dc_details.name}.${module.create_dc.domain_fqdn}:636"
+      #secondary_server = "ldaps://${module.create_dc.dc_details_secondary.name}.${module.create_dc.domain_fqdn}:636"
+      ssl = "Enabled"
     }
   }
 
@@ -398,3 +398,4 @@ module "test_private_cloud" {
   }
 
 }
+

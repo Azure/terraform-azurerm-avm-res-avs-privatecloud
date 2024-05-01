@@ -2,20 +2,19 @@
 resource "azapi_resource" "public_ip" {
   for_each = var.internet_inbound_public_ips
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2022-05-01"
-  body = jsonencode({
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2023-03-01"
+  body = {
     properties = {
       displayName       = each.key
       numberOfPublicIPs = each.value.number_of_ip_addresses
     }
-  })
+  }
   name      = each.key
   parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
 
   timeouts {
     create = "4h"
     delete = "4h"
-    update = "4h"
   }
 
   depends_on = [

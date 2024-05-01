@@ -2,32 +2,30 @@
 resource "azapi_resource" "dhcp" {
   for_each = var.dhcp_configuration
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/dhcpConfigurations@2022-05-01"
-  body = upper(each.value.dhcp_type) == "RELAY" ? (
-    jsonencode({
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/dhcpConfigurations@2023-03-01"
+  body = jsondecode(upper(each.value.dhcp_type) == "RELAY" ? jsonencode(
+    {
       properties = {
         displayName     = each.value.display_name
         dhcpType        = upper(each.value.dhcp_type)
         serverAddresses = each.value.relay_server_addresses
       }
-    })
-    ) : (
-    jsonencode({
+    }) : jsonencode(
+    {
       properties = {
         displayName   = each.value.display_name
         dhcpType      = upper(each.value.dhcp_type)
         leaseTime     = each.value.server_lease_time
         serverAddress = each.value.server_address
       }
-    })
-  )
+    }
+  ))
   name      = each.key
   parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
 
   timeouts {
     create = "4h"
     delete = "4h"
-    update = "4h"
   }
 
   depends_on = [

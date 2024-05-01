@@ -11,7 +11,7 @@ terraform {
     }
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 1.9"
+      version = "~> 1.13"
     }
     time = {
       source  = "hashicorp/time"
@@ -178,7 +178,7 @@ module "avm_res_keyvault_vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.4.1"
+  # version            = "=0.5.0"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name

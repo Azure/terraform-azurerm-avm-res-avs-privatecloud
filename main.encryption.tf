@@ -10,8 +10,8 @@ data "azurerm_key_vault" "this_vault" {
 resource "azapi_update_resource" "customer_managed_key" {
   for_each = var.customer_managed_key
 
-  type = "Microsoft.AVS/privateClouds@2022-05-01"
-  body = jsonencode({
+  type = "Microsoft.AVS/privateClouds@2023-03-01"
+  body = {
     properties = {
       encryption = {
         status = "Enabled"
@@ -22,7 +22,7 @@ resource "azapi_update_resource" "customer_managed_key" {
         }
       }
     }
-  })
+  }
   #name      = "${azapi_resource.this_private_cloud.name}-${var.customer_managed_key.key_name}"
   resource_id = azapi_resource.this_private_cloud.id
 

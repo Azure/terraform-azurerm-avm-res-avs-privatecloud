@@ -2,14 +2,19 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~>1.12"
+      version = "~> 1.13, != 1.13.0"
     }
   }
 }
+
+provider "azapi" {
+  enable_hcl_output_for_data_source = true
+}
+
 locals {
-  test_regions     = ["southafricanorth", "eastasia", "canadacentral"]
-  with_quota_av36  = try([for region in data.azapi_resource_action.quota : { name = split("/", region.resource_id)[6], sku = "av36" } if jsondecode(region.output).hostsRemaining.he >= var.total_quota_required], [])
-  with_quota_av36p = try([for region in data.azapi_resource_action.quota : { name = split("/", region.resource_id)[6], sku = "av36p" } if jsondecode(region.output).hostsRemaining.he2 >= var.total_quota_required], [])
+  test_regions     = ["southafricanorth", "eastasia", "canadacentral", "germanywestcentral"]
+  with_quota_av36  = try([for region in data.azapi_resource_action.quota : { name = split("/", region.resource_id)[6], sku = "av36" } if region.output.hostsRemaining.he >= var.total_quota_required], [])
+  with_quota_av36p = try([for region in data.azapi_resource_action.quota : { name = split("/", region.resource_id)[6], sku = "av36p" } if region.output.hostsRemaining.he2 >= var.total_quota_required], [])
   with_quota       = concat(local.with_quota_av36, local.with_quota_av36p)
 }
 
@@ -33,4 +38,3 @@ resource "random_integer" "region_index" {
   min = 0
   max = try((length(local.with_quota) - 1), 0)
 }
-
