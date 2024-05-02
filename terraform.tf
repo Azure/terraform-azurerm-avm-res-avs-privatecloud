@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 1.13"
+      version = "~> 1.13, != 1.13.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -18,8 +18,4 @@ terraform {
       version = "~> 0.10"
     }
   }
-}
-
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
 }

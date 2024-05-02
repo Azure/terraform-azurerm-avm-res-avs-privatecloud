@@ -11,7 +11,7 @@ terraform {
     }
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 1.13"
+      version = "~> 1.13, != 1.13.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -27,6 +27,10 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+}
+
+provider "azapi" {
+  enable_hcl_output_for_data_source = true
 }
 
 locals {
