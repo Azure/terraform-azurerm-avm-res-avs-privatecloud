@@ -10,13 +10,13 @@ resource "azurerm_vmware_express_route_authorization" "this_authorization_key" {
 resource "azapi_resource" "globalreach_connections" {
   for_each = var.global_reach_connections
 
-  type = "Microsoft.AVS/privateClouds/globalReachConnections@2022-05-01"
-  body = jsonencode({
+  type = "Microsoft.AVS/privateClouds/globalReachConnections@2023-03-01"
+  body = {
     properties = {
       authorizationKey        = each.value.authorization_key
       peerExpressRouteCircuit = each.value.peer_expressroute_circuit_resource_id
     }
-  })
+  }
   name      = each.key
   parent_id = azapi_resource.this_private_cloud.id
 
@@ -45,7 +45,7 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
   virtual_network_gateway_id   = each.value.expressroute_gateway_resource_id
   authorization_key            = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
   enable_bgp                   = true
-  express_route_circuit_id     = jsondecode(azapi_resource.this_private_cloud.output).properties.circuit.expressRouteID
+  express_route_circuit_id     = azapi_resource.this_private_cloud.output.properties.circuit.expressRouteID
   express_route_gateway_bypass = each.value.fast_path_enabled
   tags                         = each.value.tags == {} ? var.tags : each.value.tags
 
@@ -123,12 +123,12 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
 resource "azapi_resource" "avs_interconnect" {
   for_each = var.avs_interconnect_connections
 
-  type = "Microsoft.AVS/privateClouds/cloudLinks@2022-05-01"
-  body = jsonencode({
+  type = "Microsoft.AVS/privateClouds/cloudLinks@2023-03-01"
+  body = {
     properties = {
       linkedCloud = each.value.linked_private_cloud_resource_id
     }
-  })
+  }
   name      = each.key
   parent_id = azapi_resource.this_private_cloud.id
 

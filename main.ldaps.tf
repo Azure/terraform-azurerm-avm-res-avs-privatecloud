@@ -12,9 +12,9 @@ resource "terraform_data" "rerun_get" {
 resource "azapi_resource" "remove_existing_identity_source" {
   for_each = var.vcenter_identity_sources
 
-  type = "Microsoft.AVS/privateClouds/scriptExecutions@2022-05-01"
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-03-01"
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
-  body = (jsonencode({ #remove the current identity source
+  body = ({ #remove the current identity source
     properties = {
       timeout        = "PT15M"
       retention      = "P30D"
@@ -22,7 +22,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
       DomainName     = each.value.domain
     }
     }
-  ))
+  )
   name                      = "TF-AVM-RemoveIdentitySources-${each.key}"
   parent_id                 = azapi_resource.this_private_cloud.id
   response_export_values    = ["*"]
@@ -63,107 +63,104 @@ resource "azapi_resource" "remove_existing_identity_source" {
 resource "azapi_resource" "configure_identity_sources" {
   for_each = var.vcenter_identity_sources
 
-  type = "Microsoft.AVS/privateClouds/scriptExecutions@2021-06-01"
-  body = (
-    jsonencode({
-      properties = {
-        timeout        = "PT15M"
-        retention      = "P30D"
-        scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*/scriptCmdlets/${each.value.ssl == "Enabled" ? "New-LDAPSIdentitySource" : "New-LDAPIdentitySource"}"
-        hiddenParameters = [{
-          name     = "Credential"
-          type     = "Credential"
-          username = var.vcenter_identity_sources_credentials[each.key].ldap_user
-          password = var.vcenter_identity_sources_credentials[each.key].ldap_user_password
-        }]
-        parameters = each.value.secondary_server != null ? [ #list with a primary and secondary server value
-          {
-            name  = "GroupName"
-            type  = "Value"
-            value = each.value.group_name
-          },
-          {
-            name  = "BaseDNGroups"
-            type  = "Value"
-            value = each.value.base_group_dn
-          },
-          {
-            name  = "BaseDNUsers"
-            type  = "Value"
-            value = each.value.base_user_dn
-          },
-          {
-            name  = "PrimaryUrl"
-            type  = "Value"
-            value = each.value.primary_server
-          },
-          {
-            name  = "DomainAlias"
-            type  = "Value"
-            value = each.value.alias
-          },
-          {
-            name  = "DomainName"
-            type  = "Value"
-            value = each.value.domain
-          },
-          {
-            name  = "Name"
-            type  = "Value"
-            value = each.value.name
-          },
-          {
-            name  = "SecondaryUrl"
-            type  = "Value"
-            value = each.value.secondary_server
-          }
-          ] : [ #list with only a primary value
-          {
-            name  = "GroupName"
-            type  = "Value"
-            value = each.value.group_name
-          },
-          {
-            name  = "BaseDNGroups"
-            type  = "Value"
-            value = each.value.base_group_dn
-          },
-          {
-            name  = "BaseDNUsers"
-            type  = "Value"
-            value = each.value.base_user_dn
-          },
-          {
-            name  = "PrimaryUrl"
-            type  = "Value"
-            value = each.value.primary_server
-          },
-          {
-            name  = "DomainAlias"
-            type  = "Value"
-            value = each.value.alias
-          },
-          {
-            name  = "DomainName"
-            type  = "Value"
-            value = each.value.domain
-          },
-          {
-            name  = "Name"
-            type  = "Value"
-            value = each.value.name
-          }
-        ]
-      }
-    })
-  )
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-03-01"
+  body = ({
+    properties = {
+      timeout        = "PT15M"
+      retention      = "P30D"
+      scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*/scriptCmdlets/${each.value.ssl == "Enabled" ? "New-LDAPSIdentitySource" : "New-LDAPIdentitySource"}"
+      hiddenParameters = [{
+        name     = "Credential"
+        type     = "Credential"
+        username = var.vcenter_identity_sources_credentials[each.key].ldap_user
+        password = var.vcenter_identity_sources_credentials[each.key].ldap_user_password
+      }]
+      parameters = each.value.secondary_server != null ? [ #list with a primary and secondary server value
+        {
+          name  = "GroupName"
+          type  = "Value"
+          value = each.value.group_name
+        },
+        {
+          name  = "BaseDNGroups"
+          type  = "Value"
+          value = each.value.base_group_dn
+        },
+        {
+          name  = "BaseDNUsers"
+          type  = "Value"
+          value = each.value.base_user_dn
+        },
+        {
+          name  = "PrimaryUrl"
+          type  = "Value"
+          value = each.value.primary_server
+        },
+        {
+          name  = "DomainAlias"
+          type  = "Value"
+          value = each.value.alias
+        },
+        {
+          name  = "DomainName"
+          type  = "Value"
+          value = each.value.domain
+        },
+        {
+          name  = "Name"
+          type  = "Value"
+          value = each.value.name
+        },
+        {
+          name  = "SecondaryUrl"
+          type  = "Value"
+          value = each.value.secondary_server
+        }
+        ] : [ #list with only a primary value
+        {
+          name  = "GroupName"
+          type  = "Value"
+          value = each.value.group_name
+        },
+        {
+          name  = "BaseDNGroups"
+          type  = "Value"
+          value = each.value.base_group_dn
+        },
+        {
+          name  = "BaseDNUsers"
+          type  = "Value"
+          value = each.value.base_user_dn
+        },
+        {
+          name  = "PrimaryUrl"
+          type  = "Value"
+          value = each.value.primary_server
+        },
+        {
+          name  = "DomainAlias"
+          type  = "Value"
+          value = each.value.alias
+        },
+        {
+          name  = "DomainName"
+          type  = "Value"
+          value = each.value.domain
+        },
+        {
+          name  = "Name"
+          type  = "Value"
+          value = each.value.name
+        }
+      ]
+    }
+  })
   name      = "TF-AVM-SetIdentitySources-${each.key}"
   parent_id = azapi_resource.this_private_cloud.id
 
   timeouts {
     create = "4h"
     delete = "4h"
-    update = "4h"
   }
 
   depends_on = [

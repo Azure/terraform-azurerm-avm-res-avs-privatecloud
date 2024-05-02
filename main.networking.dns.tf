@@ -2,8 +2,8 @@
 resource "azapi_resource" "dns_forwarder_zones" {
   for_each = var.dns_forwarder_zones
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/dnsZones@2022-05-01"
-  body = jsonencode({
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/dnsZones@2023-03-01"
+  body = {
     properties = {
       displayName  = each.value.display_name
       dnsServerIps = each.value.dns_server_ips
@@ -11,14 +11,13 @@ resource "azapi_resource" "dns_forwarder_zones" {
       sourceIp     = each.value.source_ip
       #revision     = each.value.revision
     }
-  })
+  }
   name      = each.key
   parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
 
   timeouts {
     create = "4h"
     delete = "4h"
-    update = "4h"
   }
 
   depends_on = [
@@ -42,7 +41,7 @@ resource "azapi_resource" "dns_forwarder_zones" {
 #get the default DNS zone details
 #read in a private cloud dns services
 data "azapi_resource_action" "avs_dns" {
-  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2022-05-01"
+  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-03-01"
   method                 = "GET"
   resource_id            = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices"
   response_export_values = ["*"]
@@ -70,24 +69,23 @@ resource "azapi_resource_action" "dns_service" {
   count = (length(keys(var.dns_forwarder_zones))) == 0 ? 0 : 1
 
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
-  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2022-05-01"
+  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-03-01"
   #if zone information defined populate the properties
-  body = jsonencode({
+  body = {
     properties = {
-      defaultDnsZone = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.defaultDnsZone
-      displayName    = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.displayName
-      dnsServiceIp   = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.dnsServiceIp
+      defaultDnsZone = data.azapi_resource_action.avs_dns.output.value[0].properties.defaultDnsZone
+      displayName    = data.azapi_resource_action.avs_dns.output.value[0].properties.displayName
+      dnsServiceIp   = data.azapi_resource_action.avs_dns.output.value[0].properties.dnsServiceIp
       fqdnZones      = try([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service], [])
-      logLevel       = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.logLevel
+      logLevel       = data.azapi_resource_action.avs_dns.output.value[0].properties.logLevel
     }
-  })
+  }
   method = "PATCH"
   when   = "apply"
 
   timeouts {
     create = "4h"
     delete = "4h"
-    update = "4h"
   }
 
   depends_on = [
@@ -113,25 +111,24 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
   count = length(keys(var.dns_forwarder_zones)) > 0 ? 1 : 0
 
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
-  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2022-05-01"
+  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-03-01"
   #if zone information defined populate the properties
-  body = jsonencode({
+  body = {
     properties = {
-      defaultDnsZone = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.defaultDnsZone
-      displayName    = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.displayName
-      dnsServiceIp   = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.dnsServiceIp
+      defaultDnsZone = data.azapi_resource_action.avs_dns.output.value[0].properties.defaultDnsZone
+      displayName    = data.azapi_resource_action.avs_dns.output.value[0].properties.displayName
+      dnsServiceIp   = data.azapi_resource_action.avs_dns.output.value[0].properties.dnsServiceIp
       fqdnZones      = []
-      logLevel       = jsondecode(data.azapi_resource_action.avs_dns.output).value[0].properties.logLevel
+      logLevel       = data.azapi_resource_action.avs_dns.output.value[0].properties.logLevel
       #revision       = 0
     }
-  })
+  }
   method = "PATCH"
   when   = "destroy"
 
   timeouts {
     create = "4h"
     delete = "4h"
-    update = "4h"
   }
 
   depends_on = [

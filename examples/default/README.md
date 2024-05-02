@@ -27,7 +27,7 @@ terraform {
     }
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 1.9"
+      version = "~> 1.13"
     }
     time = {
       source  = "hashicorp/time"
@@ -189,7 +189,7 @@ module "avm_res_keyvault_vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.4.1"
+  # version            = "=0.5.0"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
@@ -255,7 +255,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.6)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.9)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 

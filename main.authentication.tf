@@ -46,12 +46,12 @@ resource "azurerm_role_assignment" "this_private_cloud" {
 resource "azapi_update_resource" "managed_identity" {
   count = var.managed_identities.system_assigned ? 1 : 0
 
-  type = "Microsoft.AVS/privateClouds@2022-05-01"
-  body = jsonencode({
+  type = "Microsoft.AVS/privateClouds@2023-03-01"
+  body = {
     identity = {
-      type = "systemassigned"
+      type = "SystemAssigned"
     }
-  })
+  }
   resource_id            = azapi_resource.this_private_cloud.id
   response_export_values = ["identity"]
 
@@ -69,7 +69,7 @@ resource "azapi_update_resource" "managed_identity" {
 resource "azapi_update_resource" "manual_passwords" {
   count = var.nsxt_password != null || var.vcenter_password != null ? 1 : 0 #if either password value is set, then update the password.  
 
-  type      = "Microsoft.AVS/privateClouds@2022-05-01"
+  type      = "Microsoft.AVS/privateClouds@2023-03-01"
   #name      = "${azapi_resource.this_private_cloud.name}-passwords"
   resource_id = azapi_resource.this_private_cloud.id
   body = jsonencode({
@@ -83,7 +83,7 @@ resource "azapi_update_resource" "manual_passwords" {
 
 #get SDDC credentials for use with the credentials output
 data "azapi_resource_action" "sddc_creds" {
-  type                   = "Microsoft.AVS/privateClouds@2022-05-01"
+  type                   = "Microsoft.AVS/privateClouds@2023-03-01"
   action                 = "listAdminCredentials"
   resource_id            = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
