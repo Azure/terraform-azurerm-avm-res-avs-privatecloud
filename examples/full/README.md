@@ -80,8 +80,8 @@ locals {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  source = "../../modules/generate_deployment_region"
-  #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
+  #source = "../../modules/generate_deployment_region"
+  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -519,7 +519,7 @@ Version: =0.1.3
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
-Source: ../../modules/generate_deployment_region
+Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region
 
 Version:
 
