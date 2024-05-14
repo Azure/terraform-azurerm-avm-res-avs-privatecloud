@@ -81,12 +81,12 @@ resource "azurerm_resource_group" "this" {
 
 module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = "0.5.1"
+  version                = "0.5.3"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
   location               = azurerm_resource_group.this.location
-  enabled_for_deployment = true
+  enabled_for_deployment = true  
   network_acls = {
     default_action = "Allow"
     bypass         = "AzureServices"
@@ -119,7 +119,7 @@ module "avm_res_keyvault_vault" {
     }
     system_managed_identity_keys = { #give the system assigned managed identity for the disk encryption set access to keys
       role_definition_id_or_name = "Key Vault Crypto Officer"
-      principal_id               = module.test_private_cloud.identity.identity.principalId
+      principal_id               = module.test_private_cloud.identity.principalId
     }
   }
 
@@ -154,12 +154,12 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.1.3"
+  version = "=0.1.4"
 
   resource_group_name           = azurerm_resource_group.this.name
   virtual_network_address_space = ["10.100.0.0/16"]
-  vnet_name                     = "GatewayHubVnet"
-  vnet_location                 = azurerm_resource_group.this.location
+  name                     = "GatewayHubVnet"
+  location                 = azurerm_resource_group.this.location
 
   subnets = {
     GatewaySubnet = {
@@ -173,6 +173,9 @@ module "gateway_vnet" {
     }
     AzureBastionSubnet = {
       address_prefixes = ["10.100.2.0/24"]
+    }
+    ElasticSanSubnet = {
+      address_prefixes = ["10.100.4.0/24"]
     }
     ANFSubnet = {
       address_prefixes = ["10.100.3.0/24"]
@@ -214,7 +217,7 @@ module "create_dc" {
   test_admin_user             = local.test_admin_user_name
   admin_group_name            = local.test_admin_group_name
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
-  virtual_network_resource_id = module.gateway_vnet.vnet-resource.id
+  virtual_network_resource_id = module.gateway_vnet.vnet_resource.id
 
   depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
 }
@@ -267,6 +270,48 @@ module "create_anf_volume" {
   anf_nfs_allowed_clients = ["0.0.0.0/0"]
 }
 
+
+module "elastic_san" {
+  source               = "../../modules/create_elastic_san_volume"
+  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
+  elastic_san_name     = "esan-${module.naming.storage_share.name_unique}"
+  resource_group_name  = azurerm_resource_group.this.name
+  resource_group_id    = azurerm_resource_group.this.id
+  location             = azurerm_resource_group.this.location
+  base_size_in_tib     = 1
+  extended_size_in_tib = 1
+  zones                = [module.test_private_cloud.resource.properties.availability.zone]
+  public_network_access = "Enabled"
+
+  sku = {
+    name = "Premium_LRS"
+    tier = "Premium"
+  }
+
+  elastic_san_volume_groups = {
+    vg_1 = {
+      name          = "esan-vg-${module.naming.storage_share.name_unique}"
+      protocol_type = "iSCSI"
+      volumes = {
+        volume_1 = {
+          name        = "esan-vol-${module.naming.storage_share.name_unique}-01"
+          size_in_gib = 100
+        }
+      }
+
+        private_link_service_connections = {
+            pls_conn_1 = {
+                private_endpoint_name = "esan-${module.naming.private_endpoint.name_unique}"
+                resource_group_name = azurerm_resource_group.this.name
+                resource_group_location = azurerm_resource_group.this.location
+                esan_subnet_resource_id = module.gateway_vnet.subnets["ElasticSanSubnet"].id
+                private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
+            }
+        }
+    }
+  }
+}
+
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
@@ -292,7 +337,7 @@ module "test_private_cloud" {
 
   /* example for adding additional clusters
   clusters = {
-    Cluster_2 = {
+    "Cluster-2" = {
       cluster_node_count = 3
       sku_name           = jsondecode(local_file.region_sku_cache.content).sku
     }
@@ -334,12 +379,28 @@ module "test_private_cloud" {
     }
   }
 
+  elastic_san_datastores = {
+    esan_datastore_cluster1 = {
+      esan_volume_resource_id = module.elastic_san.volumes["vg_1-volume_1"].id
+      cluster_names             = ["Cluster-1"]
+    }
+  }
+
   expressroute_connections = {
     default = {
       expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
       authorization_key_name           = "test_auth_key"
     }
   }
+
+  /*Example global reach connection.  Uncomment and provide the target auth key and circuit id to create a new GR circuit
+  global_reach_connections = {
+    gr_region_1 = {
+      authorization_key                     = "00000000-0000-0000-0000-000000000000"
+      peer_expressroute_circuit_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/<resource_group_name>/providers/Microsoft.Network/expressRouteCircuits/tnt##-cust-p##-region-er"
+    }
+  }
+  */
 
   lock = {
     name = "lock-avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
@@ -400,6 +461,8 @@ module "test_private_cloud" {
       ldap_user_password = module.create_dc.ldap_user_password
     }
   }
-
 }
 
+output "resource" {
+  value = module.test_private_cloud.resource
+}

@@ -31,6 +31,6 @@ resource "azapi_update_resource" "customer_managed_key" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    azapi_update_resource.managed_identity
+    #azapi_update_resource.managed_identity
   ]
 }

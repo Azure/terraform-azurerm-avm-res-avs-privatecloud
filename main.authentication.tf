@@ -42,6 +42,10 @@ resource "azurerm_role_assignment" "this_private_cloud" {
   ]
 }
 
+
+
+
+/*
 #toggle the system managed identity
 resource "azapi_update_resource" "managed_identity" {
   count = var.managed_identities.system_assigned ? 1 : 0
@@ -49,7 +53,7 @@ resource "azapi_update_resource" "managed_identity" {
   type = "Microsoft.AVS/privateClouds@2023-03-01"
   body = {
     identity = {
-      type = "SystemAssigned"
+      type = "systemassigned"
     }
   }
   resource_id            = azapi_resource.this_private_cloud.id

@@ -28,6 +28,27 @@ locals {
   #merge the extended network Blocks value into the properties if it exists
   properties_map_enb = jsondecode((length(var.extended_network_blocks) == 0) ? jsonencode({}) : jsonencode({ extendedNetworkBlocks = var.extended_network_blocks }))
   secondary_zone_map = jsondecode(var.secondary_zone != null ? jsonencode({ secondaryZone = var.secondary_zone }) : jsonencode({}))
+
+
+  managed_identities = {
+    system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
+      this = {
+        type                       = var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0 ? "SystemAssigned, UserAssigned" : length(var.managed_identities.user_assigned_resource_ids) > 0 ? "UserAssigned" : "SystemAssigned"
+        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+      }
+    } : {}
+    system_assigned = var.managed_identities.system_assigned ? {
+      this = {
+        type = "SystemAssigned"
+      }
+    } : {}
+    user_assigned = length(var.managed_identities.user_assigned_resource_ids) > 0 ? {
+      this = {
+        type                       = "UserAssigned"
+        user_assigned_resource_ids = var.managed_identities.user_assigned_resource_ids
+      }
+    } : {}
+  }
 }
 
 #build a base private cloud resource then modify it as needed.
@@ -39,6 +60,13 @@ resource "azapi_resource" "this_private_cloud" {
   parent_id              = var.resource_group_resource_id
   response_export_values = ["*"]
   tags                   = var.tags
+
+  dynamic "identity" {
+    for_each = local.managed_identities.system_assigned
+    content {
+      type = identity.value.type
+    }
+  }
 
   #TODO: Test to see if a lifecycle block is needed when the NSXT or VCenter passwords change
   timeouts {

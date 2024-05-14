@@ -1,9 +1,10 @@
 resource "azurerm_monitor_diagnostic_setting" "this_private_cloud_diags" {
   for_each = var.diagnostic_settings
 
-  name                           = each.value.name
+  name                           = each.value.name != null ? each.value.name : "diag-${var.name}"
   target_resource_id             = azapi_resource.this_private_cloud.id
   eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id
+  eventhub_name                  = each.value.event_hub_name
   log_analytics_destination_type = each.value.log_analytics_destination_type
   log_analytics_workspace_id     = each.value.workspace_resource_id
   partner_solution_id            = each.value.marketplace_partner_resource_id
