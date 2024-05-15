@@ -318,16 +318,17 @@ module "test_private_cloud" {
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
   # version            = "=0.6.0"
 
-  enable_telemetry           = var.enable_telemetry
-  resource_group_name        = azurerm_resource_group.this.name
-  location                   = azurerm_resource_group.this.location
-  resource_group_resource_id = azurerm_resource_group.this.id
-  name                       = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-  sku_name                   = jsondecode(local_file.region_sku_cache.content).sku
-  avs_network_cidr           = "10.0.0.0/22"
-  internet_enabled           = true
-  management_cluster_size    = 3
-  extended_network_blocks    = ["10.10.0.0/23"]
+  enable_telemetry               = var.enable_telemetry
+  resource_group_name            = azurerm_resource_group.this.name
+  location                       = azurerm_resource_group.this.location
+  resource_group_resource_id     = azurerm_resource_group.this.id
+  name                           = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
+  sku_name                       = jsondecode(local_file.region_sku_cache.content).sku
+  avs_network_cidr               = "10.0.0.0/22"
+  internet_enabled               = true
+  management_cluster_size        = 3
+  extended_network_blocks        = ["10.10.0.0/23"]
+  external_storage_address_block = "10.20.0.0/24"
 
   addons = {
     HCX = {
