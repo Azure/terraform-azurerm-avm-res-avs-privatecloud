@@ -268,6 +268,14 @@ DNS_FORWARDER_ZONES
   nullable    = false
 }
 
+variable "elastic_san_datastores" {
+  type = map(object({
+    cluster_names           = set(string)
+    esan_volume_resource_id = string
+  }))
+  default = {}
+}
+
 variable "enable_stretch_cluster" {
   type        = bool
   default     = false
@@ -305,7 +313,7 @@ variable "expressroute_connections" {
   }))
   default     = {}
   description = <<EXPRESSROUTE_CONNECTIONS
-Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
+Map of string objects describing one or more ExpressRoute connections to be configured by the private cloud. The map key will be used for the connection name.
 
 - `<map key>` - Provide a key value that will be used as the expressroute connection name
   - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
@@ -339,6 +347,12 @@ variable "extended_network_blocks" {
   type        = list(string)
   default     = []
   description = "If using AV64 sku's in non-management clusters it is required to provide one /23 CIDR block or three /23 CIDR blocks. Provide a list of CIDR strings if planning to use AV64 nodes."
+}
+
+variable "external_storage_address_block" {
+  type        = string
+  default     = null
+  description = "If using Elastic SAN or other ISCSI storage, provide an /24 CIDR range as a string for use in connecting the external storage.  Example: 10.10.0.0/24"
 }
 
 variable "global_reach_connections" {
@@ -423,10 +437,16 @@ LOCK
 #resource doesn't support user-assigned managed identities.
 variable "managed_identities" {
   type = object({
-    system_assigned = optional(bool, false)
+    system_assigned            = optional(bool, false)
+    user_assigned_resource_ids = optional(set(string), [])
   })
   default     = {}
-  description = "This value toggles the system managed identity to on for use with customer managed keys. User Managed identities are currently unsupported for this resource. Defaults to false."
+  description = <<DESCRIPTION
+  Controls the Managed Identity configuration on this resource. The following properties can be specified:
+  
+  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled. This is used to configure encryption using customer managed keys.
+  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource. Currently unused by this resource.
+  DESCRIPTION
   nullable    = false
 }
 
