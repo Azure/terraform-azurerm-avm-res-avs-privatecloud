@@ -1,11 +1,11 @@
 locals {
-      #flatten the volumes in volume groups
+  #flatten the volumes in volume groups
   vg_volumes = { for vol in flatten([
     for vgk, vgv in var.elastic_san_volume_groups : [
       for vk, vv in vgv.volumes : {
-        vg_key          = vgk
-        vv_key          = vk
-        volume          = vv
+        vg_key = vgk
+        vv_key = vk
+        volume = vv
       }
     ]
   ]) : "${vol.vg_key}-${vol.vv_key}" => vol }
@@ -13,19 +13,19 @@ locals {
   vg_network_rules = { for nr in flatten([
     for vgk, vgv in var.elastic_san_volume_groups : [
       for nrk, nrv in vgv.network_rules : {
-        vg_key          = vgk
-        nr_key          = nrk
-        rule            = nrv
+        vg_key = vgk
+        nr_key = nrk
+        rule   = nrv
       }
     ]
   ]) : "${nr.vg_key}-${nr.vv_key}" => nr }
 
-    vg_private_endpoints = { for pe in flatten([
+  vg_private_endpoints = { for pe in flatten([
     for vgk, vgv in var.elastic_san_volume_groups : [
       for pek, pev in vgv.private_link_service_connections : {
-        vg_key          = vgk
-        pe_key          = pek
-        connection      = pev
+        vg_key     = vgk
+        pe_key     = pek
+        connection = pev
       }
     ]
   ]) : "${pe.vg_key}-${pe.pe_key}" => pe }
@@ -33,63 +33,63 @@ locals {
 }
 
 resource "azapi_resource" "this_elastic_san" {
-  type = "Microsoft.ElasticSan/elasticSans@2023-01-01"
-  name = var.elastic_san_name
-  location = var.location
+  type      = "Microsoft.ElasticSan/elasticSans@2023-01-01"
+  name      = var.elastic_san_name
+  location  = var.location
   parent_id = var.resource_group_id
-  tags = var.tags
+  tags      = var.tags
   body = {
     properties = {
-      availabilityZones = var.zones
-      baseSizeTiB = var.base_size_in_tib
+      availabilityZones       = var.zones
+      baseSizeTiB             = var.base_size_in_tib
       extendedCapacitySizeTiB = var.extended_size_in_tib
-      publicNetworkAccess = var.public_network_access
-      sku = var.sku
+      publicNetworkAccess     = var.public_network_access
+      sku                     = var.sku
     }
   }
 }
 
-locals{
-    encryptionProperties = { for key, value in var.elastic_san_volume_groups : key => {
-        identity = value.encryption_key_vault_properties.user_assigned_managed_identity_resource_id
-        keyVaultProperties = {
-            keyName              = value.encryption_key_vault_properties.keyName
-            keyVaultUri          = value.encryption_key_vault_properties.keyVaultUri        
-            keyVersion           = value.encryption_key_vault_properties.keyVersion 
-        }
-    } if  ( value.encryption_key_vault_properties != null) }
-}      
-       
-resource "azapi_resource" "this_elastic_san_volume_group" {
-  for_each = var.elastic_san_volume_groups
- schema_validation_enabled = false
+locals {
+  encryptionProperties = { for key, value in var.elastic_san_volume_groups : key => {
+    identity = value.encryption_key_vault_properties.user_assigned_managed_identity_resource_id
+    keyVaultProperties = {
+      keyName     = value.encryption_key_vault_properties.keyName
+      keyVaultUri = value.encryption_key_vault_properties.keyVaultUri
+      keyVersion  = value.encryption_key_vault_properties.keyVersion
+    }
+  } if(value.encryption_key_vault_properties != null) }
+}
 
-  type = "Microsoft.ElasticSan/elasticSans/volumegroups@2023-01-01"
-  name = each.value.name
+resource "azapi_resource" "this_elastic_san_volume_group" {
+  for_each                  = var.elastic_san_volume_groups
+  schema_validation_enabled = false
+
+  type      = "Microsoft.ElasticSan/elasticSans/volumegroups@2023-01-01"
+  name      = each.value.name
   parent_id = azapi_resource.this_elastic_san.id
 
-  dynamic identity {
+  dynamic "identity" {
     for_each = each.value.managed_identities != null ? ["identity"] : []
     content {
-        type = each.value.managed_identities.type
-        identity_ids = each.value.managed_identities.identity_ids
+      type         = each.value.managed_identities.type
+      identity_ids = each.value.managed_identities.identity_ids
     }
   }
 
   body = jsondecode(each.value.encryption_key_vault_properties != null ? jsonencode({
     properties = {
-      encryption = each.value.encryption_type
+      encryption           = each.value.encryption_type
       encryptionProperties = local.encryptionProperties
       networkAcls = {
-        virtualNetworkRules = [  for rule in each.value.network_rules : rule if rule.action == "Allow"   ]
+        virtualNetworkRules = [for rule in each.value.network_rules : rule if rule.action == "Allow"]
       }
       protocolType = each.value.protocol_type
     }
-  }) : jsonencode({
+    }) : jsonencode({
     properties = {
       encryption = each.value.encryption_type
       networkAcls = {
-        virtualNetworkRules = [  for rule in each.value.network_rules : rule if rule.action == "Allow"   ]
+        virtualNetworkRules = [for rule in each.value.network_rules : rule if rule.action == "Allow"]
       }
       protocolType = each.value.protocol_type
     }
@@ -98,22 +98,22 @@ resource "azapi_resource" "this_elastic_san_volume_group" {
 
 resource "azapi_resource" "this_elastic_san_volume" {
   for_each = local.vg_volumes
-  
+
   schema_validation_enabled = false
-  type = "Microsoft.ElasticSan/elasticSans/volumegroups/volumes@2023-01-01"
-  name = each.value.volume.name
-  parent_id = azapi_resource.this_elastic_san_volume_group[each.value.vg_key].id
+  type                      = "Microsoft.ElasticSan/elasticSans/volumegroups/volumes@2023-01-01"
+  name                      = each.value.volume.name
+  parent_id                 = azapi_resource.this_elastic_san_volume_group[each.value.vg_key].id
   body = {
     properties = {
       creationData = {
         createSource = each.value.volume.create_source_source_type
-        sourceId = each.value.volume.create_source_resource_id
+        sourceId     = each.value.volume.create_source_resource_id
       }
       sizeGiB = each.value.volume.size_in_gib
     }
   }
-  
-  depends_on = [ azurerm_private_endpoint.this ]
+
+  depends_on = [azurerm_private_endpoint.this]
 }
 
 resource "azurerm_private_endpoint" "this" {
@@ -129,7 +129,7 @@ resource "azurerm_private_endpoint" "this" {
     private_connection_resource_id = azapi_resource.this_elastic_san.id
     subresource_names              = [azapi_resource.this_elastic_san_volume_group[each.value.vg_key].name]
     is_manual_connection           = false
-  }  
+  }
 }
 
 /*

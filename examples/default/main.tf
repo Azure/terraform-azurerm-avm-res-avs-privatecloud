@@ -115,6 +115,9 @@ module "gateway_vnet" {
     AzureBastionSubnet = {
       address_prefixes = ["10.100.2.0/24"]
     }
+    ElasticSanSubnet = {
+      address_prefixes = ["10.100.3.0/24"]
+    }
   }
 }
 
@@ -151,7 +154,7 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
 module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = "0.5.1"
+  version                = "0.5.3"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
@@ -174,10 +177,51 @@ module "avm_res_keyvault_vault" {
   }
 }
 
+module "elastic_san" {
+  #source               = "../../modules/create_elastic_san_volume"
+  source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
+  elastic_san_name      = "esan-${module.naming.storage_share.name_unique}"
+  resource_group_name   = azurerm_resource_group.this.name
+  resource_group_id     = azurerm_resource_group.this.id
+  location              = azurerm_resource_group.this.location
+  base_size_in_tib      = 1
+  extended_size_in_tib  = 1
+  zones                 = [module.test_private_cloud.resource.properties.availability.zone]
+  public_network_access = "Enabled"
+
+  sku = {
+    name = "Premium_LRS"
+    tier = "Premium"
+  }
+
+  elastic_san_volume_groups = {
+    vg_1 = {
+      name          = "esan-vg-${module.naming.storage_share.name_unique}"
+      protocol_type = "iSCSI"
+      volumes = {
+        volume_1 = {
+          name        = "esan-vol-${module.naming.storage_share.name_unique}-01"
+          size_in_gib = 100
+        }
+      }
+
+      private_link_service_connections = {
+        pls_conn_1 = {
+          private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
+          resource_group_name                  = azurerm_resource_group.this.name
+          resource_group_location              = azurerm_resource_group.this.location
+          esan_subnet_resource_id              = module.gateway_vnet.subnets["ElasticSanSubnet"].id
+          private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
+        }
+      }
+    }
+  }
+}
+
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.5.0"
+  # version            = "=0.6.0"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
@@ -202,6 +246,13 @@ module "test_private_cloud" {
       workspace_resource_id = azurerm_log_analytics_workspace.this_workspace.id
       metric_categories     = ["AllMetrics"]
       log_groups            = ["allLogs"]
+    }
+  }
+
+  elastic_san_datastores = {
+    esan_datastore_cluster1 = {
+      esan_volume_resource_id = module.elastic_san.volumes["vg_1-volume_1"].id
+      cluster_names           = ["Cluster-1"]
     }
   }
 

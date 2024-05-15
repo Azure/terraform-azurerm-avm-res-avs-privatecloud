@@ -1,16 +1,15 @@
 locals {
+  elastic_san_attachments = flatten([for ds_key, datastore in var.elastic_san_datastores : [
+    for cluster_name in datastore.cluster_names : {
+      attachment_name         = "${ds_key}-${cluster_name}"
+      esan_volume_resource_id = datastore.esan_volume_resource_id
+      cluster_name            = cluster_name
+    }
+  ]])
   netapp_attachments = flatten([for ds_key, datastore in var.netapp_files_datastores : [
     for cluster_name in datastore.cluster_names : {
       attachment_name           = "${ds_key}-${cluster_name}"
       netapp_volume_resource_id = datastore.netapp_volume_resource_id
-      cluster_name              = cluster_name
-    }
-  ]])
-
-  elastic_san_attachments = flatten([for ds_key, datastore in var.elastic_san_datastores : [
-    for cluster_name in datastore.cluster_names : {
-      attachment_name           = "${ds_key}-${cluster_name}"
-      esan_volume_resource_id   = datastore.esan_volume_resource_id
       cluster_name              = cluster_name
     }
   ]])
@@ -51,19 +50,18 @@ resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
 #provision an external storage block
 resource "azapi_resource" "iscsi_path_network" {
   count = var.external_storage_address_block != null ? 1 : 0
+
   type = "Microsoft.AVS/privateClouds/iscsiPaths@2023-09-01"
-  parent_id = "${azapi_resource.this_private_cloud.id}/iscsiPaths/default"
-  body = {properties = {
+  body = { properties = {
     networkBlock = var.external_storage_address_block
-  }}
+  } }
+  parent_id = "${azapi_resource.this_private_cloud.id}/iscsiPaths/default"
 }
 
 resource "azapi_resource" "this_esan_attachment" {
   for_each = { for datastore in local.elastic_san_attachments : datastore.attachment_name => datastore }
-  
-  name = each.value.attachment_name
+
   type = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
-  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
   body = {
     properties = {
       elasticSanVolume = {
@@ -71,7 +69,9 @@ resource "azapi_resource" "this_esan_attachment" {
       }
     }
   }
-  
+  name      = each.value.attachment_name
+  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
+
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,

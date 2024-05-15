@@ -57,16 +57,17 @@ The following resources are used by this module:
 - [azapi_resource.globalreach_connections](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.iscsi_path_network](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.remove_existing_identity_source](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.segments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.srm_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this_esan_attachment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vr_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.dns_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.dns_service_destroy_non_empty_start](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.customer_managed_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azapi_update_resource.managed_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_express_route_connection.avs_private_cloud_connection](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
 - [azurerm_management_lock.this_private_cloud](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this_private_cloud_diags](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
@@ -390,6 +391,21 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_elastic_san_datastores"></a> [elastic\_san\_datastores](#input\_elastic\_san\_datastores)
+
+Description: n/a
+
+Type:
+
+```hcl
+map(object({
+    cluster_names           = set(string)
+    esan_volume_resource_id = string
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_enable_stretch_cluster"></a> [enable\_stretch\_cluster](#input\_enable\_stretch\_cluster)
 
 Description: Set this value to true if deploying an AVS stretch cluster.
@@ -410,7 +426,7 @@ Default: `true`
 
 ### <a name="input_expressroute_connections"></a> [expressroute\_connections](#input\_expressroute\_connections)
 
-Description: Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
+Description: Map of string objects describing one or more ExpressRoute connections to be configured by the private cloud. The map key will be used for the connection name.
 
 - `<map key>` - Provide a key value that will be used as the expressroute connection name
   - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
@@ -469,6 +485,14 @@ Description: If using AV64 sku's in non-management clusters it is required to pr
 Type: `list(string)`
 
 Default: `[]`
+
+### <a name="input_external_storage_address_block"></a> [external\_storage\_address\_block](#input\_external\_storage\_address\_block)
+
+Description: If using Elastic SAN or other ISCSI storage, provide an /24 CIDR range as a string for use in connecting the external storage.  Example: 10.10.0.0/24
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_global_reach_connections"></a> [global\_reach\_connections](#input\_global\_reach\_connections)
 
@@ -557,13 +581,17 @@ Default: `{}`
 
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
-Description: This value toggles the system managed identity to on for use with customer managed keys. User Managed identities are currently unsupported for this resource. Defaults to false.
+Description:   Controls the Managed Identity configuration on this resource. The following properties can be specified:
+
+  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled. This is used to configure encryption using customer managed keys.
+  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource. Currently unused by this resource.
 
 Type:
 
 ```hcl
 object({
-    system_assigned = optional(bool, false)
+    system_assigned            = optional(bool, false)
+    user_assigned_resource_ids = optional(set(string), [])
   })
 ```
 

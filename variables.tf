@@ -268,10 +268,9 @@ DNS_FORWARDER_ZONES
   nullable    = false
 }
 
-
 variable "elastic_san_datastores" {
   type = map(object({
-    cluster_names = set(string)
+    cluster_names           = set(string)
     esan_volume_resource_id = string
   }))
   default = {}
@@ -351,9 +350,9 @@ variable "extended_network_blocks" {
 }
 
 variable "external_storage_address_block" {
-  type = string
-  default = null
-  description = "If using Elastic SAN or other ISCSI storage, provide an /24 CIDR range as a string for use in connecting the external storage.  Example: 10.10.0.0/24"  
+  type        = string
+  default     = null
+  description = "If using Elastic SAN or other ISCSI storage, provide an /24 CIDR range as a string for use in connecting the external storage.  Example: 10.10.0.0/24"
 }
 
 variable "global_reach_connections" {
@@ -438,8 +437,8 @@ LOCK
 #resource doesn't support user-assigned managed identities.
 variable "managed_identities" {
   type = object({
-    system_assigned = optional(bool, false)
-    user_assigned_resource_ids    = optional(set(string), [])
+    system_assigned            = optional(bool, false)
+    user_assigned_resource_ids = optional(set(string), [])
   })
   default     = {}
   description = <<DESCRIPTION

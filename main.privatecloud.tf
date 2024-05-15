@@ -22,14 +22,7 @@ locals {
   base_properties_availability = {
     strategy = var.enable_stretch_cluster ? "DualZone" : "SingleZone"
   }
-  full_body        = merge(local.base_body, { properties = local.properties_map }) #merge the properties map into the body map
-  primary_zone_map = jsondecode(var.primary_zone != null ? jsonencode({ zone = var.primary_zone }) : jsonencode({}))
-  properties_map   = merge(local.base_properties, { availability = local.availability_map }, local.properties_map_enb) #build the properties map
-  #merge the extended network Blocks value into the properties if it exists
-  properties_map_enb = jsondecode((length(var.extended_network_blocks) == 0) ? jsonencode({}) : jsonencode({ extendedNetworkBlocks = var.extended_network_blocks }))
-  secondary_zone_map = jsondecode(var.secondary_zone != null ? jsonencode({ secondaryZone = var.secondary_zone }) : jsonencode({}))
-
-
+  full_body = merge(local.base_body, { properties = local.properties_map }) #merge the properties map into the body map
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
       this = {
@@ -49,6 +42,11 @@ locals {
       }
     } : {}
   }
+  primary_zone_map = jsondecode(var.primary_zone != null ? jsonencode({ zone = var.primary_zone }) : jsonencode({}))
+  properties_map   = merge(local.base_properties, { availability = local.availability_map }, local.properties_map_enb) #build the properties map
+  #merge the extended network Blocks value into the properties if it exists
+  properties_map_enb = jsondecode((length(var.extended_network_blocks) == 0) ? jsonencode({}) : jsonencode({ extendedNetworkBlocks = var.extended_network_blocks }))
+  secondary_zone_map = jsondecode(var.secondary_zone != null ? jsonencode({ secondaryZone = var.secondary_zone }) : jsonencode({}))
 }
 
 #build a base private cloud resource then modify it as needed.
@@ -67,7 +65,6 @@ resource "azapi_resource" "this_private_cloud" {
       type = identity.value.type
     }
   }
-
   #TODO: Test to see if a lifecycle block is needed when the NSXT or VCenter passwords change
   timeouts {
     create = "15h"
