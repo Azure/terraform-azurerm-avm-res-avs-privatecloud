@@ -56,7 +56,7 @@ resource "azapi_resource" "iscsi_path_network" {
     networkBlock = var.external_storage_address_block
   } }
   name      = "default"
-  parent_id = "${azapi_resource.this_private_cloud.id}/iscsiPaths/default"
+  parent_id = azapi_resource.this_private_cloud.id
 }
 
 resource "azapi_resource" "this_esan_attachment" {
