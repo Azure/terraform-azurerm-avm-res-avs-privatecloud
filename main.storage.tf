@@ -55,7 +55,8 @@ resource "azapi_resource" "iscsi_path_network" {
   body = { properties = {
     networkBlock = var.external_storage_address_block
   } }
-  parent_id = "${azapi_resource.this_private_cloud.id}/iscsiPaths/default"
+  name      = "default"
+  parent_id = azapi_resource.this_private_cloud.id
 }
 
 resource "azapi_resource" "this_esan_attachment" {
@@ -70,7 +71,7 @@ resource "azapi_resource" "this_esan_attachment" {
     }
   }
   name      = each.value.attachment_name
-  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
+  parent_id = azapi_resource.this_private_cloud.id
 
   depends_on = [
     azapi_resource.this_private_cloud,
