@@ -1,16 +1,3 @@
-terraform {
-  required_providers {
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 1.13, != 1.13.0"
-    }
-  }
-}
-
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
-}
-
 locals {
   test_regions     = ["southafricanorth", "eastasia", "canadacentral", "germanywestcentral"]
   with_quota       = concat(local.with_quota_av36, local.with_quota_av36p)

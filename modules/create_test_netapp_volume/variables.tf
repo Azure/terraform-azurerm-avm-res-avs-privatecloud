@@ -47,3 +47,9 @@ variable "resource_group_name" {
   type        = string
   description = "The name of the resource group where the dc will be installed."
 }
+
+variable "tags" {
+  type        = map(string)
+  default     = {}
+  description = "Map of tags to be assigned to this resource"
+}

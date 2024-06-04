@@ -2,6 +2,7 @@ resource "azurerm_netapp_account" "anf_account" {
   location            = var.resource_group_location
   name                = var.anf_account_name
   resource_group_name = var.resource_group_name
+  tags                = var.tags
 }
 
 resource "azurerm_netapp_pool" "anf_pool" {
@@ -11,6 +12,7 @@ resource "azurerm_netapp_pool" "anf_pool" {
   resource_group_name = var.resource_group_name
   service_level       = "Standard"
   size_in_tb          = var.anf_pool_size
+  tags                = var.tags
 }
 
 resource "azurerm_netapp_volume" "anf_volume" {
@@ -27,6 +29,7 @@ resource "azurerm_netapp_volume" "anf_volume" {
   protocols                       = ["NFSv3"]
   security_style                  = "unix"
   snapshot_directory_visible      = true
+  tags                            = var.tags
   zone                            = var.anf_zone_number
 
   export_policy_rule {

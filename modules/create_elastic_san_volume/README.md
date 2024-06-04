@@ -416,11 +416,19 @@ The following outputs are exported:
 
 ### <a name="output_elastic_san"></a> [elastic\_san](#output\_elastic\_san)
 
-Description: n/a
+Description: The full elastic san resource output.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The full elastic san volume resource output
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The resource id of the elastic san volume
 
 ### <a name="output_volumes"></a> [volumes](#output\_volumes)
 
-Description: n/a
+Description: The full elastic san volume output
 
 ## Modules
 

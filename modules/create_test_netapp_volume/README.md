@@ -8,6 +8,7 @@ resource "azurerm_netapp_account" "anf_account" {
   location            = var.resource_group_location
   name                = var.anf_account_name
   resource_group_name = var.resource_group_name
+  tags                = var.tags
 }
 
 resource "azurerm_netapp_pool" "anf_pool" {
@@ -17,6 +18,7 @@ resource "azurerm_netapp_pool" "anf_pool" {
   resource_group_name = var.resource_group_name
   service_level       = "Standard"
   size_in_tb          = var.anf_pool_size
+  tags                = var.tags
 }
 
 resource "azurerm_netapp_volume" "anf_volume" {
@@ -33,6 +35,7 @@ resource "azurerm_netapp_volume" "anf_volume" {
   protocols                       = ["NFSv3"]
   security_style                  = "unix"
   snapshot_directory_visible      = true
+  tags                            = var.tags
   zone                            = var.anf_zone_number
 
   export_policy_rule {
@@ -54,13 +57,17 @@ resource "azurerm_netapp_volume" "anf_volume" {
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
-No requirements.
+The following requirements are needed by this module:
+
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
+
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.105)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.105)
 
 ## Resources
 
@@ -137,15 +144,31 @@ Type: `string`
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Map of tags to be assigned to this resource
+
+Type: `map(string)`
+
+Default: `{}`
 
 ## Outputs
 
 The following outputs are exported:
 
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: the full ANF volume resource being created.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The Azure resource ID of the netapp volume being created.
+
 ### <a name="output_volume_id"></a> [volume\_id](#output\_volume\_id)
 
-Description: n/a
+Description: The Azure resource ID of the netapp volume being created.
 
 ## Modules
 

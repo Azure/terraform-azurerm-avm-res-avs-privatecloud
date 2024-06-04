@@ -4,19 +4,6 @@
 The test subscription only had limited quota in select regions for testing AVS examples. This module queries the quota API for the allocated test regions to locate one or more regions with available quota and outputs the region and quota details.
 
 ```hcl
-terraform {
-  required_providers {
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 1.13, != 1.13.0"
-    }
-  }
-}
-
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
-}
-
 locals {
   test_regions     = ["southafricanorth", "eastasia", "canadacentral", "germanywestcentral"]
   with_quota       = concat(local.with_quota_av36, local.with_quota_av36p)
@@ -50,6 +37,8 @@ resource "random_integer" "region_index" {
 ## Requirements
 
 The following requirements are needed by this module:
+
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13, != 1.13.0)
 
