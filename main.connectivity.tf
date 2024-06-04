@@ -34,6 +34,12 @@ resource "azapi_resource" "globalreach_connections" {
   ]
 }
 
+data "azurerm_vmware_private_cloud" "this_private_cloud" {
+  name                = azapi_resource.this_private_cloud.name
+  resource_group_name = data.azurerm_resource_group.sddc_deployment.name
+}
+
+/*
 #create one or more ExpressRoute Gateway connections to virtual network hubs
 resource "azurerm_virtual_network_gateway_connection" "this" {
   for_each = { for k, v in var.expressroute_connections : k => v if v.vwan_hub_connection == false }
@@ -67,11 +73,48 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
     ignore_changes = [express_route_circuit_id]
   } #TODO - determine why this is returning 'known after apply'
 }
+*/
 
-data "azurerm_vmware_private_cloud" "this_private_cloud" {
-  name                = azapi_resource.this_private_cloud.name
-  resource_group_name = data.azurerm_resource_group.sddc_deployment.name
+#create one or more ExpressRoute Gateway connections to virtual network hubs
+resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connection" {
+  for_each = { for k, v in var.expressroute_connections : k => v if v.vwan_hub_connection == false }
+  type = "Microsoft.Network/connections@2023-11-01"
+  name = each.value.name
+  parent_id = coalesce(each.value.network_resource_group_resource_id, var.resource_group_resource_id)
+  tags = each.value.tags == {} ? var.tags : each.value.tags
+  location = coalesce(each.value.network_resource_group_location, var.location)
+  body = {
+    properties = {
+      connectionType = "ExpressRoute"
+      virtualNetworkGateway1 = {
+        properties = {       
+        }        
+        id = each.value.expressroute_gateway_resource_id
+      }
+      authorizationKey = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+      expressRouteGatewayBypass = each.value.fast_path_enabled
+      enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
+      peer = {
+        id = azapi_resource.this_private_cloud.output.properties.circuit.expressRouteID
+      }
+    }
+  }
+  
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    #azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azapi_resource.globalreach_connections
+  ]
 }
+
 
 #Create one or more ExpressRoute Gateway connections to a VWAN hub
 resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
@@ -111,7 +154,8 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azapi_resource.globalreach_connections,
-    azurerm_virtual_network_gateway_connection.this
+    #azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection
   ]
 
   lifecycle {
@@ -144,7 +188,7 @@ resource "azapi_resource" "avs_interconnect" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azapi_resource.globalreach_connections,
-    azurerm_virtual_network_gateway_connection.this,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
     azurerm_express_route_connection.avs_private_cloud_connection
   ]
 }

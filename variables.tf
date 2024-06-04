@@ -294,13 +294,17 @@ DESCRIPTION
 
 variable "expressroute_connections" {
   type = map(object({
-    vwan_hub_connection              = optional(bool, false)
+    name                             = string
     expressroute_gateway_resource_id = string
+    vwan_hub_connection              = optional(bool, false)
     authorization_key_name           = optional(string, null)
     fast_path_enabled                = optional(bool, false)
+    private_link_fast_path_enabled   = optional(bool, false)
     routing_weight                   = optional(number, 0)
     enable_internet_security         = optional(bool, false)
     tags                             = optional(map(string), {})
+    network_resource_group_resource_id = optional(string, null)
+    network_resource_group_location  = optional(string, null) 
     routing = optional(map(object({
       associated_route_table_resource_id = optional(string, null)
       inbound_route_map_resource_id      = optional(string, null)
@@ -315,14 +319,18 @@ variable "expressroute_connections" {
   description = <<EXPRESSROUTE_CONNECTIONS
 Map of string objects describing one or more ExpressRoute connections to be configured by the private cloud. The map key will be used for the connection name.
 
-- `<map key>` - Provide a key value that will be used as the expressroute connection name
-  - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
+- `<map key>` - Provide an arbitrary key value that will be used to identify this expressRoute connection
+  - `name`                                 = (Required) - The name to use for the expressRoute connection.
   - `expressroute_gateway_resource_id`     = (Required) - The Azure Resource ID for the ExpressRoute gateway where the connection will be made.
+  - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
   - `authorization_key_name`               = (Optional) - The authorization key name that should be used from the auth key map. If no key is provided a name will be generated from the map key.
   - `fast_path_enabled`                    = (Optional) - Should fast path gateway bypass be enabled. There are sku and cost considerations to be aware of when enabling fast path. Defaults to false
   - `routing_weight`                       = (Optional) - The routing weight value to use for this connection.  Defaults to 0.
   - `enable_internet_security`             = (Optional) - Set this to true if connecting to a secure VWAN hub and you want the hub NVA to publish a default route to AVS.
-  - `routing`                              =  Optional( map ( object({
+  - `tags`                                 = (Optional) - Map of strings describing any custom tags to apply to this connection resource
+  - `network_resource_group_resource_id`   = (Optional) - The resource ID of an external resource group. This is used to place the virtual network gateway connection resource with the virtual network gateway if the gateway is in a separate location.
+  - `network_resource_group_location`      = (Optional) - The location of an external resource group. This is used to place the virtual network gateway connection resource with the virtual network gateway if the gateway is in a separate location.
+  - `routing`                              = (Optional) - Map of objects used to describe any VWAN and Virtual Hub custom routing for this connection
     - `associated_route_table_resource_id` = (Optional) - The Azure Resource ID of the Virtual Hub Route Table associated with this Express Route Connection.
     - `inbound_route_map_resource_id`      = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for inbound learned routes
     - `outbound_route_map_resource_id`     = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for outbound advertised routes

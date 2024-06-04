@@ -79,6 +79,15 @@ resource "azurerm_resource_group" "this" {
   }
 }
 
+resource "azurerm_resource_group" "this_secondary" {
+  location = "westus3" #module.regions.regions_by_name[jsondecode(local_file.region_sku_cache.content).name].paired_region_name
+  name     = "${module.naming.resource_group.name_unique}-secondary"
+
+  lifecycle {
+    ignore_changes = [tags, location]
+  }
+}
+
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
   version = "0.5.3"
@@ -133,33 +142,13 @@ module "avm_res_keyvault_vault" {
   }
 }
 
-resource "azurerm_public_ip" "nat_gateway" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.nat_gateway.name_unique}-pip"
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
-}
-
-resource "azurerm_nat_gateway" "this_nat_gateway" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.nat_gateway.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "Standard"
-}
-
-resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
-  nat_gateway_id       = azurerm_nat_gateway.this_nat_gateway.id
-  public_ip_address_id = azurerm_public_ip.nat_gateway.id
-}
-
-module "gateway_vnet" {
+module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.1.4"
 
   resource_group_name           = azurerm_resource_group.this.name
   virtual_network_address_space = ["10.100.0.0/16"]
-  name                          = "GatewayHubVnet"
+  name                          = "HubVnet-${azurerm_resource_group.this.location}"
   location                      = azurerm_resource_group.this.location
 
   subnets = {
@@ -196,6 +185,67 @@ module "gateway_vnet" {
   }
 }
 
+resource "azurerm_public_ip" "nat_gateway" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.nat_gateway.name_unique}-pip"
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "Standard"
+  zones               = ["1","2","3"]
+}
+
+resource "azurerm_nat_gateway" "this_nat_gateway" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.nat_gateway.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "Standard"
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
+  nat_gateway_id       = azurerm_nat_gateway.this_nat_gateway.id
+  public_ip_address_id = azurerm_public_ip.nat_gateway.id
+}
+
+module "gateway_vnet_secondary_region" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "=0.1.4"
+
+  resource_group_name           = azurerm_resource_group.this_secondary.name
+  virtual_network_address_space = ["10.101.0.0/16"]
+  name                          = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  location                      = azurerm_resource_group.this_secondary.location
+
+  subnets = {
+    GatewaySubnet = {
+      address_prefixes = ["10.101.0.0/24"]
+    }
+    DCSubnet = {
+      address_prefixes = ["10.101.1.0/24"]
+    }
+    AzureBastionSubnet = {
+      address_prefixes = ["10.101.2.0/24"]
+    }
+    ElasticSanSubnet = {
+      address_prefixes = ["10.101.4.0/24"]
+    }
+    ANFSubnet = {
+      address_prefixes = ["10.101.3.0/24"]
+      delegations = [
+        {
+          name = "Microsoft.Netapp/volumes"
+          service_delegation = {
+            name = "Microsoft.Netapp/volumes"
+            actions = [
+              "Microsoft.Network/networkinterfaces/*",
+              "Microsoft.Network/virtualNetworks/subnets/join/action"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+
 module "create_dc" {
   #source = "../../modules/create_test_domain_controllers"
   source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_domain_controllers"
@@ -208,8 +258,8 @@ module "create_dc" {
   create_bastion              = true
   bastion_name                = module.naming.bastion_host.name_unique
   bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
-  bastion_subnet_resource_id  = module.gateway_vnet.subnets["AzureBastionSubnet"].id
-  dc_subnet_resource_id       = module.gateway_vnet.subnets["DCSubnet"].id
+  bastion_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["AzureBastionSubnet"].id
+  dc_subnet_resource_id       = module.gateway_vnet_primary_region.subnets["DCSubnet"].id
   dc_vm_sku                   = local.dc_vm_sku
   domain_fqdn                 = local.test_domain_name
   domain_netbios_name         = local.test_domain_netbios
@@ -218,9 +268,9 @@ module "create_dc" {
   test_admin_user             = local.test_admin_user_name
   admin_group_name            = local.test_admin_group_name
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
-  virtual_network_resource_id = module.gateway_vnet.vnet_resource.id
+  virtual_network_resource_id = module.gateway_vnet_primary_region.vnet_resource.id
 
-  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet, azurerm_nat_gateway.this_nat_gateway]
+  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway]
 }
 
 
@@ -238,6 +288,7 @@ resource "azurerm_public_ip" "gatewaypip" {
   name                = module.naming.public_ip.name_unique
   resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard" #required for an ultraperformance gateway
+  zones               = ["1","2","3"]
 }
 
 resource "azurerm_virtual_network_gateway" "gateway" {
@@ -249,7 +300,31 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
   ip_configuration {
     public_ip_address_id          = azurerm_public_ip.gatewaypip.id
-    subnet_id                     = module.gateway_vnet.subnets["GatewaySubnet"].id
+    subnet_id                     = module.gateway_vnet_primary_region.subnets["GatewaySubnet"].id
+    name                          = "default"
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_public_ip" "gatewaypip_secondary" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this_secondary.location
+  name                = "${module.naming.public_ip.name_unique}-secondary"
+  resource_group_name = azurerm_resource_group.this_secondary.name
+  sku                 = "Standard" #required for an ultraperformance gateway
+  zones               = ["1","2","3"]
+}
+
+resource "azurerm_virtual_network_gateway" "gateway_secondary" {
+  location            = azurerm_resource_group.this_secondary.location
+  name                = "${module.naming.express_route_gateway.name_unique}-secondary"
+  resource_group_name = azurerm_resource_group.this_secondary.name
+  sku                 = "ErGw1AZ"
+  type                = "ExpressRoute"
+
+  ip_configuration {
+    public_ip_address_id          = azurerm_public_ip.gatewaypip_secondary.id
+    subnet_id                     = module.gateway_vnet_secondary_region.subnets["GatewaySubnet"].id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
   }
@@ -266,7 +341,7 @@ module "create_anf_volume" {
   anf_pool_size           = 2
   anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
   anf_volume_size         = 2048
-  anf_subnet_resource_id  = module.gateway_vnet.subnets["ANFSubnet"].id
+  anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].id
   anf_zone_number         = module.test_private_cloud.resource.properties.availability.zone
   anf_nfs_allowed_clients = ["0.0.0.0/0"]
 }
@@ -305,7 +380,7 @@ module "elastic_san" {
           private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
           resource_group_name                  = azurerm_resource_group.this.name
           resource_group_location              = azurerm_resource_group.this.location
-          esan_subnet_resource_id              = module.gateway_vnet.subnets["ElasticSanSubnet"].id
+          esan_subnet_resource_id              = module.gateway_vnet_primary_region.subnets["ElasticSanSubnet"].id
           private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
         }
       }
@@ -389,9 +464,17 @@ module "test_private_cloud" {
   }
 
   expressroute_connections = {
-    default = {
+    region1 = {
+      name = "exr-connection-${azurerm_resource_group.this.location}"
       expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
-      authorization_key_name           = "test_auth_key"
+      authorization_key_name           = "test_auth_key-${azurerm_resource_group.this.location}"
+    }
+    region2 = {
+      name = "exr-connection-${azurerm_resource_group.this_secondary.location}"
+      expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway_secondary.id
+      authorization_key_name           = "test_auth_key-${azurerm_resource_group.this_secondary.location}"
+      network_resource_group_resource_id = azurerm_resource_group.this_secondary.id
+      network_resource_group_location  = azurerm_resource_group.this_secondary.location
     }
   }
 

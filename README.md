@@ -73,7 +73,7 @@ The following resources are used by this module:
 - [azurerm_monitor_diagnostic_setting.this_private_cloud_diags](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this_private_cloud](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_virtual_network_gateway_connection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_gateway_connection) (resource)
+- [azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_gateway_connection) (resource)
 - [azurerm_vmware_express_route_authorization.this_authorization_key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/vmware_express_route_authorization) (resource)
 - [azurerm_vmware_netapp_volume_attachment.attach_datastores](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/vmware_netapp_volume_attachment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
