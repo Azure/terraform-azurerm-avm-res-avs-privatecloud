@@ -489,7 +489,7 @@ module "test_private_cloud" {
 
   lock = {
     name = "lock-avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-    type = "CanNotDelete"
+    kind = "CanNotDelete"
   }
 
   managed_identities = {
