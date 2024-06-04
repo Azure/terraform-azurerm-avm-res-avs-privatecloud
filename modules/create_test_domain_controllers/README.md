@@ -1,3 +1,9 @@
+<!-- BEGIN_TF_DOCS -->
+# Create Test Domain Controllers
+
+This module creates two windows virtual machines configured as domain controllers for use in testing the identity provider configuration. The VM's include Active Directory Certificate Services and DNS server and are configured to support LDAPs. The module also modifies the DNS configuration in the Vnet to point at the primary DC for DNS.
+
+```hcl
 
 resource "azurerm_public_ip" "bastion_pip" {
   count = var.create_bastion ? 1 : 0
@@ -385,3 +391,263 @@ data "azurerm_virtual_machine" "this_vm_secondary" {
 
   depends_on = [time_sleep.wait_600_seconds_2, module.testvm_secondary]
 }
+```
+
+<!-- markdownlint-disable MD033 -->
+## Requirements
+
+No requirements.
+
+## Providers
+
+The following providers are used by this module:
+
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm)
+
+- <a name="provider_random"></a> [random](#provider\_random)
+
+- <a name="provider_template"></a> [template](#provider\_template)
+
+- <a name="provider_time"></a> [time](#provider\_time)
+
+## Resources
+
+The following resources are used by this module:
+
+- [azurerm_bastion_host.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
+- [azurerm_key_vault_certificate.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
+- [azurerm_key_vault_certificate.this_secondary](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
+- [azurerm_key_vault_secret.ldap_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) (resource)
+- [azurerm_key_vault_secret.test_admin_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) (resource)
+- [azurerm_public_ip.bastion_pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_virtual_network_dns_servers.dc_dns](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_dns_servers) (resource)
+- [random_password.ldap_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
+- [random_password.test_admin_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
+- [time_sleep.wait_600_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [time_sleep.wait_600_seconds_2](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_virtual_machine.this_vm](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_machine) (data source)
+- [azurerm_virtual_machine.this_vm_secondary](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_machine) (data source)
+- [template_file.run_script](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) (data source)
+- [template_file.run_script_secondary](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) (data source)
+
+<!-- markdownlint-disable MD013 -->
+## Required Inputs
+
+The following input variables are required:
+
+### <a name="input_dc_vm_name"></a> [dc\_vm\_name](#input\_dc\_vm\_name)
+
+Description: The name of the domain controller virtual machine.
+
+Type: `string`
+
+### <a name="input_dc_vm_name_secondary"></a> [dc\_vm\_name\_secondary](#input\_dc\_vm\_name\_secondary)
+
+Description: The name of the domain controller virtual machine.
+
+Type: `string`
+
+### <a name="input_key_vault_resource_id"></a> [key\_vault\_resource\_id](#input\_key\_vault\_resource\_id)
+
+Description: The Azure Resource ID for the key vault where the DSC key and VM passwords will be stored.
+
+Type: `string`
+
+### <a name="input_private_ip_address"></a> [private\_ip\_address](#input\_private\_ip\_address)
+
+Description: The ip address to use for the primary dc
+
+Type: `string`
+
+### <a name="input_resource_group_location"></a> [resource\_group\_location](#input\_resource\_group\_location)
+
+Description: The region for the resource group where the dc will be installed.
+
+Type: `string`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group where the dc will be installed.
+
+Type: `string`
+
+### <a name="input_virtual_network_resource_id"></a> [virtual\_network\_resource\_id](#input\_virtual\_network\_resource\_id)
+
+Description: The resource ID Of the virtual network where the resources are deployed.
+
+Type: `string`
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
+
+### <a name="input_admin_group_name"></a> [admin\_group\_name](#input\_admin\_group\_name)
+
+Description: the username to use for the account used to query ldap.
+
+Type: `string`
+
+Default: `"vcenterAdmins"`
+
+### <a name="input_bastion_name"></a> [bastion\_name](#input\_bastion\_name)
+
+Description: The name to use for the bastion resource
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_bastion_pip_name"></a> [bastion\_pip\_name](#input\_bastion\_pip\_name)
+
+Description: The name to use for the bastion public IP resource
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_bastion_subnet_resource_id"></a> [bastion\_subnet\_resource\_id](#input\_bastion\_subnet\_resource\_id)
+
+Description: The Azure Resource ID for the subnet where the bastion will be connected.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_create_bastion"></a> [create\_bastion](#input\_create\_bastion)
+
+Description: Create a bastion resource to use for logging into the domain controller?  Defaults to false.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_dc_dsc_script_url"></a> [dc\_dsc\_script\_url](#input\_dc\_dsc\_script\_url)
+
+Description: the github url for the raw DSC configuration script that will be used by the custom script extension.
+
+Type: `string`
+
+Default: `"https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/main/modules/create_test_domain_controllers/templates/dc_windows_dsc.ps1"`
+
+### <a name="input_dc_dsc_script_url_secondary"></a> [dc\_dsc\_script\_url\_secondary](#input\_dc\_dsc\_script\_url\_secondary)
+
+Description: the github url for the raw DSC configuration script that will be used by the custom script extension.
+
+Type: `string`
+
+Default: `"https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/main/modules/create_test_domain_controllers/templates/dc_secondary_windows_dsc.ps1"`
+
+### <a name="input_dc_subnet_resource_id"></a> [dc\_subnet\_resource\_id](#input\_dc\_subnet\_resource\_id)
+
+Description: domain controller
+
+Type: `string`
+
+Default: `"The Azure Resource ID for the subnet where the DC will be connected."`
+
+### <a name="input_dc_vm_sku"></a> [dc\_vm\_sku](#input\_dc\_vm\_sku)
+
+Description: The virtual machine sku size to use for the domain controller.  Defaults to Standard\_D2\_v4
+
+Type: `string`
+
+Default: `"Standard_D2_v4"`
+
+### <a name="input_domain_distinguished_name"></a> [domain\_distinguished\_name](#input\_domain\_distinguished\_name)
+
+Description: The distinguished name (DN) for the domain to use in ADCS. Defaults to DC=test,DC=local
+
+Type: `string`
+
+Default: `"DC=test,DC=local"`
+
+### <a name="input_domain_fqdn"></a> [domain\_fqdn](#input\_domain\_fqdn)
+
+Description: The fully qualified domain name to use when creating the domain controller. Defaults to test.local
+
+Type: `string`
+
+Default: `"test.local"`
+
+### <a name="input_domain_netbios_name"></a> [domain\_netbios\_name](#input\_domain\_netbios\_name)
+
+Description: The Netbios name for the domain.  Default to test.
+
+Type: `string`
+
+Default: `"test"`
+
+### <a name="input_ldap_user"></a> [ldap\_user](#input\_ldap\_user)
+
+Description: the username to use for the account used to query ldap.
+
+Type: `string`
+
+Default: `"ldapuser"`
+
+### <a name="input_test_admin_user"></a> [test\_admin\_user](#input\_test\_admin\_user)
+
+Description: the username to use for the account used to query ldap.
+
+Type: `string`
+
+Default: `"testAdmin"`
+
+## Outputs
+
+The following outputs are exported:
+
+### <a name="output_dc_details"></a> [dc\_details](#output\_dc\_details)
+
+Description: n/a
+
+### <a name="output_dc_details_secondary"></a> [dc\_details\_secondary](#output\_dc\_details\_secondary)
+
+Description: n/a
+
+### <a name="output_domain_distinguished_name"></a> [domain\_distinguished\_name](#output\_domain\_distinguished\_name)
+
+Description: n/a
+
+### <a name="output_domain_fqdn"></a> [domain\_fqdn](#output\_domain\_fqdn)
+
+Description: n/a
+
+### <a name="output_domain_netbios_name"></a> [domain\_netbios\_name](#output\_domain\_netbios\_name)
+
+Description: n/a
+
+### <a name="output_ldap_user"></a> [ldap\_user](#output\_ldap\_user)
+
+Description: n/a
+
+### <a name="output_ldap_user_password"></a> [ldap\_user\_password](#output\_ldap\_user\_password)
+
+Description: n/a
+
+### <a name="output_primary_dc_private_ip_address"></a> [primary\_dc\_private\_ip\_address](#output\_primary\_dc\_private\_ip\_address)
+
+Description: n/a
+
+## Modules
+
+The following Modules are called:
+
+### <a name="module_testvm"></a> [testvm](#module\_testvm)
+
+Source: Azure/avm-res-compute-virtualmachine/azurerm
+
+Version: =0.13.0
+
+### <a name="module_testvm_secondary"></a> [testvm\_secondary](#module\_testvm\_secondary)
+
+Source: Azure/avm-res-compute-virtualmachine/azurerm
+
+Version: =0.13.0
+
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+<!-- END_TF_DOCS -->

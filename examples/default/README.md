@@ -276,6 +276,7 @@ module "test_private_cloud" {
 
   expressroute_connections = {
     default = {
+      name                             = "default_vnet_gateway_connection"
       authorization_key_name           = "test_auth_key"
       expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
     }

@@ -191,7 +191,7 @@ resource "azurerm_public_ip" "nat_gateway" {
   name                = "${module.naming.nat_gateway.name_unique}-pip"
   resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard"
-  zones               = ["1","2","3"]
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_nat_gateway" "this_nat_gateway" {
@@ -288,7 +288,7 @@ resource "azurerm_public_ip" "gatewaypip" {
   name                = module.naming.public_ip.name_unique
   resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard" #required for an ultraperformance gateway
-  zones               = ["1","2","3"]
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_virtual_network_gateway" "gateway" {
@@ -312,7 +312,7 @@ resource "azurerm_public_ip" "gatewaypip_secondary" {
   name                = "${module.naming.public_ip.name_unique}-secondary"
   resource_group_name = azurerm_resource_group.this_secondary.name
   sku                 = "Standard" #required for an ultraperformance gateway
-  zones               = ["1","2","3"]
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_virtual_network_gateway" "gateway_secondary" {
@@ -465,16 +465,16 @@ module "test_private_cloud" {
 
   expressroute_connections = {
     region1 = {
-      name = "exr-connection-${azurerm_resource_group.this.location}"
+      name                             = "exr-connection-${azurerm_resource_group.this.location}"
       expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
       authorization_key_name           = "test_auth_key-${azurerm_resource_group.this.location}"
     }
     region2 = {
-      name = "exr-connection-${azurerm_resource_group.this_secondary.location}"
-      expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway_secondary.id
-      authorization_key_name           = "test_auth_key-${azurerm_resource_group.this_secondary.location}"
+      name                               = "exr-connection-${azurerm_resource_group.this_secondary.location}"
+      expressroute_gateway_resource_id   = azurerm_virtual_network_gateway.gateway_secondary.id
+      authorization_key_name             = "test_auth_key-${azurerm_resource_group.this_secondary.location}"
       network_resource_group_resource_id = azurerm_resource_group.this_secondary.id
-      network_resource_group_location  = azurerm_resource_group.this_secondary.location
+      network_resource_group_location    = azurerm_resource_group.this_secondary.location
     }
   }
 

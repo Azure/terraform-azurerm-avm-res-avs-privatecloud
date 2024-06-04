@@ -78,20 +78,17 @@ resource "azurerm_virtual_network_gateway_connection" "this" {
 #create one or more ExpressRoute Gateway connections to virtual network hubs
 resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if v.vwan_hub_connection == false }
+
   type = "Microsoft.Network/connections@2023-11-01"
-  name = each.value.name
-  parent_id = coalesce(each.value.network_resource_group_resource_id, var.resource_group_resource_id)
-  tags = each.value.tags == {} ? var.tags : each.value.tags
-  location = coalesce(each.value.network_resource_group_location, var.location)
   body = {
     properties = {
       connectionType = "ExpressRoute"
       virtualNetworkGateway1 = {
-        properties = {       
-        }        
+        properties = {
+        }
         id = each.value.expressroute_gateway_resource_id
       }
-      authorizationKey = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+      authorizationKey          = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
       expressRouteGatewayBypass = each.value.fast_path_enabled
       enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
       peer = {
@@ -99,7 +96,11 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
       }
     }
   }
-  
+  location  = coalesce(each.value.network_resource_group_location, var.location)
+  name      = each.value.name
+  parent_id = coalesce(each.value.network_resource_group_resource_id, var.resource_group_resource_id)
+  tags      = each.value.tags == {} ? var.tags : each.value.tags
+
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,

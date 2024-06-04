@@ -294,17 +294,17 @@ DESCRIPTION
 
 variable "expressroute_connections" {
   type = map(object({
-    name                             = string
-    expressroute_gateway_resource_id = string
-    vwan_hub_connection              = optional(bool, false)
-    authorization_key_name           = optional(string, null)
-    fast_path_enabled                = optional(bool, false)
-    private_link_fast_path_enabled   = optional(bool, false)
-    routing_weight                   = optional(number, 0)
-    enable_internet_security         = optional(bool, false)
-    tags                             = optional(map(string), {})
+    name                               = string
+    expressroute_gateway_resource_id   = string
+    vwan_hub_connection                = optional(bool, false)
+    authorization_key_name             = optional(string, null)
+    fast_path_enabled                  = optional(bool, false)
+    private_link_fast_path_enabled     = optional(bool, false)
+    routing_weight                     = optional(number, 0)
+    enable_internet_security           = optional(bool, false)
+    tags                               = optional(map(string), {})
     network_resource_group_resource_id = optional(string, null)
-    network_resource_group_location  = optional(string, null) 
+    network_resource_group_location    = optional(string, null)
     routing = optional(map(object({
       associated_route_table_resource_id = optional(string, null)
       inbound_route_map_resource_id      = optional(string, null)
