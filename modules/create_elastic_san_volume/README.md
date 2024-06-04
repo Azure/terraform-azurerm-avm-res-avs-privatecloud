@@ -420,7 +420,7 @@ Description: The full elastic san resource output.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: The full elastic san volume resource output
+Description: The full elastic san resource output
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
