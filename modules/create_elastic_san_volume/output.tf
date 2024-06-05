@@ -1,6 +1,6 @@
 
 output "volumes" {
-  value       = jsondecode(azapi_resource.this_elastic_san_volume)
+  value       = jsondecode(azapi_resource.this_elastic_san_volume.output)
   description = "The full elastic san volume output"
 }
 
