@@ -5,6 +5,10 @@ The test subscription only had limited quota in select regions for testing AVS e
 
 ```hcl
 locals {
+  region = {
+    name = "no_quota"
+    sku  = "no_quota"
+  }
   test_regions     = ["southafricanorth", "eastasia", "canadacentral", "germanywestcentral"]
   with_quota       = concat(local.with_quota_av36, local.with_quota_av36p)
   with_quota_av36  = try([for region in jsondecode(data.azapi_resource_action.quota) : { name = split("/", region.resource_id)[6], sku = "av36" } if region.output.hostsRemaining.he >= var.total_quota_required], [])

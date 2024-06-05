@@ -5,17 +5,9 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.74"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5"
-    }
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 1.13, != 1.13.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.10"
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.5"
     }
   }
 }
@@ -542,5 +534,6 @@ module "test_private_cloud" {
 }
 
 output "resource" {
-  value = module.test_private_cloud.resource
+  value       = module.test_private_cloud.resource
+  description = "Example output of the full private cloud resource output."
 }
