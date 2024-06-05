@@ -65,5 +65,5 @@ variable "vm_sku" {
 #domain controller
 variable "vm_subnet_resource_id" {
   type    = string
-  default = "The Azure Resource ID for the subnet where the DC will be connected."
+  description = "The subnet resource ID to use for deploying the virtual machine nics."
 }

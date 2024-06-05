@@ -24,11 +24,6 @@ variable "resource_group_id" {
   description = "(Required) - The Azure Resource ID for the resource group where this Elastic SAN resource will be deployed."
 }
 
-variable "resource_group_name" {
-  type        = string
-  description = "(Required) Specifies the name of the Resource Group within which this Elastic SAN resource should exist. Changing this forces a new resource to be created."
-}
-
 variable "elastic_san_volume_groups" {
   type = map(object({
     name            = string

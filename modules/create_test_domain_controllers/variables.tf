@@ -85,7 +85,7 @@ variable "dc_dsc_script_url_secondary" {
 #domain controller
 variable "dc_subnet_resource_id" {
   type    = string
-  default = "The Azure Resource ID for the subnet where the DC will be connected."
+  description = "The Azure Resource ID for the subnet where the DC will be connected."
 }
 
 #DC sku
