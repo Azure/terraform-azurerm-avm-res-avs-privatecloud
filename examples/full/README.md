@@ -448,7 +448,7 @@ module "test_private_cloud" {
 
   elastic_san_datastores = {
     esan_datastore_cluster1 = {
-      esan_volume_resource_id = module.elastic_san.volumes["vg_1-volume_1"].id
+      esan_volume_resource_id = jsondecode(module.elastic_san.volumes["vg_1-volume_1"].output).id
       cluster_names           = ["Cluster-1"]
     }
   }

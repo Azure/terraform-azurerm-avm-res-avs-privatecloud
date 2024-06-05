@@ -17,7 +17,7 @@ output "resource" {
 
 output "resource_id" {
   description = "The azure resource if of the private cloud."
-  value       = jsondecode(azapi_resource.this_private_cloud).id
+  value       = jsondecode(azapi_resource.this_private_cloud.output).id
 }
 
 output "system_assigned_mi_principal_id" {

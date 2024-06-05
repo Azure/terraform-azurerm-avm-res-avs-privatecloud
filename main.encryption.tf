@@ -13,7 +13,7 @@ resource "azapi_update_resource" "customer_managed_key" {
         status = "Enabled"
         keyVaultProperties = {
           keyName     = var.customer_managed_key.key_name
-          keyVaultUrl = data.azurerm_key_vault.this_vault[each.key].vault_uri
+          keyVaultUrl = data.azurerm_key_vault.this_vault.vault_uri
           keyVersion  = var.customer_managed_key.key_version
         }
       }
