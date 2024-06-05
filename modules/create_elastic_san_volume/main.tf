@@ -1,15 +1,4 @@
 locals {
-  /* TODO: remove this if we don't need to do key references on the rules.
-  vg_network_rules = { for nr in flatten([
-    for vgk, vgv in var.elastic_san_volume_groups : [
-      for nrk, nrv in vgv.network_rules : {
-        vg_key = vgk
-        nr_key = nrk
-        rule   = nrv
-      }
-    ]
-  ]) : "${nr.vg_key}-${nr.vv_key}" => nr }
-  */
   vg_private_endpoints = { for pe in flatten([
     for vgk, vgv in var.elastic_san_volume_groups : [
       for pek, pev in vgv.private_link_service_connections : {

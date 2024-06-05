@@ -12,6 +12,8 @@ resource "azurerm_public_ip" "bastion_pip" {
   name                = var.bastion_pip_name
   resource_group_name = var.resource_group_name
   sku                 = "Standard"
+  tags                = var.tags
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_bastion_host" "bastion" {
@@ -20,6 +22,7 @@ resource "azurerm_bastion_host" "bastion" {
   location            = var.resource_group_location
   name                = var.bastion_name
   resource_group_name = var.resource_group_name
+  tags                = var.tags
 
   ip_configuration {
     name                 = "${var.bastion_name}-ipconf"
@@ -27,8 +30,6 @@ resource "azurerm_bastion_host" "bastion" {
     subnet_id            = var.bastion_subnet_resource_id
   }
 }
-
-data "azurerm_client_config" "current" {}
 
 #create the virtual machine
 module "jumpvm" {
@@ -89,7 +90,6 @@ The following resources are used by this module:
 
 - [azurerm_bastion_host.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
 - [azurerm_public_ip.bastion_pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -156,6 +156,14 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: (Optional) Map of tags to be assigned to the AVS resources
+
+Type: `map(string)`
+
+Default: `null`
+
 ### <a name="input_vm_sku"></a> [vm\_sku](#input\_vm\_sku)
 
 Description: The virtual machine sku size to use for the domain controller.  Defaults to Standard\_D2\_v4
@@ -174,7 +182,15 @@ Default: `"The Azure Resource ID for the subnet where the DC will be connected."
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: n/a
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: n/a
 
 ## Modules
 

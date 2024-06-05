@@ -57,10 +57,6 @@ provider "azurerm" {
   }
 }
 
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
-}
-
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "= 0.4.0"

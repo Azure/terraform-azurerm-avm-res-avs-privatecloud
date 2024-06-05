@@ -5,15 +5,6 @@ This module creates a simple Elastic SAN pool and volume that is configured to p
 
 ```hcl
 locals {
-  vg_network_rules = { for nr in flatten([
-    for vgk, vgv in var.elastic_san_volume_groups : [
-      for nrk, nrv in vgv.network_rules : {
-        vg_key = vgk
-        nr_key = nrk
-        rule   = nrv
-      }
-    ]
-  ]) : "${nr.vg_key}-${nr.vv_key}" => nr }
   vg_private_endpoints = { for pe in flatten([
     for vgk, vgv in var.elastic_san_volume_groups : [
       for pek, pev in vgv.private_link_service_connections : {
@@ -53,7 +44,7 @@ resource "azapi_resource" "this_elastic_san" {
 }
 
 locals {
-  encryptionProperties = { for key, value in var.elastic_san_volume_groups : key => {
+  encryption_properties = { for key, value in var.elastic_san_volume_groups : key => {
     identity = value.encryption_key_vault_properties.user_assigned_managed_identity_resource_id
     keyVaultProperties = {
       keyName     = value.encryption_key_vault_properties.keyName
@@ -70,7 +61,7 @@ resource "azapi_resource" "this_elastic_san_volume_group" {
   body = jsondecode(each.value.encryption_key_vault_properties != null ? jsonencode({
     properties = {
       encryption           = each.value.encryption_type
-      encryptionProperties = local.encryptionProperties
+      encryptionProperties = local.encryption_properties
       networkAcls = {
         virtualNetworkRules = [for rule in each.value.network_rules : rule if rule.action == "Allow"]
       }
@@ -125,6 +116,7 @@ resource "azurerm_private_endpoint" "this" {
   name                = each.value.connection.private_endpoint_name
   resource_group_name = each.value.connection.resource_group_name
   subnet_id           = each.value.connection.esan_subnet_resource_id
+  tags                = var.tags
 
   private_service_connection {
     is_manual_connection           = false
@@ -133,80 +125,6 @@ resource "azurerm_private_endpoint" "this" {
     subresource_names              = [azapi_resource.this_elastic_san_volume_group[each.value.vg_key].name]
   }
 }
-
-/*
-resource "azurerm_elastic_san" "this" {
-  name                 = var.elastic_san_name
-  resource_group_name  = var.resource_group_name
-  location             = var.location
-  base_size_in_tib     = var.base_size_in_tib
-  extended_size_in_tib = var.extended_size_in_tib
-  sku {
-    name = var.sku.name
-    tier = var.sku.tier
-  }
-  zones = var.zone 
-}
-*/
-
-
-/*
-resource "azurerm_elastic_san_volume_group" "this" {
-  for_each = var.elastic_san_volume_groups
-
-  name            = each.value.name
-  elastic_san_id  = azurerm_elastic_san.this.id
-  encryption_type = each.value.encryption_type
-  protocol_type   = each.value.protocol_type
-
-
-  dynamic encryption {
-    for_each = each.value.encryption != null ? ["encryption"] : []
-
-    content{
-        key_vault_key_id          = each.value.encryption.key_vault_key_resource_id
-        user_assigned_identity_id = each.value.encryption.user_assigned_identity_resource_id
-    }
-  }
-
-  dynamic identity {
-    for_each = each.value.managed_identities != null ? ["identity"] : []
-    content {
-        type         = each.value.managed_identities.type
-        identity_ids = each.value.managed_identities.identity_ids
-    }
-  }
-
-  dynamic network_rule {
-    for_each = local.vg_network_rules
-
-    content {
-        subnet_id = each.value.rule.subnet_id
-        action    = each.value.rule.action
-    }
-  }
-}
-*/
-
-/*
-resource "azurerm_elastic_san_volume" "this" {
-  for_each = local.vg_volumes
-  
-  name            = each.value.volume.name
-  volume_group_id = azurerm_elastic_san_volume_group.this[each.value.vg_key].id
-  size_in_gib     = each.value.volume.size_in_gib
-
-  dynamic create_source {
-    for_each = ( each.value.volume.create_source_resource_id != null && each.value.volume.create_source_source_type != null) ? ["create_source"] : []
-    content {
-        source_id = each.value.volume.create_source_resource_id
-        source_type = each.value.volume.create_source_source_type
-    }
-  }
-
-  depends_on = [ azurerm_private_endpoint.this ]
-}
-*/
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -218,13 +136,15 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13, != 1.13.0)
 
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.105)
+
 ## Providers
 
 The following providers are used by this module:
 
 - <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 1.13, != 1.13.0)
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.105)
 
 ## Resources
 
@@ -396,11 +316,11 @@ Default:
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description: (Optional) - a map of tags to apply directly to this resource.
+Description: (Optional) Map of tags to be assigned to the AVS resources
 
 Type: `map(string)`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_zones"></a> [zones](#input\_zones)
 

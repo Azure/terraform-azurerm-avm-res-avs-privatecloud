@@ -16,7 +16,7 @@ variable "extended_size_in_tib" {
 variable "location" {
   type        = string
   description = "(Required) The Azure Region where the Elastic SAN resource should exist. Changing this forces a new resource to be created."
-  nullable  = false
+  nullable    = false
 }
 
 variable "resource_group_id" {

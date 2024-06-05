@@ -148,11 +148,11 @@ The following input variables are optional (have default values):
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description: Map of tags to be assigned to this resource
+Description: (Optional) Map of tags to be assigned to the AVS resources
 
 Type: `map(string)`
 
-Default: `{}`
+Default: `null`
 
 ## Outputs
 

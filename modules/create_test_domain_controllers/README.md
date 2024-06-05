@@ -13,6 +13,8 @@ resource "azurerm_public_ip" "bastion_pip" {
   name                = var.bastion_pip_name
   resource_group_name = var.resource_group_name
   sku                 = "Standard"
+  tags                = var.tags
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_bastion_host" "bastion" {
@@ -21,6 +23,7 @@ resource "azurerm_bastion_host" "bastion" {
   location            = var.resource_group_location
   name                = var.bastion_name
   resource_group_name = var.resource_group_name
+  tags                = var.tags
 
   ip_configuration {
     name                 = "${var.bastion_name}-ipconf"
@@ -28,13 +31,12 @@ resource "azurerm_bastion_host" "bastion" {
     subnet_id            = var.bastion_subnet_resource_id
   }
 }
-#get the deployer user details
-data "azurerm_client_config" "current" {}
 
 #Create a self-signed certificate for DSC to use for encrypted deployment
 resource "azurerm_key_vault_certificate" "this" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.dc_vm_name}-dsc-cert"
+  tags         = var.tags
 
   certificate_policy {
     issuer_parameters {
@@ -212,6 +214,7 @@ resource "azurerm_key_vault_secret" "ldap_password" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.ldap_user}-password"
   value        = random_password.ldap_password.result
+  tags         = var.tags
 }
 
 #store the testadmin user account in the key vault as a secret
@@ -219,6 +222,7 @@ resource "azurerm_key_vault_secret" "test_admin_password" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.test_admin_user}-password"
   value        = random_password.test_admin_password.result
+  tags         = var.tags
 }
 
 resource "azurerm_virtual_network_dns_servers" "dc_dns" {
@@ -237,6 +241,7 @@ resource "azurerm_virtual_network_dns_servers" "dc_dns" {
 resource "azurerm_key_vault_certificate" "this_secondary" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.dc_vm_name_secondary}-dsc-cert"
+  tags         = var.tags
 
   certificate_policy {
     issuer_parameters {
@@ -402,17 +407,23 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.105)
 
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+
+- <a name="requirement_template"></a> [template](#requirement\_template) (~> 2.2)
+
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.11)
+
 ## Providers
 
 The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.105)
 
-- <a name="provider_random"></a> [random](#provider\_random)
+- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
-- <a name="provider_template"></a> [template](#provider\_template)
+- <a name="provider_template"></a> [template](#provider\_template) (~> 2.2)
 
-- <a name="provider_time"></a> [time](#provider\_time)
+- <a name="provider_time"></a> [time](#provider\_time) (~> 0.11)
 
 ## Resources
 
@@ -429,7 +440,6 @@ The following resources are used by this module:
 - [random_password.test_admin_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [time_sleep.wait_600_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.wait_600_seconds_2](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_virtual_machine.this_vm](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_machine) (data source)
 - [azurerm_virtual_machine.this_vm_secondary](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_machine) (data source)
 - [template_file.run_script](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) (data source)
@@ -590,6 +600,14 @@ Type: `string`
 
 Default: `"ldapuser"`
 
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: (Optional) Map of tags to be assigned to the AVS resources
+
+Type: `map(string)`
+
+Default: `null`
+
 ### <a name="input_test_admin_user"></a> [test\_admin\_user](#input\_test\_admin\_user)
 
 Description: the username to use for the account used to query ldap.
@@ -604,35 +622,43 @@ The following outputs are exported:
 
 ### <a name="output_dc_details"></a> [dc\_details](#output\_dc\_details)
 
-Description: n/a
+Description: The primary domain controller data resource output.
 
 ### <a name="output_dc_details_secondary"></a> [dc\_details\_secondary](#output\_dc\_details\_secondary)
 
-Description: n/a
+Description: The secondary domain controller data resource output.
 
 ### <a name="output_domain_distinguished_name"></a> [domain\_distinguished\_name](#output\_domain\_distinguished\_name)
 
-Description: n/a
+Description: The distinguished name for the domain deployed on the domain controllers.
 
 ### <a name="output_domain_fqdn"></a> [domain\_fqdn](#output\_domain\_fqdn)
 
-Description: n/a
+Description: The fully qualified domain name for the domain deployed on the domain controllers.
 
 ### <a name="output_domain_netbios_name"></a> [domain\_netbios\_name](#output\_domain\_netbios\_name)
 
-Description: n/a
+Description: The domain short name or netbios name for the domain deployed on the domain controllers.
 
 ### <a name="output_ldap_user"></a> [ldap\_user](#output\_ldap\_user)
 
-Description: n/a
+Description: The ldap user name created for use in testing the identity configuration functions of the AVM AVS module.
 
 ### <a name="output_ldap_user_password"></a> [ldap\_user\_password](#output\_ldap\_user\_password)
 
-Description: n/a
+Description: The ldap user password value for use in testing the identity configuration functions of the AVM AVS module.
 
 ### <a name="output_primary_dc_private_ip_address"></a> [primary\_dc\_private\_ip\_address](#output\_primary\_dc\_private\_ip\_address)
 
-Description: n/a
+Description: The IP address for the primary domain controller.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: the full module output for the primary domain controller. Including this to comply with the spec tests.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The primary domain controller id.  Included to comply with the spec.
 
 ## Modules
 

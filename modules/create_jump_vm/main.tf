@@ -6,8 +6,8 @@ resource "azurerm_public_ip" "bastion_pip" {
   name                = var.bastion_pip_name
   resource_group_name = var.resource_group_name
   sku                 = "Standard"
-  zones               = ["1","2","3"]
   tags                = var.tags
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_bastion_host" "bastion" {

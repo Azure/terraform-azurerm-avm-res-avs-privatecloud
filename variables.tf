@@ -127,15 +127,14 @@ CLUSTERS
 
 variable "customer_managed_key" {
   type = object({
-    key_vault_resource_id  = string
-    key_name               = string
-    key_version            = optional(string, null)
+    key_vault_resource_id = string
+    key_name              = string
+    key_version           = optional(string, null)
     user_assigned_identity = optional(object({
       resource_id = string
     }), null)
   })
-  default = null
-  
+  default     = null
   description = <<CUSTOMER_MANAGED_KEY
 This object defines the customer managed key details to use when encrypting the VSAN datastore. 
 

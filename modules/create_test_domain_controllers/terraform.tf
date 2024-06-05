@@ -10,11 +10,11 @@ terraform {
       version = "~> 3.5"
     }
     template = {
-      source = "hashicorp/template"
+      source  = "hashicorp/template"
       version = "~> 2.2"
     }
-    time    = {
-      source = "hashicorp/time"
+    time = {
+      source  = "hashicorp/time"
       version = "~> 0.11"
     }
   }

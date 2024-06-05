@@ -241,6 +241,7 @@ Description: This object defines the customer managed key details to use when en
   - `key_vault_resource_id` = (Required) - The full Azure resource ID of the key vault where the encryption key will be sourced from
   - `key_name`              = (Required) - The name for the encryption key
   - `key_version`           = (Optional) - The key version value for the encryption key.
+  - `user_assigned_identity` = (Non-Functional) - AVS doesn't currently
 
 Example Inputs:
 ```hcl
@@ -254,14 +255,17 @@ Example Inputs:
 Type:
 
 ```hcl
-map(object({
-    key_vault_resource_id = optional(string, null)
-    key_name              = optional(string, null)
+object({
+    key_vault_resource_id = string
+    key_name              = string
     key_version           = optional(string, null)
-  }))
+    user_assigned_identity = optional(object({
+      resource_id = string
+    }), null)
+  })
 ```
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_dhcp_configuration"></a> [dhcp\_configuration](#input\_dhcp\_configuration)
 
@@ -744,11 +748,11 @@ Default: `{}`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description: Map of tags to be assigned to this resource
+Description: (Optional) Map of tags to be assigned to the AVS resources
 
 Type: `map(string)`
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_vcenter_identity_sources"></a> [vcenter\_identity\_sources](#input\_vcenter\_identity\_sources)
 
