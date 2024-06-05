@@ -104,6 +104,11 @@ data "template_file" "run_script" {
 
 
 #build the DC VM
+locals {
+  protected_settings_script_primary = jsonencode({
+    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
+  })
+}
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
@@ -164,12 +169,7 @@ module "testvm" {
       type                       = "CustomScriptExtension"
       type_handler_version       = "1.9"
       auto_upgrade_minor_version = true
-      protected_settings         = <<PROTECTED_SETTINGS
-        {
-            "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
-        }
-      PROTECTED_SETTINGS
-
+      protected_settings         = local.protected_settings_script_primary
     }
   }
 }
@@ -308,7 +308,12 @@ data "template_file" "run_script_secondary" {
 }
 
 
-#build the DC VM
+#build the secondary DC VM
+locals {
+  protected_settings_script_secondary = jsonencode({
+    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script_secondary.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
+  })
+}
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
@@ -371,12 +376,7 @@ module "testvm_secondary" {
       type                       = "CustomScriptExtension"
       type_handler_version       = "1.9"
       auto_upgrade_minor_version = true
-      protected_settings         = <<PROTECTED_SETTINGS
-        {
-            "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script_secondary.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
-        }
-      PROTECTED_SETTINGS
-
+      protected_settings         = local.protected_settings_script_secondary
     }
   }
 

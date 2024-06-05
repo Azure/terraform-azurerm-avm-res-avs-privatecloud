@@ -26,29 +26,6 @@ This example demonstrates most of the deployment inputs using a single Azure VMw
 The following example code uses several test modules, so be sure to include them and update the deployment regions if copying verbatim.
 
 ```hcl
-terraform {
-  required_version = "~> 1.6"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.74"
-    }
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.5"
-    }
-  }
-}
-
-# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "= 0.4.0"
@@ -559,11 +536,6 @@ module "test_private_cloud" {
       ldap_user_password = module.create_dc.ldap_user_password
     }
   }
-}
-
-output "resource" {
-  value       = module.test_private_cloud.resource
-  description = "Example output of the full private cloud resource output."
 }
 ```
 

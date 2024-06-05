@@ -14,29 +14,6 @@ This example demonstrates a deployment with a single Azure VMware Solution priva
         - Bastion enabled for accessing the Jump Box GUI
 
 ```hcl
-terraform {
-  required_version = "~>1.6"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.74"
-    }
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.5"
-    }
-  }
-}
-
-# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
 locals {
   vm_sku = "Standard_D2_v4"
 }
