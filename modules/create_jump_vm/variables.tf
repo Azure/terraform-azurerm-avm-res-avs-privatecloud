@@ -61,3 +61,9 @@ variable "vm_subnet_resource_id" {
   type    = string
   default = "The Azure Resource ID for the subnet where the DC will be connected."
 }
+
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) Map of tags to be assigned to the AVS resources"
+}

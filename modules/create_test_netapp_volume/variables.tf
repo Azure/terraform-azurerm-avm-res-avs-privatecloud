@@ -50,6 +50,6 @@ variable "resource_group_name" {
 
 variable "tags" {
   type        = map(string)
-  default     = {}
-  description = "Map of tags to be assigned to this resource"
+  default     = null
+  description = "(Optional) Map of tags to be assigned to the AVS resources"
 }

@@ -126,12 +126,16 @@ CLUSTERS
 }
 
 variable "customer_managed_key" {
-  type = map(object({
-    key_vault_resource_id = optional(string, null)
-    key_name              = optional(string, null)
-    key_version           = optional(string, null)
-  }))
-  default     = {}
+  type = object({
+    key_vault_resource_id  = string
+    key_name               = string
+    key_version            = optional(string, null)
+    user_assigned_identity = optional(object({
+      resource_id = string
+    }), null)
+  })
+  default = null
+  
   description = <<CUSTOMER_MANAGED_KEY
 This object defines the customer managed key details to use when encrypting the VSAN datastore. 
 
@@ -139,6 +143,7 @@ This object defines the customer managed key details to use when encrypting the 
   - `key_vault_resource_id` = (Required) - The full Azure resource ID of the key vault where the encryption key will be sourced from
   - `key_name`              = (Required) - The name for the encryption key
   - `key_version`           = (Optional) - The key version value for the encryption key. 
+  - `user_assigned_identity` = (Non-Functional) - AVS doesn't currently 
 
 Example Inputs:
 ```hcl
@@ -149,7 +154,6 @@ Example Inputs:
 }
 ```
 CUSTOMER_MANAGED_KEY
-  nullable    = false
 }
 
 variable "dhcp_configuration" {
@@ -587,8 +591,8 @@ SEGMENTS
 
 variable "tags" {
   type        = map(string)
-  default     = {}
-  description = "Map of tags to be assigned to this resource"
+  default     = null
+  description = "(Optional) Map of tags to be assigned to the AVS resources"
 }
 
 variable "vcenter_identity_sources" {

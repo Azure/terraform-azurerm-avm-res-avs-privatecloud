@@ -29,10 +29,6 @@ provider "azurerm" {
   }
 }
 
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
-}
-
 locals {
   vm_sku = "Standard_D2_v4"
 }

@@ -126,3 +126,9 @@ variable "test_admin_user" {
   default     = "testAdmin"
   description = "the username to use for the account used to query ldap."
 }
+
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) Map of tags to be assigned to the AVS resources"
+}

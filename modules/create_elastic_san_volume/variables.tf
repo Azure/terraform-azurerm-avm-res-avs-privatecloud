@@ -16,6 +16,7 @@ variable "extended_size_in_tib" {
 variable "location" {
   type        = string
   description = "(Required) The Azure Region where the Elastic SAN resource should exist. Changing this forces a new resource to be created."
+  nullable  = false
 }
 
 variable "resource_group_id" {
@@ -129,8 +130,8 @@ DESCRIPTION
 
 variable "tags" {
   type        = map(string)
-  default     = {}
-  description = "(Optional) - a map of tags to apply directly to this resource."
+  default     = null
+  description = "(Optional) Map of tags to be assigned to the AVS resources"
 }
 
 variable "zones" {

@@ -7,6 +7,8 @@ resource "azurerm_public_ip" "bastion_pip" {
   name                = var.bastion_pip_name
   resource_group_name = var.resource_group_name
   sku                 = "Standard"
+  zones               = ["1","2","3"]
+  tags                = var.tags
 }
 
 resource "azurerm_bastion_host" "bastion" {
@@ -15,6 +17,7 @@ resource "azurerm_bastion_host" "bastion" {
   location            = var.resource_group_location
   name                = var.bastion_name
   resource_group_name = var.resource_group_name
+  tags                = var.tags
 
   ip_configuration {
     name                 = "${var.bastion_name}-ipconf"
@@ -22,13 +25,12 @@ resource "azurerm_bastion_host" "bastion" {
     subnet_id            = var.bastion_subnet_resource_id
   }
 }
-#get the deployer user details
-data "azurerm_client_config" "current" {}
 
 #Create a self-signed certificate for DSC to use for encrypted deployment
 resource "azurerm_key_vault_certificate" "this" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.dc_vm_name}-dsc-cert"
+  tags         = var.tags
 
   certificate_policy {
     issuer_parameters {
@@ -206,6 +208,7 @@ resource "azurerm_key_vault_secret" "ldap_password" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.ldap_user}-password"
   value        = random_password.ldap_password.result
+  tags         = var.tags
 }
 
 #store the testadmin user account in the key vault as a secret
@@ -213,6 +216,7 @@ resource "azurerm_key_vault_secret" "test_admin_password" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.test_admin_user}-password"
   value        = random_password.test_admin_password.result
+  tags         = var.tags
 }
 
 resource "azurerm_virtual_network_dns_servers" "dc_dns" {
@@ -231,6 +235,7 @@ resource "azurerm_virtual_network_dns_servers" "dc_dns" {
 resource "azurerm_key_vault_certificate" "this_secondary" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.dc_vm_name_secondary}-dsc-cert"
+  tags         = var.tags
 
   certificate_policy {
     issuer_parameters {

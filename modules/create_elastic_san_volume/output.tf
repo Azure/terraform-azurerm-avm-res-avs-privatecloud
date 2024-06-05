@@ -1,20 +1,20 @@
 
 output "volumes" {
-  value       = azapi_resource.this_elastic_san_volume
+  value       = jsondecode(azapi_resource.this_elastic_san_volume.output)
   description = "The full elastic san volume output"
 }
 
 output "elastic_san" {
-  value       = azapi_resource.this_elastic_san
+  value       = jsondecode(azapi_resource.this_elastic_san.output)
   description = "The full elastic san resource output."
 }
 
 output "resource" {
-  value       = azapi_resource.this_elastic_san
+  value       = jsondecode(azapi_resource.this_elastic_san.output)
   description = "The full elastic san resource output"
 }
 
 output "resource_id" {
-  value       = azapi_resource.this_elastic_san.id
+  value       = jsondecode(azapi_resource.this_elastic_san.output).id
   description = "The resource id of the elastic san volume"
 }

@@ -6,6 +6,8 @@ resource "azurerm_public_ip" "bastion_pip" {
   name                = var.bastion_pip_name
   resource_group_name = var.resource_group_name
   sku                 = "Standard"
+  zones               = ["1","2","3"]
+  tags                = var.tags
 }
 
 resource "azurerm_bastion_host" "bastion" {
@@ -14,6 +16,7 @@ resource "azurerm_bastion_host" "bastion" {
   location            = var.resource_group_location
   name                = var.bastion_name
   resource_group_name = var.resource_group_name
+  tags                = var.tags
 
   ip_configuration {
     name                 = "${var.bastion_name}-ipconf"
@@ -21,8 +24,6 @@ resource "azurerm_bastion_host" "bastion" {
     subnet_id            = var.bastion_subnet_resource_id
   }
 }
-
-data "azurerm_client_config" "current" {}
 
 #create the virtual machine
 module "jumpvm" {
