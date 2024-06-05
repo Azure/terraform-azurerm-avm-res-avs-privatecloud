@@ -120,6 +120,12 @@ Description: The name of the domain controller virtual machine.
 
 Type: `string`
 
+### <a name="input_vm_subnet_resource_id"></a> [vm\_subnet\_resource\_id](#input\_vm\_subnet\_resource\_id)
+
+Description: The subnet resource ID to use for deploying the virtual machine nics.
+
+Type: `string`
+
 ## Optional Inputs
 
 The following input variables are optional (have default values):
@@ -172,25 +178,17 @@ Type: `string`
 
 Default: `"Standard_D2_v4"`
 
-### <a name="input_vm_subnet_resource_id"></a> [vm\_subnet\_resource\_id](#input\_vm\_subnet\_resource\_id)
-
-Description: domain controller
-
-Type: `string`
-
-Default: `"The Azure Resource ID for the subnet where the DC will be connected."`
-
 ## Outputs
 
 The following outputs are exported:
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: n/a
+Description: The jump vm resource output required by the spec.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: n/a
+Description: The jump vm resource id output required by the spec.
 
 ## Modules
 

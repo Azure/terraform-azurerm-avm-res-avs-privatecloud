@@ -450,6 +450,12 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_dc_subnet_resource_id"></a> [dc\_subnet\_resource\_id](#input\_dc\_subnet\_resource\_id)
+
+Description: The Azure Resource ID for the subnet where the DC will be connected.
+
+Type: `string`
+
 ### <a name="input_dc_vm_name"></a> [dc\_vm\_name](#input\_dc\_vm\_name)
 
 Description: The name of the domain controller virtual machine.
@@ -551,14 +557,6 @@ Description: the github url for the raw DSC configuration script that will be us
 Type: `string`
 
 Default: `"https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/main/modules/create_test_domain_controllers/templates/dc_secondary_windows_dsc.ps1"`
-
-### <a name="input_dc_subnet_resource_id"></a> [dc\_subnet\_resource\_id](#input\_dc\_subnet\_resource\_id)
-
-Description: domain controller
-
-Type: `string`
-
-Default: `"The Azure Resource ID for the subnet where the DC will be connected."`
 
 ### <a name="input_dc_vm_sku"></a> [dc\_vm\_sku](#input\_dc\_vm\_sku)
 

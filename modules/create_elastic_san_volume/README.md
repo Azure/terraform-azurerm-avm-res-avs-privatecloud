@@ -190,12 +190,6 @@ Description: (Required) - The Azure Resource ID for the resource group where thi
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: (Required) Specifies the name of the Resource Group within which this Elastic SAN resource should exist. Changing this forces a new resource to be created.
-
-Type: `string`
-
 ## Optional Inputs
 
 The following input variables are optional (have default values):

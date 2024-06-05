@@ -344,7 +344,7 @@ module "create_anf_volume" {
 
 
 module "elastic_san" {
-  source               = "../../modules/create_elastic_san_volume"
+  source = "../../modules/create_elastic_san_volume"
   #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
   elastic_san_name      = "esan-${module.naming.storage_share.name_unique}"
   resource_group_id     = azurerm_resource_group.this.id

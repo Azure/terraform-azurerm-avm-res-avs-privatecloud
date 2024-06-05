@@ -42,15 +42,19 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13, != 1.13.0)
 
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.105)
+
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+
 ## Providers
 
 The following providers are used by this module:
 
 - <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 1.13, != 1.13.0)
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.105)
 
-- <a name="provider_random"></a> [random](#provider\_random)
+- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
 ## Resources
 
@@ -83,11 +87,19 @@ The following outputs are exported:
 
 ### <a name="output_deployment_region"></a> [deployment\_region](#output\_deployment\_region)
 
-Description: return the deployment region details if quota exists.  Return no\_quota if not. (will cause the deployment to error with invalid region)
+Description: The region map to use for the AVS deployment. Returns no\_quota if all region quota is consumed.
 
 ### <a name="output_regions_with_quota"></a> [regions\_with\_quota](#output\_regions\_with\_quota)
 
-Description: n/a
+Description: A map of regions that meet the quota requirement.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The region map to use for the AVS deployment. Returns no\_quota if all region quota is consumed. Duplicating the deployment region output to comply with the AVM spec.
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: A map of regions that meet the quota requirement. Duplicating the regions with quota output to comply with the AVM spec.
 
 ## Modules
 

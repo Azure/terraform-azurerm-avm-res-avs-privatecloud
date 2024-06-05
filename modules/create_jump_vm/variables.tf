@@ -20,6 +20,12 @@ variable "vm_name" {
   description = "The name of the domain controller virtual machine."
 }
 
+#domain controller
+variable "vm_subnet_resource_id" {
+  type        = string
+  description = "The subnet resource ID to use for deploying the virtual machine nics."
+}
+
 #bastion name
 variable "bastion_name" {
   type        = string
@@ -60,10 +66,4 @@ variable "vm_sku" {
   type        = string
   default     = "Standard_D2_v4"
   description = "The virtual machine sku size to use for the domain controller.  Defaults to Standard_D2_v4"
-}
-
-#domain controller
-variable "vm_subnet_resource_id" {
-  type    = string
-  description = "The subnet resource ID to use for deploying the virtual machine nics."
 }

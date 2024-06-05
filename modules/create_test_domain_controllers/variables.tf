@@ -1,3 +1,9 @@
+#domain controller
+variable "dc_subnet_resource_id" {
+  type        = string
+  description = "The Azure Resource ID for the subnet where the DC will be connected."
+}
+
 #names
 #vm name
 variable "dc_vm_name" {
@@ -80,12 +86,6 @@ variable "dc_dsc_script_url_secondary" {
   type        = string
   default     = "https://raw.githubusercontent.com/Azure/terraform-azurerm-avm-res-avs-privatecloud/main/modules/create_test_domain_controllers/templates/dc_secondary_windows_dsc.ps1"
   description = "the github url for the raw DSC configuration script that will be used by the custom script extension."
-}
-
-#domain controller
-variable "dc_subnet_resource_id" {
-  type    = string
-  description = "The Azure Resource ID for the subnet where the DC will be connected."
 }
 
 #DC sku
