@@ -51,6 +51,7 @@ The following resources are used by this module:
 - [azapi_resource.arc_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.avs_interconnect](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.clusters](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.configure_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.dhcp](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -70,6 +71,7 @@ The following resources are used by this module:
 - [azapi_resource_action.dns_service_destroy_non_empty_start](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.customer_managed_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_express_route_connection.avs_private_cloud_connection](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
+- [azurerm_express_route_connection.avs_private_cloud_connection_additional](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this_private_cloud_diags](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
@@ -479,6 +481,7 @@ Type:
 map(object({
     name                               = string
     expressroute_gateway_resource_id   = string
+    deployment_order                   = optional(number, 1)
     vwan_hub_connection                = optional(bool, false)
     authorization_key_name             = optional(string, null)
     fast_path_enabled                  = optional(bool, false)

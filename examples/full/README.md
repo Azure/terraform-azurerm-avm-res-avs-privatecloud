@@ -448,7 +448,7 @@ module "test_private_cloud" {
 
   elastic_san_datastores = {
     esan_datastore_cluster1 = {
-      esan_volume_resource_id = jsondecode(module.elastic_san.volumes["vg_1-volume_1"].output).id
+      esan_volume_resource_id = module.elastic_san.volumes["vg_1-volume_1"].id
       cluster_names           = ["Cluster-1"]
     }
   }
@@ -458,6 +458,7 @@ module "test_private_cloud" {
       name                             = "exr-connection-${azurerm_resource_group.this.location}"
       expressroute_gateway_resource_id = azurerm_virtual_network_gateway.gateway.id
       authorization_key_name           = "test_auth_key-${azurerm_resource_group.this.location}"
+      deployment_order                 = 1
     }
     region2 = {
       name                               = "exr-connection-${azurerm_resource_group.this_secondary.location}"
@@ -465,6 +466,7 @@ module "test_private_cloud" {
       authorization_key_name             = "test_auth_key-${azurerm_resource_group.this_secondary.location}"
       network_resource_group_resource_id = azurerm_resource_group.this_secondary.id
       network_resource_group_location    = azurerm_resource_group.this_secondary.location
+      deployment_order                   = 2
     }
   }
 
@@ -494,9 +496,10 @@ module "test_private_cloud" {
   }
 
   role_assignments = {
-    deployment_user_secrets = {
+    deployment_user_contributor = {
       role_definition_id_or_name = "Contributor"
       principal_id               = data.azurerm_client_config.current.client_id
+      principal_type             = "ServicePrincipal"
     }
   }
 

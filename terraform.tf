@@ -19,3 +19,8 @@ terraform {
     }
   }
 }
+
+
+provider "azapi" {
+  enable_hcl_output_for_data_source = false
+}

@@ -37,10 +37,11 @@ resource "azapi_resource" "this_elastic_san" {
       sku                     = var.sku
     }
   }
-  location  = var.location
-  name      = var.elastic_san_name
-  parent_id = var.resource_group_id
-  tags      = var.tags
+  location               = var.location
+  name                   = var.elastic_san_name
+  parent_id              = var.resource_group_id
+  response_export_values = ["*"]
+  tags                   = var.tags
 }
 
 locals {

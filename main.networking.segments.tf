@@ -13,7 +13,7 @@ resource "azapi_resource" "segments" {
   type = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2023-03-01"
   body = {
     properties = {
-      connectedGateway = each.value.connected_gateway == null ? [for value in data.azapi_resource_action.avs_gateways.output.value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
+      connectedGateway = each.value.connected_gateway == null ? [for value in jsondecode(data.azapi_resource_action.avs_gateways.output).value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
       displayName      = each.value.display_name
       subnet = {
         dhcpRanges     = each.value.dhcp_ranges
@@ -41,7 +41,9 @@ resource "azapi_resource" "segments" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,

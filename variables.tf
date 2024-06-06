@@ -318,6 +318,7 @@ variable "expressroute_connections" {
   type = map(object({
     name                               = string
     expressroute_gateway_resource_id   = string
+    deployment_order                   = optional(number, 1)
     vwan_hub_connection                = optional(bool, false)
     authorization_key_name             = optional(string, null)
     fast_path_enabled                  = optional(bool, false)
