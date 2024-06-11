@@ -40,7 +40,9 @@ resource "azapi_resource" "dhcp" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones

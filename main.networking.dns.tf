@@ -32,7 +32,9 @@ resource "azapi_resource" "dns_forwarder_zones" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect
   ]
@@ -58,11 +60,17 @@ data "azapi_resource_action" "avs_dns" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones
   ]
+}
+
+locals {
+  dns_details = jsondecode(data.azapi_resource_action.avs_dns.output)
 }
 
 resource "azapi_resource_action" "dns_service" {
@@ -73,11 +81,15 @@ resource "azapi_resource_action" "dns_service" {
   #if zone information defined populate the properties
   body = {
     properties = {
-      defaultDnsZone = data.azapi_resource_action.avs_dns.output.value[0].properties.defaultDnsZone
-      displayName    = data.azapi_resource_action.avs_dns.output.value[0].properties.displayName
-      dnsServiceIp   = data.azapi_resource_action.avs_dns.output.value[0].properties.dnsServiceIp
-      fqdnZones      = try([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service], [])
-      logLevel       = data.azapi_resource_action.avs_dns.output.value[0].properties.logLevel
+      #defaultDnsZone = data.azapi_resource_action.avs_dns.output.value[0].properties.defaultDnsZone #TODO: put these back when AzAPI 2.0 comes out.
+      defaultDnsZone = local.dns_details.value[0].properties.defaultDnsZone
+      #displayName    = data.azapi_resource_action.avs_dns.output.value[0].properties.displayName
+      displayName = local.dns_details.value[0].properties.displayName
+      #dnsServiceIp   = data.azapi_resource_action.avs_dns.output.value[0].properties.dnsServiceIp
+      dnsServiceIp = local.dns_details.value[0].properties.dnsServiceIp
+      fqdnZones    = try([for key, zone in var.dns_forwarder_zones : key if zone.add_to_default_dns_service], [])
+      #logLevel       = data.azapi_resource_action.avs_dns.output.value[0].properties.logLevel
+      logLevel = local.dns_details.value[0].properties.logLevel
     }
   }
   method = "PATCH"
@@ -100,7 +112,9 @@ resource "azapi_resource_action" "dns_service" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones
@@ -115,11 +129,15 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
   #if zone information defined populate the properties
   body = {
     properties = {
-      defaultDnsZone = data.azapi_resource_action.avs_dns.output.value[0].properties.defaultDnsZone
-      displayName    = data.azapi_resource_action.avs_dns.output.value[0].properties.displayName
-      dnsServiceIp   = data.azapi_resource_action.avs_dns.output.value[0].properties.dnsServiceIp
-      fqdnZones      = []
-      logLevel       = data.azapi_resource_action.avs_dns.output.value[0].properties.logLevel
+      #defaultDnsZone = data.azapi_resource_action.avs_dns.output.value[0].properties.defaultDnsZone #TODO: Set these back when AzAPI 2.0 goes GA.
+      defaultDnsZone = local.dns_details.value[0].properties.defaultDnsZone
+      #displayName    = data.azapi_resource_action.avs_dns.output.value[0].properties.displayName
+      displayName = local.dns_details.value[0].properties.displayName
+      #dnsServiceIp   = data.azapi_resource_action.avs_dns.output.value[0].properties.dnsServiceIp
+      dnsServiceIp = local.dns_details.value[0].properties.dnsServiceIp
+      fqdnZones    = []
+      #logLevel       = data.azapi_resource_action.avs_dns.output.value[0].properties.logLevel
+      logLevel = local.dns_details.value[0].properties.logLevel
       #revision       = 0
     }
   }
@@ -143,7 +161,9 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones

@@ -34,7 +34,9 @@ resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
@@ -71,7 +73,7 @@ resource "azapi_resource" "this_esan_attachment" {
     }
   }
   name      = each.value.attachment_name
-  parent_id = azapi_resource.this_private_cloud.id
+  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -85,7 +87,9 @@ resource "azapi_resource" "this_esan_attachment" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,

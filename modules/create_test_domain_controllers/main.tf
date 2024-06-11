@@ -2,64 +2,58 @@
 resource "azurerm_public_ip" "bastion_pip" {
   count = var.create_bastion ? 1 : 0
 
-  name                = var.bastion_pip_name
-  location            = var.resource_group_location
-  resource_group_name = var.resource_group_name
   allocation_method   = "Static"
+  location            = var.resource_group_location
+  name                = var.bastion_pip_name
+  resource_group_name = var.resource_group_name
   sku                 = "Standard"
+  tags                = var.tags
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_bastion_host" "bastion" {
-  count               = var.create_bastion ? 1 : 0
-  name                = var.bastion_name
+  count = var.create_bastion ? 1 : 0
+
   location            = var.resource_group_location
+  name                = var.bastion_name
   resource_group_name = var.resource_group_name
+  tags                = var.tags
 
   ip_configuration {
     name                 = "${var.bastion_name}-ipconf"
-    subnet_id            = var.bastion_subnet_resource_id
     public_ip_address_id = azurerm_public_ip.bastion_pip[0].id
+    subnet_id            = var.bastion_subnet_resource_id
   }
 }
-#get the deployer user details
-data "azurerm_client_config" "current" {}
 
 #Create a self-signed certificate for DSC to use for encrypted deployment
 resource "azurerm_key_vault_certificate" "this" {
-  name         = "${var.dc_vm_name}-dsc-cert"
   key_vault_id = var.key_vault_resource_id
+  name         = "${var.dc_vm_name}-dsc-cert"
+  tags         = var.tags
 
   certificate_policy {
     issuer_parameters {
       name = "Self"
     }
-
     key_properties {
       exportable = true
-      key_size   = 2048
       key_type   = "RSA"
       reuse_key  = true
+      key_size   = 2048
     }
-
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
     lifetime_action {
       action {
         action_type = "AutoRenew"
       }
-
       trigger {
         days_before_expiry = 30
       }
     }
-
-    secret_properties {
-      content_type = "application/x-pkcs12"
-    }
-
     x509_certificate_properties {
-      # Server Authentication = 1.3.6.1.5.5.7.3.1
-      # Client Authentication = 1.3.6.1.5.5.7.3.2
-      extended_key_usage = ["1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2", "2.5.29.37", "1.3.6.1.4.1.311.80.1"]
-
       key_usage = [
         "cRLSign",
         "dataEncipherment",
@@ -68,13 +62,15 @@ resource "azurerm_key_vault_certificate" "this" {
         "keyCertSign",
         "keyEncipherment",
       ]
+      subject            = "CN=${var.dc_vm_name}"
+      validity_in_months = 12
+      # Server Authentication = 1.3.6.1.5.5.7.3.1
+      # Client Authentication = 1.3.6.1.5.5.7.3.2
+      extended_key_usage = ["1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2", "2.5.29.37", "1.3.6.1.4.1.311.80.1"]
 
       subject_alternative_names {
         dns_names = ["${var.dc_vm_name}.${var.domain_fqdn}"]
       }
-
-      subject            = "CN=${var.dc_vm_name}"
-      validity_in_months = 12
     }
   }
 }
@@ -102,6 +98,11 @@ data "template_file" "run_script" {
 
 
 #build the DC VM
+locals {
+  protected_settings_script_primary = jsonencode({
+    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
+  })
+}
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
@@ -162,27 +163,23 @@ module "testvm" {
       type                       = "CustomScriptExtension"
       type_handler_version       = "1.9"
       auto_upgrade_minor_version = true
-      protected_settings         = <<PROTECTED_SETTINGS
-        {
-            "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
-        }
-      PROTECTED_SETTINGS
-
+      protected_settings         = local.protected_settings_script_primary
     }
   }
 }
 
 #adding sleep wait to give the DC time to install the features and configure itself
 resource "time_sleep" "wait_600_seconds" {
-  depends_on = [module.testvm]
-
   create_duration = "600s"
+
+  depends_on = [module.testvm]
 }
 
 data "azurerm_virtual_machine" "this_vm" {
   name                = module.testvm.virtual_machine.name
   resource_group_name = var.resource_group_name
-  depends_on          = [time_sleep.wait_600_seconds, module.testvm]
+
+  depends_on = [time_sleep.wait_600_seconds, module.testvm]
 }
 
 #generate a password for use by the ldap user account
@@ -192,8 +189,8 @@ resource "random_password" "ldap_password" {
   min_numeric      = 2
   min_special      = 2
   min_upper        = 2
-  special          = true
   override_special = "!#$%&()*+,-./:;<=>?@[]^_{|}~"
+  special          = true
 }
 
 resource "random_password" "test_admin_password" {
@@ -202,22 +199,24 @@ resource "random_password" "test_admin_password" {
   min_numeric      = 2
   min_special      = 2
   min_upper        = 2
-  special          = true
   override_special = "!#$%&()*+,-./:;<=>?@[]^_{|}~"
+  special          = true
 }
 
 #store the ldap user account in the key vault as a secret
 resource "azurerm_key_vault_secret" "ldap_password" {
+  key_vault_id = var.key_vault_resource_id
   name         = "${var.ldap_user}-password"
   value        = random_password.ldap_password.result
-  key_vault_id = var.key_vault_resource_id
+  tags         = var.tags
 }
 
 #store the testadmin user account in the key vault as a secret
 resource "azurerm_key_vault_secret" "test_admin_password" {
+  key_vault_id = var.key_vault_resource_id
   name         = "${var.test_admin_user}-password"
   value        = random_password.test_admin_password.result
-  key_vault_id = var.key_vault_resource_id
+  tags         = var.tags
 }
 
 resource "azurerm_virtual_network_dns_servers" "dc_dns" {
@@ -234,40 +233,32 @@ resource "azurerm_virtual_network_dns_servers" "dc_dns" {
 
 #Create a self-signed certificate for DSC to use for encrypted deployment
 resource "azurerm_key_vault_certificate" "this_secondary" {
-  name         = "${var.dc_vm_name_secondary}-dsc-cert"
   key_vault_id = var.key_vault_resource_id
+  name         = "${var.dc_vm_name_secondary}-dsc-cert"
+  tags         = var.tags
 
   certificate_policy {
     issuer_parameters {
       name = "Self"
     }
-
     key_properties {
       exportable = true
-      key_size   = 2048
       key_type   = "RSA"
       reuse_key  = true
+      key_size   = 2048
     }
-
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
     lifetime_action {
       action {
         action_type = "AutoRenew"
       }
-
       trigger {
         days_before_expiry = 30
       }
     }
-
-    secret_properties {
-      content_type = "application/x-pkcs12"
-    }
-
     x509_certificate_properties {
-      # Server Authentication = 1.3.6.1.5.5.7.3.1
-      # Client Authentication = 1.3.6.1.5.5.7.3.2
-      extended_key_usage = ["1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2", "2.5.29.37", "1.3.6.1.4.1.311.80.1"]
-
       key_usage = [
         "cRLSign",
         "dataEncipherment",
@@ -276,13 +267,15 @@ resource "azurerm_key_vault_certificate" "this_secondary" {
         "keyCertSign",
         "keyEncipherment",
       ]
+      subject            = "CN=${var.dc_vm_name_secondary}"
+      validity_in_months = 12
+      # Server Authentication = 1.3.6.1.5.5.7.3.1
+      # Client Authentication = 1.3.6.1.5.5.7.3.2
+      extended_key_usage = ["1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2", "2.5.29.37", "1.3.6.1.4.1.311.80.1"]
 
       subject_alternative_names {
         dns_names = ["${var.dc_vm_name_secondary}.${var.domain_fqdn}"]
       }
-
-      subject            = "CN=${var.dc_vm_name_secondary}"
-      validity_in_months = 12
     }
   }
 }
@@ -309,7 +302,12 @@ data "template_file" "run_script_secondary" {
 }
 
 
-#build the DC VM
+#build the secondary DC VM
+locals {
+  protected_settings_script_secondary = jsonencode({
+    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script_secondary.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
+  })
+}
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
@@ -372,12 +370,7 @@ module "testvm_secondary" {
       type                       = "CustomScriptExtension"
       type_handler_version       = "1.9"
       auto_upgrade_minor_version = true
-      protected_settings         = <<PROTECTED_SETTINGS
-        {
-            "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script_secondary.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
-        }
-      PROTECTED_SETTINGS
-
+      protected_settings         = local.protected_settings_script_secondary
     }
   }
 
@@ -386,13 +379,14 @@ module "testvm_secondary" {
 
 #adding sleep wait to give the DC time to install the features and configure itself
 resource "time_sleep" "wait_600_seconds_2" {
-  depends_on = [module.testvm_secondary]
-
   create_duration = "600s"
+
+  depends_on = [module.testvm_secondary]
 }
 
 data "azurerm_virtual_machine" "this_vm_secondary" {
   name                = module.testvm_secondary.virtual_machine.name
   resource_group_name = var.resource_group_name
-  depends_on          = [time_sleep.wait_600_seconds_2, module.testvm_secondary]
+
+  depends_on = [time_sleep.wait_600_seconds_2, module.testvm_secondary]
 }

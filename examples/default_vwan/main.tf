@@ -1,38 +1,3 @@
-terraform {
-  required_version = "~>1.6"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.74"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5"
-    }
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 1.13, != 1.13.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.10"
-    }
-  }
-}
-
-# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
-}
-
 locals {
   vm_sku = "Standard_D2_v4"
 }
@@ -50,8 +15,8 @@ module "regions" {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  #source               = "../../modules/generate_deployment_region"
-  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
+  source = "../../modules/generate_deployment_region"
+  #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -182,7 +147,7 @@ module "avm_res_keyvault_vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.6.1"
+  # version            = "=0.7.0"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
@@ -212,6 +177,7 @@ module "test_private_cloud" {
 
   expressroute_connections = {
     default = {
+      name                             = "default_vwan_connection"
       vwan_hub_connection              = true
       expressroute_gateway_resource_id = azurerm_express_route_gateway.vwan_express_route_gateway.id
       authorization_key_name           = "test_auth_key"
@@ -224,8 +190,8 @@ module "test_private_cloud" {
 }
 
 module "create_jump_vm" {
-  #source = "../../modules/create_jump_vm"
-  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm"
+  source = "../../modules/create_jump_vm"
+  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm"
 
 
   resource_group_name        = azurerm_resource_group.this.name

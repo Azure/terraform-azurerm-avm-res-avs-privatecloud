@@ -8,7 +8,8 @@ variable "avs_network_cidr" {
 
 variable "location" {
   type        = string
-  description = "The Azure region where this and supporting resources should be deployed.  "
+  description = "The Azure region where this and supporting resources should be deployed."
+  nullable    = false
 }
 
 variable "name" {
@@ -125,12 +126,15 @@ CLUSTERS
 }
 
 variable "customer_managed_key" {
-  type = map(object({
-    key_vault_resource_id = optional(string, null)
-    key_name              = optional(string, null)
+  type = object({
+    key_vault_resource_id = string
+    key_name              = string
     key_version           = optional(string, null)
-  }))
-  default     = {}
+    user_assigned_identity = optional(object({
+      resource_id = string
+    }), null)
+  })
+  default     = null
   description = <<CUSTOMER_MANAGED_KEY
 This object defines the customer managed key details to use when encrypting the VSAN datastore. 
 
@@ -138,6 +142,7 @@ This object defines the customer managed key details to use when encrypting the 
   - `key_vault_resource_id` = (Required) - The full Azure resource ID of the key vault where the encryption key will be sourced from
   - `key_name`              = (Required) - The name for the encryption key
   - `key_version`           = (Optional) - The key version value for the encryption key. 
+  - `user_assigned_identity` = (Non-Functional) - AVS doesn't currently 
 
 Example Inputs:
 ```hcl
@@ -148,7 +153,6 @@ Example Inputs:
 }
 ```
 CUSTOMER_MANAGED_KEY
-  nullable    = false
 }
 
 variable "dhcp_configuration" {
@@ -273,7 +277,25 @@ variable "elastic_san_datastores" {
     cluster_names           = set(string)
     esan_volume_resource_id = string
   }))
-  default = {}
+  default     = {}
+  description = <<DESCRIPTION
+Map of objects describing one or more elastic sAN based datastore to configure on this private cloud.
+
+- `<map key>` - Unique map key that will be used as the prefix for the datastore attachment name.
+  - `cluster_names` = (Required) - Set of cluster names that should use the volume as a datastore
+  - `esan_volume_resource_id`- The Azure Resource id for the elastic san volume used to host the datastore.
+
+
+Example Input:
+```hcl
+elastic_san_datastores = {
+  esan_datastore_cluster1 = {
+    esan_volume_resource_id = module.elastic_san.volumes["vg_1-volume_1"].id
+    cluster_names           = ["Cluster-1"]
+  }
+}
+```
+DESCRIPTION
 }
 
 variable "enable_stretch_cluster" {
@@ -294,13 +316,18 @@ DESCRIPTION
 
 variable "expressroute_connections" {
   type = map(object({
-    vwan_hub_connection              = optional(bool, false)
-    expressroute_gateway_resource_id = string
-    authorization_key_name           = optional(string, null)
-    fast_path_enabled                = optional(bool, false)
-    routing_weight                   = optional(number, 0)
-    enable_internet_security         = optional(bool, false)
-    tags                             = optional(map(string), {})
+    name                               = string
+    expressroute_gateway_resource_id   = string
+    deployment_order                   = optional(number, 1)
+    vwan_hub_connection                = optional(bool, false)
+    authorization_key_name             = optional(string, null)
+    fast_path_enabled                  = optional(bool, false)
+    private_link_fast_path_enabled     = optional(bool, false)
+    routing_weight                     = optional(number, 0)
+    enable_internet_security           = optional(bool, false)
+    tags                               = optional(map(string), {})
+    network_resource_group_resource_id = optional(string, null)
+    network_resource_group_location    = optional(string, null)
     routing = optional(map(object({
       associated_route_table_resource_id = optional(string, null)
       inbound_route_map_resource_id      = optional(string, null)
@@ -315,14 +342,18 @@ variable "expressroute_connections" {
   description = <<EXPRESSROUTE_CONNECTIONS
 Map of string objects describing one or more ExpressRoute connections to be configured by the private cloud. The map key will be used for the connection name.
 
-- `<map key>` - Provide a key value that will be used as the expressroute connection name
-  - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
+- `<map key>` - Provide an arbitrary key value that will be used to identify this expressRoute connection
+  - `name`                                 = (Required) - The name to use for the expressRoute connection.
   - `expressroute_gateway_resource_id`     = (Required) - The Azure Resource ID for the ExpressRoute gateway where the connection will be made.
+  - `vwan_hub_connection`                  = (Optional) - Set this to true if making a connection to a VWAN hub.  Leave as false if connecting to an ExpressRoute gateway in a virtual network hub.
   - `authorization_key_name`               = (Optional) - The authorization key name that should be used from the auth key map. If no key is provided a name will be generated from the map key.
   - `fast_path_enabled`                    = (Optional) - Should fast path gateway bypass be enabled. There are sku and cost considerations to be aware of when enabling fast path. Defaults to false
   - `routing_weight`                       = (Optional) - The routing weight value to use for this connection.  Defaults to 0.
   - `enable_internet_security`             = (Optional) - Set this to true if connecting to a secure VWAN hub and you want the hub NVA to publish a default route to AVS.
-  - `routing`                              =  Optional( map ( object({
+  - `tags`                                 = (Optional) - Map of strings describing any custom tags to apply to this connection resource
+  - `network_resource_group_resource_id`   = (Optional) - The resource ID of an external resource group. This is used to place the virtual network gateway connection resource with the virtual network gateway if the gateway is in a separate location.
+  - `network_resource_group_location`      = (Optional) - The location of an external resource group. This is used to place the virtual network gateway connection resource with the virtual network gateway if the gateway is in a separate location.
+  - `routing`                              = (Optional) - Map of objects used to describe any VWAN and Virtual Hub custom routing for this connection
     - `associated_route_table_resource_id` = (Optional) - The Azure Resource ID of the Virtual Hub Route Table associated with this Express Route Connection.
     - `inbound_route_map_resource_id`      = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for inbound learned routes
     - `outbound_route_map_resource_id`     = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for outbound advertised routes
@@ -411,26 +442,20 @@ PUBLIC_IPS
 
 variable "lock" {
   type = object({
+    kind = string
     name = optional(string, null)
-    kind = optional(string, "None")
   })
-  default     = {}
-  description = <<LOCK
-"The lock level to apply to this virtual machine and all of it's child resources. The default value is none. Possible values are `None`, `CanNotDelete`, and `ReadOnly`. Set the lock value on child resource values explicitly to override any inherited locks." 
+  default     = null
+  description = <<DESCRIPTION
+Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
-Example Inputs:
-```hcl
-lock = {
-  name = "lock-{resourcename}" # optional
-  type = "CanNotDelete" 
-}
-```
-LOCK
-  nullable    = false
+- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+DESCRIPTION
 
   validation {
-    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
-    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
+    condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
+    error_message = "Lock kind must be either `\"CanNotDelete\"` or `\"ReadOnly\"`."
   }
 }
 
@@ -471,9 +496,11 @@ This map of objects describes one or more netapp volume attachments.  The map ke
 
 Example Input:
 ```hcl
-anf_datastore_cluster1 = {
-  netapp_volume_resource_id = azurerm_netapp_volume.test.id
-  cluster_names             = ["Cluster-1"]
+netapp_files_datastores = {
+  anf_datastore_cluster1 = {
+    netapp_volume_resource_id = module.create_anf_volume.volume_id
+    cluster_names             = ["Cluster-1"]
+  }
 }
 ```
 NETAPP_FILES_ATTACHMENTS
@@ -496,38 +523,29 @@ variable "primary_zone" {
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
-    principal_id                           = optional(string)
-    condition                              = optional(string)
-    condition_version                      = optional(string)
-    description                            = optional(string)
-    skip_service_principal_aad_check       = optional(bool, true)
-    delegated_managed_identity_resource_id = optional(string)
-    }
-  ))
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
+  }))
   default     = {}
-  description = <<ROLE_ASSIGNMENTS
-A list of role definitions and scopes to be assigned as part of this resources implementation.  
+  description = <<DESCRIPTION
+A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-- `<map key>` - Provide a key value that will be used as the role assignments name
-  - `principal_id`                               = (optional) - The ID of the Principal (User, Group or Service Principal) to assign the Role Definition to. Changing this forces a new resource to be created.
-  - `role_definition_id_or_name`                 = (Optional) - The Scoped-ID of the Role Definition or the built-in role name. Changing this forces a new resource to be created. Conflicts with role_definition_name 
-  - `condition`                                  = (Optional) - The condition that limits the resources that the role can be assigned to. Changing this forces a new resource to be created.
-  - `condition_version`                          = (Optional) - The version of the condition. Possible values are 1.0 or 2.0. Changing this forces a new resource to be created.
-  - `description`                                = (Optional) - The description for this Role Assignment. Changing this forces a new resource to be created.
-  - `skip_service_principal_aad_check`           = (Optional) - If the principal_id is a newly provisioned Service Principal set this value to true to skip the Azure Active Directory check which may fail due to replication lag. This argument is only valid if the principal_id is a Service Principal identity. Defaults to true.
-  - `delegated_managed_identity_resource_id`     = (Optional) - The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created.  
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+- `principal_id` - The ID of the principal to assign the role to.
+- `description` - (Optional) The description of the role assignment.
+- `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+- `condition` - (Optional) The condition which will be used to scope the role assignment.
+- `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+- `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+- `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
 
-Example Inputs:
-```hcl
-role_assignments = {
-  role_assignment_1 = {
-    role_definition_id_or_name                 = "Contributor"
-    principal_id                               = data.azuread_client_config.current.object_id
-    description                                = "Example for assigning a role to an existing principal for the Private Cloud scope"        
-  }
-}
-```
-ROLE_ASSIGNMENTS
+> Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
+DESCRIPTION
   nullable    = false
 }
 
@@ -572,9 +590,9 @@ SEGMENTS
 }
 
 variable "tags" {
-  type        = map(any)
-  default     = {}
-  description = "Map of tags to be assigned to this resource"
+  type        = map(string)
+  default     = null
+  description = "(Optional) Map of tags to be assigned to the AVS resources"
 }
 
 variable "vcenter_identity_sources" {

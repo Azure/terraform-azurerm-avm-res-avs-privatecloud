@@ -14,41 +14,6 @@ This example demonstrates a deployment with a single Azure VMware Solution priva
         - Bastion enabled for accessing the Jump Box GUI
 
 ```hcl
-terraform {
-  required_version = "~>1.6"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.74"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5"
-    }
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 1.13, != 1.13.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.10"
-    }
-  }
-}
-
-# tflint-ignore: terraform_module_provider_declaration, terraform_output_separate, terraform_variable_separate
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
-}
-
 locals {
   vm_sku = "Standard_D2_v4"
 }
@@ -66,8 +31,8 @@ module "regions" {
 data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
-  #source               = "../../modules/generate_deployment_region"
-  source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
+  source = "../../modules/generate_deployment_region"
+  #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   total_quota_required = 3
 }
 
@@ -198,7 +163,7 @@ module "avm_res_keyvault_vault" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.6.1"
+  # version            = "=0.7.0"
 
   enable_telemetry           = var.enable_telemetry
   resource_group_name        = azurerm_resource_group.this.name
@@ -228,6 +193,7 @@ module "test_private_cloud" {
 
   expressroute_connections = {
     default = {
+      name                             = "default_vwan_connection"
       vwan_hub_connection              = true
       expressroute_gateway_resource_id = azurerm_express_route_gateway.vwan_express_route_gateway.id
       authorization_key_name           = "test_auth_key"
@@ -240,8 +206,8 @@ module "test_private_cloud" {
 }
 
 module "create_jump_vm" {
-  #source = "../../modules/create_jump_vm"
-  source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm"
+  source = "../../modules/create_jump_vm"
+  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm"
 
 
   resource_group_name        = azurerm_resource_group.this.name
@@ -266,13 +232,9 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.6)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13, != 1.13.0)
-
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
-
-- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.10)
+- <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
 ## Providers
 
@@ -280,7 +242,7 @@ The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
 
-- <a name="provider_local"></a> [local](#provider\_local)
+- <a name="provider_local"></a> [local](#provider\_local) (~> 2.5)
 
 ## Resources
 
@@ -333,13 +295,13 @@ Version: 0.5.3
 
 ### <a name="module_create_jump_vm"></a> [create\_jump\_vm](#module\_create\_jump\_vm)
 
-Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm
+Source: ../../modules/create_jump_vm
 
 Version:
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
-Source: git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region
+Source: ../../modules/generate_deployment_region
 
 Version:
 

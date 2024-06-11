@@ -1,10 +1,11 @@
 #configure the resource locks
-resource "azurerm_management_lock" "this_private_cloud" {
-  count = var.lock.kind != "None" ? 1 : 0
+resource "azurerm_management_lock" "this" {
+  count = var.lock != null ? 1 : 0
 
   lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.name}")
+  name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
   scope      = azapi_resource.this_private_cloud.id
+  notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 
   depends_on = [ #deploy all sub-resources before adding locks in case someone configures a read-only lock
     azapi_resource.this_private_cloud,
@@ -18,7 +19,9 @@ resource "azurerm_management_lock" "this_private_cloud" {
     azapi_resource.srm_addon,
     azapi_resource.vr_addon,
     azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_virtual_network_gateway_connection.this,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
