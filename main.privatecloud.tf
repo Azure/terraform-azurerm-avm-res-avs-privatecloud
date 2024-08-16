@@ -71,3 +71,12 @@ resource "azapi_resource" "this_private_cloud" {
     delete = "4h"
   }
 }
+
+#use a data resource to get the identity details to avoid terraform import issues
+data "azapi_resource" "this_private_cloud" {
+  type                   = "Microsoft.AVS/privateClouds@2023-03-01"
+  resource_id            = azapi_resource.this_private_cloud.id
+  response_export_values = ["*"]
+
+  depends_on = [azapi_resource.this_private_cloud]
+}
