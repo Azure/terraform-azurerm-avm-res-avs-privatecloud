@@ -9,8 +9,9 @@ resource "azapi_resource" "public_ip" {
       numberOfPublicIPs = each.value.number_of_ip_addresses
     }
   }
-  name      = each.key
-  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  name                   = each.key
+  parent_id              = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  response_export_values = ["*"]
 
   timeouts {
     create = "4h"
@@ -44,3 +45,4 @@ resource "azapi_resource" "public_ip" {
     azurerm_vmware_netapp_volume_attachment.attach_datastores
   ]
 }
+

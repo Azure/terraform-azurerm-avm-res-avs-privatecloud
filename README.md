@@ -87,6 +87,7 @@ The following resources are used by this module:
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [terraform_data.rerun_get](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource_action.avs_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.avs_gateways](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.sddc_creds](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
@@ -862,6 +863,10 @@ Description: This value returns the vcenter and nsxt cloudadmin credential value
 ### <a name="output_identity"></a> [identity](#output\_identity)
 
 Description: This output returns the managed identity values if the managed identity has been enabled on the module.
+
+### <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip)
+
+Description: The public IP prefixes when a public ip config is configured for the private cloud.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
