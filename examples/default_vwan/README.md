@@ -236,14 +236,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
-
-- <a name="provider_local"></a> [local](#provider\_local) (~> 2.5)
-
 ## Resources
 
 The following resources are used by this module:
