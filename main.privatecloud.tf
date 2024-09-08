@@ -61,6 +61,7 @@ resource "azapi_resource" "this_private_cloud" {
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned
+
     content {
       type = identity.value.type
     }

@@ -77,6 +77,7 @@ resource "azapi_resource" "this_elastic_san_volume_group" {
 
   dynamic "identity" {
     for_each = each.value.managed_identities != null ? ["identity"] : []
+
     content {
       type         = each.value.managed_identities.type
       identity_ids = each.value.managed_identities.identity_ids
