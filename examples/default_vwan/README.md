@@ -232,7 +232,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.6)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.106)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
