@@ -51,13 +51,14 @@ locals {
 
 #build a base private cloud resource then modify it as needed.
 resource "azapi_resource" "this_private_cloud" {
-  type                   = "Microsoft.AVS/privateClouds@2023-03-01"
-  body                   = local.full_body
-  location               = var.location
-  name                   = var.name
-  parent_id              = var.resource_group_resource_id
-  response_export_values = ["*"]
-  tags                   = var.tags
+  type                      = "Microsoft.AVS/privateClouds@2023-03-01"
+  body                      = local.full_body
+  location                  = var.location
+  name                      = var.name
+  parent_id                 = var.resource_group_resource_id
+  response_export_values    = ["*"]
+  schema_validation_enabled = false
+  tags                      = var.tags
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned
@@ -70,6 +71,10 @@ resource "azapi_resource" "this_private_cloud" {
   timeouts {
     create = "15h"
     delete = "4h"
+  }
+
+  lifecycle {
+    ignore_changes = [body.properties.nsxtPassword, body.properties.vcenterPassword]
   }
 }
 
