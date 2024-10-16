@@ -2,7 +2,7 @@
 resource "azapi_resource" "dhcp" {
   for_each = var.dhcp_configuration
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/dhcpConfigurations@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/dhcpConfigurations@2023-09-01"
   body = jsondecode(upper(each.value.dhcp_type) == "RELAY" ? jsonencode(
     {
       properties = {

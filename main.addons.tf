@@ -1,10 +1,21 @@
+#adding sleep wait to handle lag in hcx registration for keys
+resource "time_sleep" "wait_60_seconds_hcx" {
+  create_duration = "60s"
+  triggers = {
+    addon = azapi_resource.this_private_cloud.id
+  }
+
+  depends_on = [azapi_resource.this_private_cloud]
+}
+
+
 #####################################################################################################################################
 # Deploy and configure the HCX Addon
 #####################################################################################################################################
 resource "azapi_resource" "hcx_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "hcx" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
   body = {
     properties = {
       addonType = "HCX"
@@ -48,7 +59,7 @@ resource "time_sleep" "wait_120_seconds" {
 resource "azapi_resource" "hcx_keys" {
   for_each = toset(try(var.addons.hcx.hcx_key_names, []))
 
-  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2023-03-01"
+  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2023-09-01"
   name                   = each.key
   parent_id              = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
@@ -72,7 +83,7 @@ resource "azapi_resource" "hcx_keys" {
 resource "azapi_resource" "srm_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "srm" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
   body = {
     properties = {
       addonType  = "SRM"
@@ -115,7 +126,7 @@ resource "azapi_resource" "srm_addon" {
 resource "azapi_resource" "vr_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "vr" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
   body = {
     properties = {
       addonType = "VR"
@@ -158,7 +169,7 @@ resource "azapi_resource" "vr_addon" {
 resource "azapi_resource" "arc_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "arc" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
   body = {
     properties = {
       addonType = "Arc"

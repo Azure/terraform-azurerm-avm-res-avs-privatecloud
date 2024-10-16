@@ -87,7 +87,7 @@ resource "azapi_update_resource" "manual_passwords" {
 
 #get SDDC credentials for use with the credentials output
 data "azapi_resource_action" "sddc_creds" {
-  type                   = "Microsoft.AVS/privateClouds@2023-03-01"
+  type                   = "Microsoft.AVS/privateClouds@2023-09-01"
   action                 = "listAdminCredentials"
   resource_id            = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]

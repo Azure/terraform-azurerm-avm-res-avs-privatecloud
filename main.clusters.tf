@@ -4,7 +4,7 @@
 resource "azapi_resource" "clusters" {
   for_each = var.clusters
 
-  type = "Microsoft.AVS/privateClouds/clusters@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/clusters@2023-09-01"
   body = {
     sku = {
       name = each.value.sku_name

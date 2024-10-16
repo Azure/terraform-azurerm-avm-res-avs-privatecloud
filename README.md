@@ -5,14 +5,6 @@ This repo is used for the Azure Verified Modules version of an Azure VMWare Solu
 
 It leverages both the AzAPI and AzureRM providers to implement the child-level resources.
 
-> **\_NOTE:\_** This module uses the AzAPI provider to configure most AVS resources.  The AzAPI provider introduced breaking changes in v.1.13. which aligns with v0.5.0 and forward versions of this module.  To address this, it is required to include the following provider block in your root module. If you are using other modules that use the AzAPI provider where this feature flag hasn't been implemented, then an alias with this flag will be required for this module. This requirement will go away when the AzAPI provider releases version v2.0 with this change as the default. We will update the module and notes accordingly when that occurs.
-
-```hcl
-provider "azapi" {
-  enable_hcl_output_for_data_source = true
-}
-```
-
 > **\_NOTE:\_**  This module is not currently fully idempotent. Because run commands are used to implement the configuration of identity sources and run-commands don't have an effective data provider to do standard reads, we currently redeploy the run-command resource to get the identity provider state. Based on the output of the read, the delete and configure resources are also re-run and either set/update the identity values or run a second and/or third Get call to avoid making unnecessary changes.
 
 <!-- markdownlint-disable MD033 -->
@@ -71,6 +63,7 @@ The following resources are used by this module:
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [terraform_data.rerun_get](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [time_sleep.wait_60_seconds_hcx](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource_action.avs_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.avs_gateways](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
@@ -844,9 +837,25 @@ The following outputs are exported:
 
 Description: This value returns the vcenter and nsxt cloudadmin credential values.
 
+### <a name="output_hcx_cloud_manager_endpoint_hostname"></a> [hcx\_cloud\_manager\_endpoint\_hostname](#output\_hcx\_cloud\_manager\_endpoint\_hostname)
+
+Description: The hcx cloud manager's hostname
+
+### <a name="output_hcx_cloud_manager_endpoint_https"></a> [hcx\_cloud\_manager\_endpoint\_https](#output\_hcx\_cloud\_manager\_endpoint\_https)
+
+Description: The full https endpoint for hcx cloud manager
+
 ### <a name="output_identity"></a> [identity](#output\_identity)
 
 Description: This output returns the managed identity values if the managed identity has been enabled on the module.
+
+### <a name="output_nsxt_manager_endpoint_hostname"></a> [nsxt\_manager\_endpoint\_hostname](#output\_nsxt\_manager\_endpoint\_hostname)
+
+Description: The nsxt endpoint's hostname
+
+### <a name="output_nsxt_manager_endpoint_https"></a> [nsxt\_manager\_endpoint\_https](#output\_nsxt\_manager\_endpoint\_https)
+
+Description: The full https endpoint for nsxt manager.
 
 ### <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip)
 
@@ -863,6 +872,14 @@ Description: The azure resource if of the private cloud.
 ### <a name="output_system_assigned_mi_principal_id"></a> [system\_assigned\_mi\_principal\_id](#output\_system\_assigned\_mi\_principal\_id)
 
 Description: The principal id of the system managed identity assigned to the virtual machine
+
+### <a name="output_vcsa_endpoint_hostname"></a> [vcsa\_endpoint\_hostname](#output\_vcsa\_endpoint\_hostname)
+
+Description: The vcsa endpoint's hostname
+
+### <a name="output_vcsa_endpoint_https"></a> [vcsa\_endpoint\_https](#output\_vcsa\_endpoint\_https)
+
+Description: The full https endpoint for vcsa.
 
 ## Modules
 
