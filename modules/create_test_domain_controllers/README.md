@@ -177,6 +177,9 @@ module "testvm" {
 #adding sleep wait to give the DC time to install the features and configure itself
 resource "time_sleep" "wait_600_seconds" {
   create_duration = "600s"
+  triggers = {
+    dc_01 = module.testvm.resource_id
+  }
 
   depends_on = [module.testvm]
 }
@@ -195,7 +198,7 @@ resource "random_password" "ldap_password" {
   min_numeric      = 2
   min_special      = 2
   min_upper        = 2
-  override_special = "!#$%&()*+,-./:;<=>?@[]^_{|}~"
+  override_special = "!#"
   special          = true
 }
 
@@ -205,7 +208,28 @@ resource "random_password" "test_admin_password" {
   min_numeric      = 2
   min_special      = 2
   min_upper        = 2
-  override_special = "!#$%&()*+,-./:;<=>?@[]^_{|}~"
+  override_special = "!#"
+  special          = true
+}
+
+#generate a password for use by the ldap user account
+resource "random_password" "dc1_password" {
+  length           = 22
+  min_lower        = 2
+  min_numeric      = 2
+  min_special      = 2
+  min_upper        = 2
+  override_special = "!#"
+  special          = true
+}
+
+resource "random_password" "dc2_password" {
+  length           = 22
+  min_lower        = 2
+  min_numeric      = 2
+  min_special      = 2
+  min_upper        = 2
+  override_special = "!#"
   special          = true
 }
 
@@ -222,6 +246,20 @@ resource "azurerm_key_vault_secret" "test_admin_password" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.test_admin_user}-password"
   value        = random_password.test_admin_password.result
+  tags         = var.tags
+}
+
+resource "azurerm_key_vault_secret" "dc01_password" {
+  key_vault_id = var.key_vault_resource_id
+  name         = "dc01-password"
+  value        = random_password.dc1_password.result
+  tags         = var.tags
+}
+
+resource "azurerm_key_vault_secret" "dc02_password" {
+  key_vault_id = var.key_vault_resource_id
+  name         = "dc02-password"
+  value        = random_password.dc2_password.result
   tags         = var.tags
 }
 
@@ -386,6 +424,9 @@ module "testvm_secondary" {
 #adding sleep wait to give the DC time to install the features and configure itself
 resource "time_sleep" "wait_600_seconds_2" {
   create_duration = "600s"
+  triggers = {
+    dc_02 = module.testvm_secondary.resource_id
+  }
 
   depends_on = [module.testvm_secondary]
 }
@@ -432,10 +473,14 @@ The following resources are used by this module:
 - [azurerm_bastion_host.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
 - [azurerm_key_vault_certificate.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
 - [azurerm_key_vault_certificate.this_secondary](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) (resource)
+- [azurerm_key_vault_secret.dc01_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) (resource)
+- [azurerm_key_vault_secret.dc02_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) (resource)
 - [azurerm_key_vault_secret.ldap_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) (resource)
 - [azurerm_key_vault_secret.test_admin_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) (resource)
 - [azurerm_public_ip.bastion_pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_virtual_network_dns_servers.dc_dns](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_dns_servers) (resource)
+- [random_password.dc1_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
+- [random_password.dc2_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [random_password.ldap_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [random_password.test_admin_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
 - [time_sleep.wait_600_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)

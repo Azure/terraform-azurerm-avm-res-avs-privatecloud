@@ -12,7 +12,7 @@ resource "terraform_data" "rerun_get" {
 resource "azapi_resource" "remove_existing_identity_source" {
   for_each = var.vcenter_identity_sources
 
-  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-09-01"
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = ({ #remove the current identity source
     properties = {
@@ -65,7 +65,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
 resource "azapi_resource" "configure_identity_sources" {
   for_each = var.vcenter_identity_sources
 
-  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-09-01"
   body = ({
     properties = {
       timeout        = "PT15M"

@@ -10,7 +10,7 @@ resource "azurerm_vmware_express_route_authorization" "this_authorization_key" {
 resource "azapi_resource" "globalreach_connections" {
   for_each = var.global_reach_connections
 
-  type = "Microsoft.AVS/privateClouds/globalReachConnections@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/globalReachConnections@2023-09-01"
   body = {
     properties = {
       authorizationKey        = each.value.authorization_key
@@ -257,7 +257,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
 resource "azapi_resource" "avs_interconnect" {
   for_each = var.avs_interconnect_connections
 
-  type = "Microsoft.AVS/privateClouds/cloudLinks@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/cloudLinks@2023-09-01"
   body = {
     properties = {
       linkedCloud = each.value.linked_private_cloud_resource_id

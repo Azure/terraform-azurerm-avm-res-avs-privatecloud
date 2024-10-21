@@ -51,7 +51,7 @@ locals {
 
 #build a base private cloud resource then modify it as needed.
 resource "azapi_resource" "this_private_cloud" {
-  type                      = "Microsoft.AVS/privateClouds@2023-03-01"
+  type                      = "Microsoft.AVS/privateClouds@2023-09-01"
   body                      = local.full_body
   location                  = var.location
   name                      = var.name
@@ -80,7 +80,7 @@ resource "azapi_resource" "this_private_cloud" {
 
 #use a data resource to get the identity details to avoid terraform import issues
 data "azapi_resource" "this_private_cloud" {
-  type                   = "Microsoft.AVS/privateClouds@2023-03-01"
+  type                   = "Microsoft.AVS/privateClouds@2023-09-01"
   resource_id            = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
 

@@ -2,7 +2,7 @@
 resource "azapi_resource" "dns_forwarder_zones" {
   for_each = var.dns_forwarder_zones
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/dnsZones@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/dnsZones@2023-09-01"
   body = {
     properties = {
       displayName  = each.value.display_name
@@ -43,7 +43,7 @@ resource "azapi_resource" "dns_forwarder_zones" {
 #get the default DNS zone details
 #read in a private cloud dns services
 data "azapi_resource_action" "avs_dns" {
-  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-03-01"
+  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-09-01"
   method                 = "GET"
   resource_id            = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices"
   response_export_values = ["*"]
@@ -77,7 +77,7 @@ resource "azapi_resource_action" "dns_service" {
   count = (length(keys(var.dns_forwarder_zones))) == 0 ? 0 : 1
 
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
-  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-03-01"
+  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-09-01"
   #if zone information defined populate the properties
   body = {
     properties = {
@@ -125,7 +125,7 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
   count = length(keys(var.dns_forwarder_zones)) > 0 ? 1 : 0
 
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
-  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-03-01"
+  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-09-01"
   #if zone information defined populate the properties
   body = {
     properties = {

@@ -23,7 +23,8 @@ data "azurerm_client_config" "current" {}
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
   #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
-  total_quota_required = 3
+  total_quota_required      = 3
+  total_av64_quota_required = 3
 }
 
 resource "local_file" "region_sku_cache" {
@@ -235,7 +236,7 @@ module "create_dc" {
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
   virtual_network_resource_id = module.gateway_vnet_primary_region.vnet_resource.id
 
-  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway]
+  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway, azurerm_virtual_network_gateway.gateway]
 }
 
 
@@ -376,14 +377,13 @@ module "test_private_cloud" {
     }
   }
 
-  /* example for adding additional clusters
+  #example for adding additional clusters
   clusters = {
     "Cluster-2" = {
       cluster_node_count = 3
-      sku_name           = jsondecode(local_file.region_sku_cache.content).sku
+      sku_name           = "av64"
     }
   }
-  */
 
   customer_managed_key = {
     key_vault_resource_id = module.avm_res_keyvault_vault.resource.id

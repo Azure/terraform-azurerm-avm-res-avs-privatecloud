@@ -51,7 +51,8 @@ data "azurerm_client_config" "current" {}
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
   #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
-  total_quota_required = 3
+  total_quota_required      = 3
+  total_av64_quota_required = 3
 }
 
 resource "local_file" "region_sku_cache" {
@@ -263,7 +264,7 @@ module "create_dc" {
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
   virtual_network_resource_id = module.gateway_vnet_primary_region.vnet_resource.id
 
-  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway]
+  depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway, azurerm_virtual_network_gateway.gateway]
 }
 
 
@@ -404,14 +405,13 @@ module "test_private_cloud" {
     }
   }
 
-  /* example for adding additional clusters
+  #example for adding additional clusters
   clusters = {
     "Cluster-2" = {
       cluster_node_count = 3
-      sku_name           = jsondecode(local_file.region_sku_cache.content).sku
+      sku_name           = "av64"
     }
   }
-  */
 
   customer_managed_key = {
     key_vault_resource_id = module.avm_res_keyvault_vault.resource.id
@@ -593,9 +593,33 @@ Default: `true`
 
 The following outputs are exported:
 
+### <a name="output_hcx_cloud_manager_endpoint_hostname"></a> [hcx\_cloud\_manager\_endpoint\_hostname](#output\_hcx\_cloud\_manager\_endpoint\_hostname)
+
+Description: The hcx cloud manager hostname
+
+### <a name="output_hcx_cloud_manager_endpoint_https"></a> [hcx\_cloud\_manager\_endpoint\_https](#output\_hcx\_cloud\_manager\_endpoint\_https)
+
+Description: n/a
+
+### <a name="output_nsxt_manager_endpoint_hostname"></a> [nsxt\_manager\_endpoint\_hostname](#output\_nsxt\_manager\_endpoint\_hostname)
+
+Description: The nsxt endpoint hostname
+
+### <a name="output_nsxt_manager_endpoint_https"></a> [nsxt\_manager\_endpoint\_https](#output\_nsxt\_manager\_endpoint\_https)
+
+Description: n/a
+
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: Example output of the full private cloud resource output.
+
+### <a name="output_vcsa_endpoint_hostname"></a> [vcsa\_endpoint\_hostname](#output\_vcsa\_endpoint\_hostname)
+
+Description: The vcsa endpoint hostname
+
+### <a name="output_vcsa_endpoint_https"></a> [vcsa\_endpoint\_https](#output\_vcsa\_endpoint\_https)
+
+Description: The https endpoint for vcsa
 
 ## Modules
 

@@ -10,7 +10,7 @@ data "azurerm_key_vault" "this_vault" {
 resource "azapi_update_resource" "customer_managed_key" {
   count = var.customer_managed_key == null ? 0 : 1
 
-  type = "Microsoft.AVS/privateClouds@2023-03-01"
+  type = "Microsoft.AVS/privateClouds@2023-09-01"
   body = {
     properties = {
       encryption = {

@@ -2,7 +2,7 @@
 resource "azapi_resource" "public_ip" {
   for_each = var.internet_inbound_public_ips
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2023-03-01"
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2023-09-01"
   body = {
     properties = {
       displayName       = each.key
