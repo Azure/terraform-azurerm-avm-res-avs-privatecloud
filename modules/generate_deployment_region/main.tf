@@ -3,7 +3,7 @@ locals {
     name = "no_quota"
     sku  = "no_quota"
   }
-  test_regions = ["australiasoutheast", "canadaeast", "eastasia", "eastus2", "germanywestcentral", "qatarcentral", "southafricanorth", "southcentralus", "swedencentral", "uaenorth", "uksouth", "westus2"]
+  test_regions = ["eastasia", "eastus2", "germanywestcentral", "qatarcentral", "southafricanorth", "southcentralus", "swedencentral", "uaenorth", "uksouth", "westus2"]
   with_quota   = concat(local.with_quota_av36, local.with_quota_av36p)
   with_quota_av36 = try([for region in data.azapi_resource_action.quota :
     { name = split("/", region.resource_id)[6], sku = "av36" } if
