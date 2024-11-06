@@ -357,7 +357,7 @@ module "testvm_secondary" {
   name                                   = var.dc_vm_name_secondary
   admin_credential_key_vault_resource_id = var.key_vault_resource_id
   virtualmachine_sku_size                = var.dc_vm_sku
-  zone                                   = "2"
+  zone                                   = "1"
   #admin_password                         = module.testvm.admin_password
   #generate_admin_password_or_ssh_key     = false
 
