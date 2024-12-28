@@ -1,17 +1,17 @@
 output "credentials" {
   description = "This value returns the vcenter and nsxt cloudadmin credential values."
   sensitive   = true
-  value       = jsondecode(data.azapi_resource_action.sddc_creds.output)
+  value       = data.azapi_resource_action.sddc_creds.output
 }
 
 output "hcx_cloud_manager_endpoint_hostname" {
   description = "The hcx cloud manager's hostname"
-  value       = split("/", jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.hcxCloudManager)[length(split("/", jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.hcxCloudManager)) - 2]
+  value       = split("/", data.azapi_resource.this_private_cloud.output.properties.endpoints.hcxCloudManager)[length(split("/", data.azapi_resource.this_private_cloud.output.properties.endpoints.hcxCloudManager)) - 2]
 }
 
 output "hcx_cloud_manager_endpoint_https" {
   description = "The full https endpoint for hcx cloud manager"
-  value       = jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.hcxCloudManager
+  value       = data.azapi_resource.this_private_cloud.output.properties.endpoints.hcxCloudManager
 }
 
 output "identity" {
@@ -19,17 +19,17 @@ output "identity" {
   #value       = var.managed_identities.system_assigned ? azapi_update_resource.managed_identity[0].output : null
   #value = var.managed_identities.system_assigned ? jsondecode(azapi_resource.this_private_cloud.output).identity : null
   #value = var.managed_identities.system_assigned ? azapi_resource.this_private_cloud.output.identity : null
-  value = var.managed_identities.system_assigned ? jsondecode(data.azapi_resource.this_private_cloud.output).identity : null
+  value = var.managed_identities.system_assigned ? data.azapi_resource.this_private_cloud.output.identity : null
 }
 
 output "nsxt_manager_endpoint_hostname" {
   description = "The nsxt endpoint's hostname"
-  value       = split("/", jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.nsxtManager)[length(split("/", jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.nsxtManager)) - 2]
+  value       = split("/", data.azapi_resource.this_private_cloud.output.properties.endpoints.nsxtManager)[length(split("/", data.azapi_resource.this_private_cloud.output.properties.endpoints.nsxtManager)) - 2]
 }
 
 output "nsxt_manager_endpoint_https" {
   description = "The full https endpoint for nsxt manager."
-  value       = jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.nsxtManager
+  value       = data.azapi_resource.this_private_cloud.output.properties.endpoints.nsxtManager
 }
 
 output "public_ip" {
@@ -54,15 +54,15 @@ output "system_assigned_mi_principal_id" {
   #value       = var.managed_identities.system_assigned == true ? azapi_update_resource.managed_identity[0].output.identity.principalId : null
   #value = var.managed_identities.system_assigned ? jsondecode(azapi_resource.this_private_cloud.output).identity.principalId : null
   #value = var.managed_identities.system_assigned ? azapi_resource.this_private_cloud.output.identity.principalId : null
-  value = var.managed_identities.system_assigned ? jsondecode(data.azapi_resource.this_private_cloud.output).identity.principalId : null
+  value = var.managed_identities.system_assigned ? data.azapi_resource.this_private_cloud.output.identity.principalId : null
 }
 
 output "vcsa_endpoint_hostname" {
   description = "The vcsa endpoint's hostname"
-  value       = split("/", jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.vcsa)[length(split("/", jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.vcsa)) - 2]
+  value       = split("/", data.azapi_resource.this_private_cloud.output.properties.endpoints.vcsa)[length(split("/", data.azapi_resource.this_private_cloud.output.properties.endpoints.vcsa)) - 2]
 }
 
 output "vcsa_endpoint_https" {
   description = "The full https endpoint for vcsa."
-  value       = jsondecode(data.azapi_resource.this_private_cloud.output).properties.endpoints.vcsa
+  value       = data.azapi_resource.this_private_cloud.output.properties.endpoints.vcsa
 }

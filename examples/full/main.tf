@@ -1,11 +1,11 @@
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "= 0.4.0"
+  version = "= 0.4.2"
 }
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "= 0.5.2"
+  version = "= 0.8.2"
 }
 
 locals {
@@ -56,7 +56,7 @@ resource "azurerm_resource_group" "this_secondary" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.5.3"
+  version = "0.9.1"
 
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
@@ -108,32 +108,48 @@ module "avm_res_keyvault_vault" {
   }
 }
 
+
+data "azapi_resource" "cmk_key" {
+  type = "Microsoft.KeyVault/vaults/keys@2023-07-01"
+  resource_id = module.avm_res_keyvault_vault.keys_resource_ids.cmk_key.resource_id
+}
+
+data "azurerm_key_vault_key" "cmk_key" {
+  name         = data.azapi_resource.cmk_key.name
+  key_vault_id = module.avm_res_keyvault_vault.resource_id
+}
+
 module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.1.4"
+  version = "=0.7.1"
 
-  resource_group_name           = azurerm_resource_group.this.name
-  virtual_network_address_space = ["10.100.0.0/16"]
-  name                          = "HubVnet-${azurerm_resource_group.this.location}"
-  location                      = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.100.0.0/16"]
+  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  location            = azurerm_resource_group.this.location
 
   subnets = {
     GatewaySubnet = {
+      name = "GatewaySubnet"
       address_prefixes = ["10.100.0.0/24"]
     }
     DCSubnet = {
+      name = "DCSubnet"
       address_prefixes = ["10.100.1.0/24"]
       nat_gateway = {
         id = azurerm_nat_gateway.this_nat_gateway.id
       }
     }
     AzureBastionSubnet = {
+      name = "AzureBastionSubnet"
       address_prefixes = ["10.100.2.0/24"]
     }
     ElasticSanSubnet = {
+      name = "ElasticSanSubnet"
       address_prefixes = ["10.100.4.0/24"]
     }
     ANFSubnet = {
+      name = "ANFSubnet"
       address_prefixes = ["10.100.3.0/24"]
       delegations = [
         {
@@ -174,27 +190,32 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.1.4"
+  version = "=0.7.1"
 
-  resource_group_name           = azurerm_resource_group.this_secondary.name
-  virtual_network_address_space = ["10.101.0.0/16"]
-  name                          = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
-  location                      = azurerm_resource_group.this_secondary.location
+  resource_group_name = azurerm_resource_group.this_secondary.name
+  address_space       = ["10.101.0.0/16"]
+  name                = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  location            = azurerm_resource_group.this_secondary.location
 
   subnets = {
     GatewaySubnet = {
+      name = "GatewaySubnet"
       address_prefixes = ["10.101.0.0/24"]
     }
     DCSubnet = {
+      name = "DCSubnet"
       address_prefixes = ["10.101.1.0/24"]
     }
     AzureBastionSubnet = {
+      name = "AzureBastionSubnet"
       address_prefixes = ["10.101.2.0/24"]
     }
     ElasticSanSubnet = {
+      name = "ElasticSanSubnet"
       address_prefixes = ["10.101.4.0/24"]
     }
     ANFSubnet = {
+      name = "ANFSubnet"
       address_prefixes = ["10.101.3.0/24"]
       delegations = [
         {
@@ -220,12 +241,12 @@ module "create_dc" {
   resource_group_location     = azurerm_resource_group.this.location
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id       = module.avm_res_keyvault_vault.resource.id
+  key_vault_resource_id       = module.avm_res_keyvault_vault.resource_id
   create_bastion              = true
   bastion_name                = module.naming.bastion_host.name_unique
   bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
-  bastion_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["AzureBastionSubnet"].id
-  dc_subnet_resource_id       = module.gateway_vnet_primary_region.subnets["DCSubnet"].id
+  bastion_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["AzureBastionSubnet"].resource_id
+  dc_subnet_resource_id       = module.gateway_vnet_primary_region.subnets["DCSubnet"].resource_id
   dc_vm_sku                   = local.dc_vm_sku
   domain_fqdn                 = local.test_domain_name
   domain_netbios_name         = local.test_domain_netbios
@@ -234,7 +255,7 @@ module "create_dc" {
   test_admin_user             = local.test_admin_user_name
   admin_group_name            = local.test_admin_group_name
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
-  virtual_network_resource_id = module.gateway_vnet_primary_region.vnet_resource.id
+  virtual_network_resource_id = module.gateway_vnet_primary_region.resource_id
 
   depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway, azurerm_virtual_network_gateway.gateway]
 }
@@ -266,7 +287,7 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
   ip_configuration {
     public_ip_address_id          = azurerm_public_ip.gatewaypip.id
-    subnet_id                     = module.gateway_vnet_primary_region.subnets["GatewaySubnet"].id
+    subnet_id                     = module.gateway_vnet_primary_region.subnets["GatewaySubnet"].resource_id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
   }
@@ -290,7 +311,7 @@ resource "azurerm_virtual_network_gateway" "gateway_secondary" {
 
   ip_configuration {
     public_ip_address_id          = azurerm_public_ip.gatewaypip_secondary.id
-    subnet_id                     = module.gateway_vnet_secondary_region.subnets["GatewaySubnet"].id
+    subnet_id                     = module.gateway_vnet_secondary_region.subnets["GatewaySubnet"].resource_id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
   }
@@ -307,7 +328,7 @@ module "create_anf_volume" {
   anf_pool_size           = 2
   anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
   anf_volume_size         = 2048
-  anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].id
+  anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].resource_id
   anf_zone_number         = module.test_private_cloud.resource.properties.availability.zone
   anf_nfs_allowed_clients = ["0.0.0.0/0"]
 }
@@ -345,7 +366,7 @@ module "elastic_san" {
           private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
           resource_group_name                  = azurerm_resource_group.this.name
           resource_group_location              = azurerm_resource_group.this.location
-          esan_subnet_resource_id              = module.gateway_vnet_primary_region.subnets["ElasticSanSubnet"].id
+          esan_subnet_resource_id              = module.gateway_vnet_primary_region.subnets["ElasticSanSubnet"].resource_id
           private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
         }
       }
@@ -356,7 +377,7 @@ module "elastic_san" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.7.0"
+  # version            = "=0.9.0"
 
   enable_telemetry               = var.enable_telemetry
   resource_group_name            = azurerm_resource_group.this.name
@@ -386,9 +407,9 @@ module "test_private_cloud" {
   }
 
   customer_managed_key = {
-    key_vault_resource_id = module.avm_res_keyvault_vault.resource.id
-    key_name              = module.avm_res_keyvault_vault.resource_keys.cmk_key.name
-    key_version           = module.avm_res_keyvault_vault.resource_keys.cmk_key.version
+    key_vault_resource_id = module.avm_res_keyvault_vault.resource_id
+    key_name              = data.azurerm_key_vault_key.cmk_key.name
+    key_version           = data.azurerm_key_vault_key.cmk_key.version
   }
 
   dhcp_configuration = {

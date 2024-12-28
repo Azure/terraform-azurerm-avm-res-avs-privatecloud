@@ -106,15 +106,17 @@ locals {
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.13.0"
+  version = "=0.17.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
-  virtualmachine_os_type                 = "Windows"
+  os_type                                = "Windows"
   name                                   = var.dc_vm_name
-  admin_credential_key_vault_resource_id = var.key_vault_resource_id
-  virtualmachine_sku_size                = var.dc_vm_sku
+  sku_size                               = var.dc_vm_sku
   zone                                   = "1"
+  generated_secrets_key_vault_secret_config = {
+    key_vault_resource_id = var.key_vault_resource_id
+  }
 
   source_image_reference = {
     publisher = "MicrosoftWindowsServer"
@@ -349,18 +351,17 @@ locals {
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.13.0"
+  version = "=0.17.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
-  virtualmachine_os_type                 = "Windows"
+  os_type                                = "Windows"
   name                                   = var.dc_vm_name_secondary
-  admin_credential_key_vault_resource_id = var.key_vault_resource_id
-  virtualmachine_sku_size                = var.dc_vm_sku
+  sku_size                               = var.dc_vm_sku
   zone                                   = "1"
-  #admin_password                         = module.testvm.admin_password
-  #generate_admin_password_or_ssh_key     = false
-
+  generated_secrets_key_vault_secret_config = {
+    key_vault_resource_id = var.key_vault_resource_id
+  }
 
   source_image_reference = {
     publisher = "MicrosoftWindowsServer"

@@ -5,12 +5,12 @@ locals {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "=0.4.0"
+  version = "=0.4.2"
 }
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "=0.4.0"
+  version = "=0.8.2"
 }
 
 data "azurerm_client_config" "current" {}
@@ -62,12 +62,12 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.1.3"
+  version = "=0.7.1"
 
   resource_group_name           = azurerm_resource_group.this.name
-  virtual_network_address_space = ["10.100.0.0/16"]
-  vnet_name                     = "GatewayHubVnet"
-  vnet_location                 = azurerm_resource_group.this.location
+  address_space                 = ["10.100.0.0/16"]
+  name                          = "GatewayHubVnet"
+  location                      = azurerm_resource_group.this.location
 
   subnets = {
     GatewaySubnet = {
@@ -121,7 +121,7 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
 module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = "0.5.3"
+  version                = "0.9.1"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
@@ -189,7 +189,7 @@ module "elastic_san" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.7.0"
+  # version            = "=0.9.0"
 
   enable_telemetry               = var.enable_telemetry
   resource_group_name            = azurerm_resource_group.this.name
