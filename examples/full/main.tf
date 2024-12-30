@@ -9,7 +9,7 @@ module "regions" {
 }
 
 locals {
-  dc_vm_sku             = "Standard_D2_v4"
+  #dc_vm_sku             = "Standard_D2_v4"
   ldap_user_name        = "ldapuser"
   test_admin_group_name = "vcenterAdmins"
   test_admin_user_name  = "testadmin"
@@ -42,6 +42,21 @@ resource "azurerm_resource_group" "this" {
 
   lifecycle {
     ignore_changes = [tags, location]
+  }
+}
+
+module "vm_sku" {
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.1.0"
+
+  location = azurerm_resource_group.this.location
+  cache_results = true
+
+  vm_filters = {
+    min_vcpus = 2
+    max_vcpus = 2
+    encryption_at_host_supported = true
+    accelerated_networking_enabled = true
   }
 }
 
@@ -108,14 +123,15 @@ module "avm_res_keyvault_vault" {
   }
 }
 
-
+/*
 data "azapi_resource" "cmk_key" {
   type = "Microsoft.KeyVault/vaults/keys@2023-07-01"
   resource_id = module.avm_res_keyvault_vault.keys_resource_ids.cmk_key.resource_id
 }
+*/
 
 data "azurerm_key_vault_key" "cmk_key" {
-  name         = data.azapi_resource.cmk_key.name
+  name         = "cmk-disk-key"
   key_vault_id = module.avm_res_keyvault_vault.resource_id
 }
 
@@ -151,15 +167,11 @@ module "gateway_vnet_primary_region" {
     ANFSubnet = {
       name = "ANFSubnet"
       address_prefixes = ["10.100.3.0/24"]
-      delegations = [
+      delegation = [
         {
           name = "Microsoft.Netapp/volumes"
           service_delegation = {
-            name = "Microsoft.Netapp/volumes"
-            actions = [
-              "Microsoft.Network/networkinterfaces/*",
-              "Microsoft.Network/virtualNetworks/subnets/join/action"
-            ]
+            name = "Microsoft.Netapp/volumes"            
           }
         }
       ]
@@ -217,15 +229,11 @@ module "gateway_vnet_secondary_region" {
     ANFSubnet = {
       name = "ANFSubnet"
       address_prefixes = ["10.101.3.0/24"]
-      delegations = [
+      delegation = [
         {
           name = "Microsoft.Netapp/volumes"
           service_delegation = {
             name = "Microsoft.Netapp/volumes"
-            actions = [
-              "Microsoft.Network/networkinterfaces/*",
-              "Microsoft.Network/virtualNetworks/subnets/join/action"
-            ]
           }
         }
       ]
@@ -247,7 +255,7 @@ module "create_dc" {
   bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
   bastion_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["AzureBastionSubnet"].resource_id
   dc_subnet_resource_id       = module.gateway_vnet_primary_region.subnets["DCSubnet"].resource_id
-  dc_vm_sku                   = local.dc_vm_sku
+  dc_vm_sku                   = module.vm_sku.sku
   domain_fqdn                 = local.test_domain_name
   domain_netbios_name         = local.test_domain_netbios
   domain_distinguished_name   = local.test_domain_dn
@@ -325,9 +333,9 @@ module "create_anf_volume" {
   resource_group_location = azurerm_resource_group.this.location
   anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
   anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
-  anf_pool_size           = 2
+  anf_pool_size           = 4
   anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
-  anf_volume_size         = 2048
+  anf_volume_size         = 4096
   anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].resource_id
   anf_zone_number         = module.test_private_cloud.resource.properties.availability.zone
   anf_nfs_allowed_clients = ["0.0.0.0/0"]

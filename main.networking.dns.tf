@@ -70,7 +70,7 @@ data "azapi_resource_action" "avs_dns" {
 }
 
 locals {
-  dns_details = jsondecode(data.azapi_resource_action.avs_dns.output)
+  dns_details = data.azapi_resource_action.avs_dns.output
 }
 
 resource "azapi_resource_action" "dns_service" {

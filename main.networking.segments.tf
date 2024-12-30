@@ -13,7 +13,7 @@ resource "azapi_resource" "segments" {
   type = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2023-09-01"
   body = {
     properties = {
-      connectedGateway = each.value.connected_gateway == null ? [for value in jsondecode(data.azapi_resource_action.avs_gateways.output).value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
+      connectedGateway = each.value.connected_gateway == null ? [for value in data.azapi_resource_action.avs_gateways.output.value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
       displayName      = each.value.display_name
       subnet = {
         dhcpRanges     = each.value.dhcp_ranges
