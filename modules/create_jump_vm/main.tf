@@ -28,15 +28,20 @@ resource "azurerm_bastion_host" "bastion" {
 #create the virtual machine
 module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.17.0"
+  version = "=0.19.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
-  virtualmachine_os_type                 = "Windows"
+  os_type                                = "Windows"
   name                                   = var.vm_name
-  admin_credential_key_vault_resource_id = var.key_vault_resource_id
-  virtualmachine_sku_size                = var.vm_sku
+  sku_size                               = var.vm_sku
   zone                                   = "1"
+
+  account_credentials = {
+    key_vault_configuration = {
+      resource_id = var.key_vault_resource_id
+    }
+  }
 
   source_image_reference = {
     publisher = "MicrosoftWindowsServer"

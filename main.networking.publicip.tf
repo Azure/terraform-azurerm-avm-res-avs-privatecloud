@@ -2,7 +2,7 @@
 resource "azapi_resource" "public_ip" {
   for_each = var.internet_inbound_public_ips
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2023-09-01"
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2024-09-01-preview"
   body = {
     properties = {
       displayName       = each.key
@@ -42,7 +42,7 @@ resource "azapi_resource" "public_ip" {
     #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources,
-    azurerm_vmware_netapp_volume_attachment.attach_datastores
+    azapi_resource.this_netapp_attachment
   ]
 }
 

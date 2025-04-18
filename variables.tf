@@ -272,6 +272,21 @@ DNS_FORWARDER_ZONES
   nullable    = false
 }
 
+variable "dns_zone_type" {
+  type        = string
+  default     = "Public"
+  description = "The type of DNS zone to create. Valid values are Private and Public. This value is only valid for generation 2 private clouds. Defaults to Public."  
+  validation {
+    condition     = contains(["Private", "Public",], var.dns_zone_type)
+    error_message = "DNS zone type must be either Private or Public."
+  }
+
+  validation {
+    condition     = (var.dns_zone_type != null && var.virtual_network_resource_id != null)
+    error_message = "Variable `dns_zone_type` does not apply to generation 1 private clouds. Please remove this variable from your configuration when setting `virtual_network_resource_id`."
+  }
+}
+
 variable "elastic_san_datastores" {
   type = map(object({
     cluster_names           = set(string)
@@ -431,9 +446,10 @@ This map object that describes the public IP configuration. Configure this value
 
 Example Input:
 ```hcl
-public_ip_config = {
-  display_name = "public_ip_configuration"
-  number_of_ip_addresses = 1
+internet_inbound_public_ips = {
+  public_ip_config = { #this key will be used as the display name
+    number_of_ip_addresses = 1
+  }
 }
 ```
 PUBLIC_IPS
@@ -675,4 +691,26 @@ variable "vcenter_password" {
   default     = null
   description = "The password value to use for the cloudadmin account password in the local domain in vcenter. If this is left as null a random password will be generated for the deployment"
   sensitive   = true
+}
+
+variable "virtual_network_resource_id" {
+  type        = string
+  default     = null
+  description = "The Azure Resource ID for the virtual network where the private cloud will be deployed. This is required when deploying a generation 2 AVS private cloud."  
+
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null && 
+      var.external_storage_address_block != null
+    )
+    error_message = "Setting the external storage address block is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `external_storage_address_block` is null when including a `virtual_network_resource_id`."
+  }
+
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null && 
+      length(var.extended_network_blocks) > 0
+    )
+    error_message = "Setting extended address blocks is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `extended_network_blocks` is empty when including a `virtual_network_resource_id`."
+  }
 }

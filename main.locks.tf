@@ -31,7 +31,7 @@ resource "azurerm_management_lock" "this" {
     #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources,
-    azurerm_vmware_netapp_volume_attachment.attach_datastores,
+    azapi_resource.this_netapp_attachment,
     azapi_resource.public_ip
   ]
 }

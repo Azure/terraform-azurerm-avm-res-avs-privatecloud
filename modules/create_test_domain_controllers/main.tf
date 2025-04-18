@@ -106,7 +106,7 @@ locals {
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.17.0"
+  version = "=0.19.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
@@ -114,8 +114,11 @@ module "testvm" {
   name                                   = var.dc_vm_name
   sku_size                               = var.dc_vm_sku
   zone                                   = "1"
-  generated_secrets_key_vault_secret_config = {
-    key_vault_resource_id = var.key_vault_resource_id
+
+  account_credentials = {
+    key_vault_configuration = {
+      resource_id = var.key_vault_resource_id
+    }
   }
 
   source_image_reference = {
@@ -351,7 +354,7 @@ locals {
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.17.0"
+  version = "=0.19.0"
 
   resource_group_name                    = var.resource_group_name
   location                               = var.resource_group_location
@@ -359,8 +362,11 @@ module "testvm_secondary" {
   name                                   = var.dc_vm_name_secondary
   sku_size                               = var.dc_vm_sku
   zone                                   = "1"
-  generated_secrets_key_vault_secret_config = {
-    key_vault_resource_id = var.key_vault_resource_id
+
+  account_credentials = {
+    key_vault_configuration = {
+      resource_id = var.key_vault_resource_id
+    }
   }
 
   source_image_reference = {

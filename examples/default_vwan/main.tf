@@ -4,12 +4,12 @@ locals {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "= 0.4.2"
+  version = "~> 0.4"
 }
 
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "= 0.8.2"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.5.0"
 }
 
 data "azurerm_client_config" "current" {}
@@ -17,7 +17,9 @@ data "azurerm_client_config" "current" {}
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
   #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
-  total_quota_required = 3
+  management_cluster_quota_required = 3
+  secondary_cluster_quota_required  = 0
+  private_cloud_generation          = 1
 }
 
 resource "local_file" "region_sku_cache" {
@@ -121,7 +123,7 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
 
 module "avm_res_keyvault_vault" {
   source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = "0.9.1"
+  version                = "0.10.0"
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
@@ -154,7 +156,7 @@ module "test_private_cloud" {
   location                   = azurerm_resource_group.this.location
   resource_group_resource_id = azurerm_resource_group.this.id
   name                       = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-  sku_name                   = jsondecode(local_file.region_sku_cache.content).sku
+  sku_name                   = jsondecode(local_file.region_sku_cache.content).sku-mgmt
   avs_network_cidr           = "10.0.0.0/22"
   internet_enabled           = false
   management_cluster_size    = 3

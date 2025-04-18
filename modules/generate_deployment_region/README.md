@@ -30,7 +30,7 @@ data "azurerm_subscription" "current" {}
 data "azapi_resource_action" "quota" {
   for_each = toset(local.test_regions)
 
-  type                   = "Microsoft.AVS/locations@2023-09-01"
+  type                   = "Microsoft.AVS/locations@2024-09-01-preview"
   action                 = "checkQuotaAvailability"
   method                 = "POST"
   resource_id            = "${data.azurerm_subscription.current.id}/providers/Microsoft.AVS/locations/${each.key}"

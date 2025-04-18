@@ -1,6 +1,6 @@
 #Get the currently configured gateways
 data "azapi_resource_action" "avs_gateways" {
-  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/gateways@2023-09-01"
+  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/gateways@2024-09-01-preview"
   method                 = "GET"
   resource_id            = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/gateways"
   response_export_values = ["*"]
@@ -10,7 +10,7 @@ data "azapi_resource_action" "avs_gateways" {
 resource "azapi_resource" "segments" {
   for_each = var.segments
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2023-09-01"
+  type = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2024-09-01-preview"
   body = {
     properties = {
       connectedGateway = each.value.connected_gateway == null ? [for value in data.azapi_resource_action.avs_gateways.output.value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway

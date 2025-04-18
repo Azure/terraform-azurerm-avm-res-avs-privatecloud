@@ -1,17 +1,43 @@
+<!-- BEGIN_TF_DOCS -->
+# Full AVS example with Vnet ExpressRoute Gateway
+
+This example demonstrates most of the deployment inputs using a single Azure VMware Solution private cloud with the following features and supporting test resources:
+
+    - A 3-node management cluster and an additional 3-node cluster
+    - The HCX Addon enabled with the Enterprise license sku
+    - An example HCX site key
+    - Diagnostic Settings to send the syslog and metrics to a Log Analytics workspace.
+    - Two domain controllers running a simple test active directory domain for use in demonstrating identity provider and dns functionality including
+        - Nat Gateway enabled for outbound internet access to download the configuration script from github
+        - Bastion enabled for accessing the domain controllers to use them for connecting to vcenter and nsxt for validation and testing
+    - A DNS forwarder zone for the test domain
+    - A DHCP server configured in NSX-T
+    - An update to the default NSX-T DNS service adding the custom domain forwarder zone
+    - An ExpressRoute authorization key
+    - An ExpressRoute Gateway connection to an example ExpressRoute gateway in a virtual network.
+    - A delete lock on the private cloud resource
+    - The system-managed identity enabled
+    - An Azure Netapp Files (ANF) Account, Pool, and Volume created in the same availalbility zone for testing external storage
+    - An external storage datastore created using the ANF volume and associated to the management cluster
+    - A role assignment assigning Contributor rights on the private cloud resource to the deployment user to demonstrate resource level RBAC
+    - A tags block to demonstrate the assignment of resource level tags
+    - A Vcenter identity sources block to demonstrate the use of the test domain for ldaps       
+
+The following example code uses several test modules, so be sure to include them and update the deployment regions if copying verbatim.
+
+```hcl
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.4"
+  version = "= 0.4.0"
 }
 
 module "regions" {
-  source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
-
-  availability_zones_filter = true
+  source  = "Azure/regions/azurerm"
+  version = "= 0.5.2"
 }
 
 locals {
-  #dc_vm_sku             = "Standard_D2_v4"
+  dc_vm_sku             = "Standard_D2_v4"
   ldap_user_name        = "ldapuser"
   test_admin_group_name = "vcenterAdmins"
   test_admin_user_name  = "testadmin"
@@ -25,35 +51,8 @@ data "azurerm_client_config" "current" {}
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
   #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
-  management_cluster_quota_required = 3
-  secondary_cluster_quota_required  = 3
-  private_cloud_generation          = 1
-  test_regions = [
-    "australiaeast",
-    "brazilsouth",
-    "centralindia",
-    "centralus",
-    "eastasia",
-    "eastus",
-    "eastus2",
-    "francecentral",
-    "germanywestcentral",
-    "italynorth",
-    "japaneast",
-    "japanwest",
-    "northeurope",
-    "qatarcentral",
-    "southafricanorth",
-    "southcentralus",
-    "southeastasia",
-    "swedencentral",
-    "switzerlandnorth",
-    "uaenorth",
-    "uksouth",
-    "westeurope",
-    "westus2",
-    "westus3"
-  ]
+  total_quota_required      = 3
+  total_av64_quota_required = 3
 }
 
 resource "local_file" "region_sku_cache" {
@@ -74,21 +73,6 @@ resource "azurerm_resource_group" "this" {
   }
 }
 
-module "vm_sku" {
-  source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.1.0"
-
-  location      = azurerm_resource_group.this.location
-  cache_results = true
-
-  vm_filters = {
-    min_vcpus                      = 2
-    max_vcpus                      = 2
-    encryption_at_host_supported   = true
-    accelerated_networking_enabled = true
-  }
-}
-
 resource "azurerm_resource_group" "this_secondary" {
   location = "westus3" #module.regions.regions_by_name[jsondecode(local_file.region_sku_cache.content).name].paired_region_name
   name     = "${module.naming.resource_group.name_unique}-secondary"
@@ -100,7 +84,7 @@ resource "azurerm_resource_group" "this_secondary" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.5.3"
 
   tenant_id              = data.azurerm_client_config.current.tenant_id
   name                   = module.naming.key_vault.name_unique
@@ -152,55 +136,42 @@ module "avm_res_keyvault_vault" {
   }
 }
 
-/*
-data "azapi_resource" "cmk_key" {
-  type = "Microsoft.KeyVault/vaults/keys@2023-07-01"
-  resource_id = module.avm_res_keyvault_vault.keys_resource_ids.cmk_key.resource_id
-}
-*/
-
-data "azurerm_key_vault_key" "cmk_key" {
-  name         = "cmk-disk-key"
-  key_vault_id = module.avm_res_keyvault_vault.resource_id
-}
-
 module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "=0.1.4"
 
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.100.0.0/16"]
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
-  location            = azurerm_resource_group.this.location
+  resource_group_name           = azurerm_resource_group.this.name
+  virtual_network_address_space = ["10.100.0.0/16"]
+  name                          = "HubVnet-${azurerm_resource_group.this.location}"
+  location                      = azurerm_resource_group.this.location
 
   subnets = {
     GatewaySubnet = {
-      name             = "GatewaySubnet"
       address_prefixes = ["10.100.0.0/24"]
     }
     DCSubnet = {
-      name             = "DCSubnet"
       address_prefixes = ["10.100.1.0/24"]
       nat_gateway = {
         id = azurerm_nat_gateway.this_nat_gateway.id
       }
     }
     AzureBastionSubnet = {
-      name             = "AzureBastionSubnet"
       address_prefixes = ["10.100.2.0/24"]
     }
     ElasticSanSubnet = {
-      name             = "ElasticSanSubnet"
       address_prefixes = ["10.100.4.0/24"]
     }
     ANFSubnet = {
-      name             = "ANFSubnet"
       address_prefixes = ["10.100.3.0/24"]
-      delegation = [
+      delegations = [
         {
           name = "Microsoft.Netapp/volumes"
           service_delegation = {
             name = "Microsoft.Netapp/volumes"
+            actions = [
+              "Microsoft.Network/networkinterfaces/*",
+              "Microsoft.Network/virtualNetworks/subnets/join/action"
+            ]
           }
         }
       ]
@@ -231,38 +202,37 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "=0.1.4"
 
-  resource_group_name = azurerm_resource_group.this_secondary.name
-  address_space       = ["10.101.0.0/16"]
-  name                = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
-  location            = azurerm_resource_group.this_secondary.location
+  resource_group_name           = azurerm_resource_group.this_secondary.name
+  virtual_network_address_space = ["10.101.0.0/16"]
+  name                          = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  location                      = azurerm_resource_group.this_secondary.location
 
   subnets = {
     GatewaySubnet = {
-      name             = "GatewaySubnet"
       address_prefixes = ["10.101.0.0/24"]
     }
     DCSubnet = {
-      name             = "DCSubnet"
       address_prefixes = ["10.101.1.0/24"]
     }
     AzureBastionSubnet = {
-      name             = "AzureBastionSubnet"
       address_prefixes = ["10.101.2.0/24"]
     }
     ElasticSanSubnet = {
-      name             = "ElasticSanSubnet"
       address_prefixes = ["10.101.4.0/24"]
     }
     ANFSubnet = {
-      name             = "ANFSubnet"
       address_prefixes = ["10.101.3.0/24"]
-      delegation = [
+      delegations = [
         {
           name = "Microsoft.Netapp/volumes"
           service_delegation = {
             name = "Microsoft.Netapp/volumes"
+            actions = [
+              "Microsoft.Network/networkinterfaces/*",
+              "Microsoft.Network/virtualNetworks/subnets/join/action"
+            ]
           }
         }
       ]
@@ -278,13 +248,13 @@ module "create_dc" {
   resource_group_location     = azurerm_resource_group.this.location
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id       = module.avm_res_keyvault_vault.resource_id
+  key_vault_resource_id       = module.avm_res_keyvault_vault.resource.id
   create_bastion              = true
   bastion_name                = module.naming.bastion_host.name_unique
   bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
-  bastion_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["AzureBastionSubnet"].resource_id
-  dc_subnet_resource_id       = module.gateway_vnet_primary_region.subnets["DCSubnet"].resource_id
-  dc_vm_sku                   = module.vm_sku.sku
+  bastion_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["AzureBastionSubnet"].id
+  dc_subnet_resource_id       = module.gateway_vnet_primary_region.subnets["DCSubnet"].id
+  dc_vm_sku                   = local.dc_vm_sku
   domain_fqdn                 = local.test_domain_name
   domain_netbios_name         = local.test_domain_netbios
   domain_distinguished_name   = local.test_domain_dn
@@ -292,7 +262,7 @@ module "create_dc" {
   test_admin_user             = local.test_admin_user_name
   admin_group_name            = local.test_admin_group_name
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
-  virtual_network_resource_id = module.gateway_vnet_primary_region.resource_id
+  virtual_network_resource_id = module.gateway_vnet_primary_region.vnet_resource.id
 
   depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway, azurerm_virtual_network_gateway.gateway]
 }
@@ -324,7 +294,7 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
   ip_configuration {
     public_ip_address_id          = azurerm_public_ip.gatewaypip.id
-    subnet_id                     = module.gateway_vnet_primary_region.subnets["GatewaySubnet"].resource_id
+    subnet_id                     = module.gateway_vnet_primary_region.subnets["GatewaySubnet"].id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
   }
@@ -348,7 +318,7 @@ resource "azurerm_virtual_network_gateway" "gateway_secondary" {
 
   ip_configuration {
     public_ip_address_id          = azurerm_public_ip.gatewaypip_secondary.id
-    subnet_id                     = module.gateway_vnet_secondary_region.subnets["GatewaySubnet"].resource_id
+    subnet_id                     = module.gateway_vnet_secondary_region.subnets["GatewaySubnet"].id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
   }
@@ -362,11 +332,11 @@ module "create_anf_volume" {
   resource_group_location = azurerm_resource_group.this.location
   anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
   anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
-  anf_pool_size           = 4
+  anf_pool_size           = 2
   anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
-  anf_volume_size         = 4096
-  anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].resource_id
-  anf_zone_number         = try(module.test_private_cloud.resource.properties.availability.zone, 1)
+  anf_volume_size         = 2048
+  anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].id
+  anf_zone_number         = module.test_private_cloud.resource.properties.availability.zone
   anf_nfs_allowed_clients = ["0.0.0.0/0"]
 }
 
@@ -379,7 +349,7 @@ module "elastic_san" {
   location              = azurerm_resource_group.this.location
   base_size_in_tib      = 1
   extended_size_in_tib  = 1
-  zones                 = [try(module.test_private_cloud.resource.properties.availability.zone, 1)]
+  zones                 = [module.test_private_cloud.resource.properties.availability.zone]
   public_network_access = "Enabled"
 
   sku = {
@@ -403,7 +373,7 @@ module "elastic_san" {
           private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
           resource_group_name                  = azurerm_resource_group.this.name
           resource_group_location              = azurerm_resource_group.this.location
-          esan_subnet_resource_id              = module.gateway_vnet_primary_region.subnets["ElasticSanSubnet"].resource_id
+          esan_subnet_resource_id              = module.gateway_vnet_primary_region.subnets["ElasticSanSubnet"].id
           private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
         }
       }
@@ -414,14 +384,14 @@ module "elastic_san" {
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.9.0"
+  # version            = "=0.7.0"
 
   enable_telemetry               = var.enable_telemetry
   resource_group_name            = azurerm_resource_group.this.name
   location                       = azurerm_resource_group.this.location
   resource_group_resource_id     = azurerm_resource_group.this.id
   name                           = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-  sku_name                       = jsondecode(local_file.region_sku_cache.content).sku-mgmt
+  sku_name                       = jsondecode(local_file.region_sku_cache.content).sku
   avs_network_cidr               = "10.0.0.0/22"
   internet_enabled               = true
   management_cluster_size        = 3
@@ -435,19 +405,18 @@ module "test_private_cloud" {
     }
   }
 
-
   #example for adding additional clusters
   clusters = {
     "Cluster-2" = {
       cluster_node_count = 3
-      sku_name           = jsondecode(local_file.region_sku_cache.content).sku-sec
+      sku_name           = "av64"
     }
   }
 
   customer_managed_key = {
-    key_vault_resource_id = module.avm_res_keyvault_vault.resource_id
-    key_name              = data.azurerm_key_vault_key.cmk_key.name
-    key_version           = data.azurerm_key_vault_key.cmk_key.version
+    key_vault_resource_id = module.avm_res_keyvault_vault.resource.id
+    key_name              = module.avm_res_keyvault_vault.resource_keys.cmk_key.name
+    key_version           = module.avm_res_keyvault_vault.resource_keys.cmk_key.version
   }
 
   dhcp_configuration = {
@@ -570,5 +539,154 @@ module "test_private_cloud" {
       ldap_user_password = module.create_dc.ldap_user_password
     }
   }
-
 }
+```
+
+<!-- markdownlint-disable MD033 -->
+## Requirements
+
+The following requirements are needed by this module:
+
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
+
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.106)
+
+- <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
+
+## Resources
+
+The following resources are used by this module:
+
+- [azurerm_log_analytics_workspace.this_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
+- [azurerm_nat_gateway.this_nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway) (resource)
+- [azurerm_nat_gateway_public_ip_association.this_nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/nat_gateway_public_ip_association) (resource)
+- [azurerm_public_ip.gatewaypip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_public_ip.gatewaypip_secondary](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_public_ip.nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_resource_group.this_secondary](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_virtual_network_gateway.gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_gateway) (resource)
+- [azurerm_virtual_network_gateway.gateway_secondary](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_gateway) (resource)
+- [local_file.region_sku_cache](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+
+<!-- markdownlint-disable MD013 -->
+## Required Inputs
+
+No required inputs.
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see https://aka.ms/avm/telemetryinfo.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+## Outputs
+
+The following outputs are exported:
+
+### <a name="output_hcx_cloud_manager_endpoint_hostname"></a> [hcx\_cloud\_manager\_endpoint\_hostname](#output\_hcx\_cloud\_manager\_endpoint\_hostname)
+
+Description: The hcx cloud manager hostname
+
+### <a name="output_hcx_cloud_manager_endpoint_https"></a> [hcx\_cloud\_manager\_endpoint\_https](#output\_hcx\_cloud\_manager\_endpoint\_https)
+
+Description: n/a
+
+### <a name="output_nsxt_manager_endpoint_hostname"></a> [nsxt\_manager\_endpoint\_hostname](#output\_nsxt\_manager\_endpoint\_hostname)
+
+Description: The nsxt endpoint hostname
+
+### <a name="output_nsxt_manager_endpoint_https"></a> [nsxt\_manager\_endpoint\_https](#output\_nsxt\_manager\_endpoint\_https)
+
+Description: n/a
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: Example output of the full private cloud resource output.
+
+### <a name="output_vcsa_endpoint_hostname"></a> [vcsa\_endpoint\_hostname](#output\_vcsa\_endpoint\_hostname)
+
+Description: The vcsa endpoint hostname
+
+### <a name="output_vcsa_endpoint_https"></a> [vcsa\_endpoint\_https](#output\_vcsa\_endpoint\_https)
+
+Description: The https endpoint for vcsa
+
+## Modules
+
+The following Modules are called:
+
+### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
+
+Source: Azure/avm-res-keyvault-vault/azurerm
+
+Version: 0.5.3
+
+### <a name="module_create_anf_volume"></a> [create\_anf\_volume](#module\_create\_anf\_volume)
+
+Source: ../../modules/create_test_netapp_volume
+
+Version:
+
+### <a name="module_create_dc"></a> [create\_dc](#module\_create\_dc)
+
+Source: ../../modules/create_test_domain_controllers
+
+Version:
+
+### <a name="module_elastic_san"></a> [elastic\_san](#module\_elastic\_san)
+
+Source: ../../modules/create_elastic_san_volume
+
+Version:
+
+### <a name="module_gateway_vnet_primary_region"></a> [gateway\_vnet\_primary\_region](#module\_gateway\_vnet\_primary\_region)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm
+
+Version: =0.1.4
+
+### <a name="module_gateway_vnet_secondary_region"></a> [gateway\_vnet\_secondary\_region](#module\_gateway\_vnet\_secondary\_region)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm
+
+Version: =0.1.4
+
+### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
+
+Source: ../../modules/generate_deployment_region
+
+Version:
+
+### <a name="module_naming"></a> [naming](#module\_naming)
+
+Source: Azure/naming/azurerm
+
+Version: = 0.4.0
+
+### <a name="module_regions"></a> [regions](#module\_regions)
+
+Source: Azure/regions/azurerm
+
+Version: = 0.5.2
+
+### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
+
+Source: ../../
+
+Version:
+
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+<!-- END_TF_DOCS -->

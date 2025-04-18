@@ -59,7 +59,7 @@ resource "time_sleep" "wait_120_seconds" {
 resource "azapi_resource" "hcx_keys" {
   for_each = toset(try(var.addons.hcx.hcx_key_names, []))
 
-  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2023-09-01"
+  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2024-09-01-preview"
   name                   = each.key
   parent_id              = azapi_resource.this_private_cloud.id
   response_export_values = ["*"]
