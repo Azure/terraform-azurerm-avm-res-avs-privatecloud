@@ -18,7 +18,7 @@ locals {
 resource "azapi_resource" "this_netapp_attachment" {
   for_each = { for datastore in local.netapp_attachments : datastore.attachment_name => datastore }
 
-  type = "Microsoft.AVS/privateClouds/clusters/datastores@2024-09-01-preview"
+  type = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
   body = {
     properties = {
       netAppVolume = {
@@ -107,7 +107,7 @@ resource "azapi_resource" "iscsi_path_network" {
 resource "azapi_resource" "this_esan_attachment" {
   for_each = { for datastore in local.elastic_san_attachments : datastore.attachment_name => datastore }
 
-  type = "Microsoft.AVS/privateClouds/clusters/datastores@2024-09-01-preview"
+  type = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
   body = {
     properties = {
       elasticSanVolume = {

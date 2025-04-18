@@ -65,7 +65,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
 resource "azapi_resource" "configure_identity_sources" {
   for_each = var.vcenter_identity_sources
 
-  type = "Microsoft.AVS/privateClouds/scriptExecutions@2024-09-01-preview"
+  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-09-01"
   body = ({
     properties = {
       timeout        = "PT15M"

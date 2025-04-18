@@ -301,6 +301,17 @@ module "elastic_san" {
   }
 }
 
+# create the virtual network for the avs private cloud 
+# this is required since the gen 2 AVS private cloud manages the subnets
+resource "azurerm_virtual_network" "example" {
+  name                = "AVSVnet-${azurerm_resource_group.this.location}"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.200.0.0/16"]
+}
+
+#peer to the hub vnet
+
 module "test_private_cloud" {
   source = "../../"
   # source             = "Azure/avm-res-avs-privatecloud/azurerm"

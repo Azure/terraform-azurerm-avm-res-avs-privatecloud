@@ -280,11 +280,6 @@ variable "dns_zone_type" {
     condition     = contains(["Private", "Public",], var.dns_zone_type)
     error_message = "DNS zone type must be either Private or Public."
   }
-
-  validation {
-    condition     = (var.dns_zone_type != null && var.virtual_network_resource_id != null)
-    error_message = "Variable `dns_zone_type` does not apply to generation 1 private clouds. Please remove this variable from your configuration when setting `virtual_network_resource_id`."
-  }
 }
 
 variable "elastic_san_datastores" {
