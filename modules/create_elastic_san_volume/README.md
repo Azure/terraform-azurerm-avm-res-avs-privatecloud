@@ -27,7 +27,10 @@ locals {
 }
 
 resource "azapi_resource" "this_elastic_san" {
-  type = "Microsoft.ElasticSan/elasticSans@2023-01-01"
+  location  = var.location
+  name      = var.elastic_san_name
+  parent_id = var.resource_group_id
+  type      = "Microsoft.ElasticSan/elasticSans@2023-01-01"
   body = {
     properties = {
       availabilityZones       = var.zones
@@ -37,9 +40,6 @@ resource "azapi_resource" "this_elastic_san" {
       sku                     = var.sku
     }
   }
-  location               = var.location
-  name                   = var.elastic_san_name
-  parent_id              = var.resource_group_id
   response_export_values = ["*"]
   tags                   = var.tags
 }
@@ -58,7 +58,9 @@ locals {
 resource "azapi_resource" "this_elastic_san_volume_group" {
   for_each = var.elastic_san_volume_groups
 
-  type = "Microsoft.ElasticSan/elasticSans/volumegroups@2023-01-01"
+  name      = each.value.name
+  parent_id = azapi_resource.this_elastic_san.id
+  type      = "Microsoft.ElasticSan/elasticSans/volumegroups@2023-01-01"
   body = jsondecode(each.value.encryption_key_vault_properties != null ? jsonencode({
     properties = {
       encryption           = each.value.encryption_type
@@ -77,8 +79,6 @@ resource "azapi_resource" "this_elastic_san_volume_group" {
       protocolType = each.value.protocol_type
     }
   }))
-  name                      = each.value.name
-  parent_id                 = azapi_resource.this_elastic_san.id
   schema_validation_enabled = false
 
   dynamic "identity" {
@@ -94,7 +94,9 @@ resource "azapi_resource" "this_elastic_san_volume_group" {
 resource "azapi_resource" "this_elastic_san_volume" {
   for_each = local.vg_volumes
 
-  type = "Microsoft.ElasticSan/elasticSans/volumegroups/volumes@2023-01-01"
+  name      = each.value.volume.name
+  parent_id = azapi_resource.this_elastic_san_volume_group[each.value.vg_key].id
+  type      = "Microsoft.ElasticSan/elasticSans/volumegroups/volumes@2023-01-01"
   body = {
     properties = {
       creationData = {
@@ -104,8 +106,6 @@ resource "azapi_resource" "this_elastic_san_volume" {
       sizeGiB = each.value.volume.size_in_gib
     }
   }
-  name                      = each.value.volume.name
-  parent_id                 = azapi_resource.this_elastic_san_volume_group[each.value.vg_key].id
   schema_validation_enabled = false
 
   depends_on = [azurerm_private_endpoint.this]
@@ -134,19 +134,19 @@ resource "azurerm_private_endpoint" "this" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.8)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 1.13, != 1.13.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.105)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.115, < 5.0)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 1.13, != 1.13.0)
+- <a name="provider_azapi"></a> [azapi](#provider\_azapi) (~> 2.0)
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.105)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.115, < 5.0)
 
 ## Resources
 

@@ -2,7 +2,9 @@
 resource "azapi_resource" "dns_forwarder_zones" {
   for_each = var.dns_forwarder_zones
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/dnsZones@2024-09-01-preview"
+  name      = each.key
+  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  type      = "Microsoft.AVS/privateClouds/workloadNetworks/dnsZones@2023-09-01"
   body = {
     properties = {
       displayName  = each.value.display_name
@@ -12,8 +14,10 @@ resource "azapi_resource" "dns_forwarder_zones" {
       #revision     = each.value.revision
     }
   }
-  name      = each.key
-  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -25,7 +29,6 @@ resource "azapi_resource" "dns_forwarder_zones" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
@@ -43,9 +46,9 @@ resource "azapi_resource" "dns_forwarder_zones" {
 #get the default DNS zone details
 #read in a private cloud dns services
 data "azapi_resource_action" "avs_dns" {
-  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2024-09-01-preview"
   method                 = "GET"
   resource_id            = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices"
+  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-09-01"
   response_export_values = ["*"]
 
   depends_on = [
@@ -53,7 +56,6 @@ data "azapi_resource_action" "avs_dns" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
@@ -76,8 +78,9 @@ locals {
 resource "azapi_resource_action" "dns_service" {
   count = (length(keys(var.dns_forwarder_zones))) == 0 ? 0 : 1
 
+  method      = "PATCH"
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
-  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2024-09-01-preview"
+  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2023-09-01"
   #if zone information defined populate the properties
   body = {
     properties = {
@@ -92,8 +95,7 @@ resource "azapi_resource_action" "dns_service" {
       logLevel = local.dns_details.value[0].properties.logLevel
     }
   }
-  method = "PATCH"
-  when   = "apply"
+  when = "apply"
 
   timeouts {
     create = "4h"
@@ -105,7 +107,6 @@ resource "azapi_resource_action" "dns_service" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
@@ -124,8 +125,9 @@ resource "azapi_resource_action" "dns_service" {
 resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
   count = length(keys(var.dns_forwarder_zones)) > 0 ? 1 : 0
 
+  method      = "PATCH"
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
-  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2024-09-01-preview"
+  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2024-09-01"
   #if zone information defined populate the properties
   body = {
     properties = {
@@ -141,8 +143,7 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
       #revision       = 0
     }
   }
-  method = "PATCH"
-  when   = "destroy"
+  when = "destroy"
 
   timeouts {
     create = "4h"
@@ -154,7 +155,6 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,

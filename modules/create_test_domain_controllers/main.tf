@@ -106,32 +106,10 @@ locals {
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.19.0"
+  version = "=0.19.3"
 
-  resource_group_name                    = var.resource_group_name
-  location                               = var.resource_group_location
-  os_type                                = "Windows"
-  name                                   = var.dc_vm_name
-  sku_size                               = var.dc_vm_sku
-  zone                                   = "1"
-
-  account_credentials = {
-    key_vault_configuration = {
-      resource_id = var.key_vault_resource_id
-    }
-  }
-
-  source_image_reference = {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2022-datacenter-g2"
-    version   = "latest"
-  }
-
-  managed_identities = {
-    system_assigned = true
-  }
-
+  location = var.resource_group_location
+  name     = var.dc_vm_name
   network_interfaces = {
     network_interface_1 = {
       name = "${var.dc_vm_name}-nic1"
@@ -144,7 +122,31 @@ module "testvm" {
       }
     }
   }
-
+  resource_group_name = var.resource_group_name
+  zone                = "1"
+  account_credentials = {
+    admin_credentials = {
+      password                           = random_password.dc1_password.result
+      generate_admin_password_or_ssh_key = false
+    }
+    key_vault_configuration = {
+      resource_id = var.key_vault_resource_id
+    }
+  }
+  extensions = {
+    configure_domain_controller = {
+      name                       = "${module.testvm.virtual_machine.name}-configure-domain-controller"
+      publisher                  = "Microsoft.Compute"
+      type                       = "CustomScriptExtension"
+      type_handler_version       = "1.9"
+      auto_upgrade_minor_version = true
+      protected_settings         = local.protected_settings_script_primary
+    }
+  }
+  managed_identities = {
+    system_assigned = true
+  }
+  os_type = "Windows"
   secrets = [
     {
       key_vault_id = var.key_vault_resource_id
@@ -160,16 +162,12 @@ module "testvm" {
       ]
     }
   ]
-
-  extensions = {
-    configure_domain_controller = {
-      name                       = "${module.testvm.virtual_machine.name}-configure-domain-controller"
-      publisher                  = "Microsoft.Compute"
-      type                       = "CustomScriptExtension"
-      type_handler_version       = "1.9"
-      auto_upgrade_minor_version = true
-      protected_settings         = local.protected_settings_script_primary
-    }
+  sku_size = var.dc_vm_sku
+  source_image_reference = {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2022-datacenter-g2"
+    version   = "latest"
   }
 }
 
@@ -236,30 +234,16 @@ resource "random_password" "dc2_password" {
 resource "azurerm_key_vault_secret" "ldap_password" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.ldap_user}-password"
-  value        = random_password.ldap_password.result
   tags         = var.tags
+  value        = random_password.ldap_password.result
 }
 
 #store the testadmin user account in the key vault as a secret
 resource "azurerm_key_vault_secret" "test_admin_password" {
   key_vault_id = var.key_vault_resource_id
   name         = "${var.test_admin_user}-password"
+  tags         = var.tags
   value        = random_password.test_admin_password.result
-  tags         = var.tags
-}
-
-resource "azurerm_key_vault_secret" "dc01_password" {
-  key_vault_id = var.key_vault_resource_id
-  name         = "dc01-password"
-  value        = random_password.dc1_password.result
-  tags         = var.tags
-}
-
-resource "azurerm_key_vault_secret" "dc02_password" {
-  key_vault_id = var.key_vault_resource_id
-  name         = "dc02-password"
-  value        = random_password.dc2_password.result
-  tags         = var.tags
 }
 
 resource "azurerm_virtual_network_dns_servers" "dc_dns" {
@@ -354,32 +338,10 @@ locals {
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.19.0"
+  version = "=0.19.3"
 
-  resource_group_name                    = var.resource_group_name
-  location                               = var.resource_group_location
-  os_type                                = "Windows"
-  name                                   = var.dc_vm_name_secondary
-  sku_size                               = var.dc_vm_sku
-  zone                                   = "1"
-
-  account_credentials = {
-    key_vault_configuration = {
-      resource_id = var.key_vault_resource_id
-    }
-  }
-
-  source_image_reference = {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2022-datacenter-g2"
-    version   = "latest"
-  }
-
-  managed_identities = {
-    system_assigned = true
-  }
-
+  location = var.resource_group_location
+  name     = var.dc_vm_name_secondary
   network_interfaces = {
     network_interface_1 = {
       name = "${var.dc_vm_name_secondary}-nic1"
@@ -391,7 +353,31 @@ module "testvm_secondary" {
       }
     }
   }
-
+  resource_group_name = var.resource_group_name
+  zone                = "1"
+  account_credentials = {
+    admin_credentials = {
+      password                           = random_password.dc2_password.result
+      generate_admin_password_or_ssh_key = false
+    }
+    key_vault_configuration = {
+      resource_id = var.key_vault_resource_id
+    }
+  }
+  extensions = {
+    configure_domain_controller = {
+      name                       = "${module.testvm_secondary.virtual_machine.name}-configure-domain-controller"
+      publisher                  = "Microsoft.Compute"
+      type                       = "CustomScriptExtension"
+      type_handler_version       = "1.9"
+      auto_upgrade_minor_version = true
+      protected_settings         = local.protected_settings_script_secondary
+    }
+  }
+  managed_identities = {
+    system_assigned = true
+  }
+  os_type = "Windows"
   secrets = [
     {
       key_vault_id = var.key_vault_resource_id
@@ -407,16 +393,12 @@ module "testvm_secondary" {
       ]
     }
   ]
-
-  extensions = {
-    configure_domain_controller = {
-      name                       = "${module.testvm_secondary.virtual_machine.name}-configure-domain-controller"
-      publisher                  = "Microsoft.Compute"
-      type                       = "CustomScriptExtension"
-      type_handler_version       = "1.9"
-      auto_upgrade_minor_version = true
-      protected_settings         = local.protected_settings_script_secondary
-    }
+  sku_size = var.dc_vm_sku
+  source_image_reference = {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2022-datacenter-g2"
+    version   = "latest"
   }
 
   depends_on = [module.testvm, azurerm_virtual_network_dns_servers.dc_dns, time_sleep.wait_600_seconds, data.azurerm_virtual_machine.this_vm]

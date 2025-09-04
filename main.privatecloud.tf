@@ -22,13 +22,11 @@ locals {
   base_properties_availability = {
     strategy = var.enable_stretch_cluster ? "DualZone" : "SingleZone"
   }
-
-#assumes that a vnetID is the flag for gen 2 private clouds.  Sets the DNS Zone type since it is only valid with gen 2 private clouds.
+  #assumes that a vnetID is the flag for gen 2 private clouds.  Sets the DNS Zone type since it is only valid with gen 2 private clouds.
   base_properties_vnet = var.virtual_network_resource_id != null ? {
     virtualNetworkId = var.virtual_network_resource_id
-    dnsZoneType = var.dns_zone_type
+    dnsZoneType      = var.dns_zone_type
   } : {}
-
   full_body = merge(local.base_body, { properties = merge(local.properties_map, local.base_properties_vnet) }) #merge the properties map into the body map
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
@@ -58,14 +56,18 @@ locals {
 
 #build a base private cloud resource then modify it as needed.
 resource "azapi_resource" "this_private_cloud" {
-  type                      = "Microsoft.AVS/privateClouds@2024-09-01-preview"
-  body                      = local.full_body
   location                  = var.location
   name                      = var.name
   parent_id                 = var.resource_group_resource_id
+  type                      = "Microsoft.AVS/privateClouds@2024-09-01"
+  body                      = local.full_body
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values    = ["*"]
   schema_validation_enabled = false
   tags                      = var.tags
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned
@@ -87,8 +89,8 @@ resource "azapi_resource" "this_private_cloud" {
 
 #use a data resource to get the identity details to avoid terraform import issues
 data "azapi_resource" "this_private_cloud" {
-  type                   = "Microsoft.AVS/privateClouds@2024-09-01-preview"
   resource_id            = azapi_resource.this_private_cloud.id
+  type                   = "Microsoft.AVS/privateClouds@2024-09-01"
   response_export_values = ["*"]
 
   depends_on = [azapi_resource.this_private_cloud]

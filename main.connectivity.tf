@@ -10,15 +10,19 @@ resource "azurerm_vmware_express_route_authorization" "this_authorization_key" {
 resource "azapi_resource" "globalreach_connections" {
   for_each = var.global_reach_connections
 
-  type = "Microsoft.AVS/privateClouds/globalReachConnections@2024-09-01-preview"
+  name      = each.key
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/globalReachConnections@2024-09-01"
   body = {
     properties = {
       authorizationKey        = each.value.authorization_key
       peerExpressRouteCircuit = each.value.peer_expressroute_circuit_resource_id
     }
   }
-  name      = each.key
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -39,47 +43,14 @@ data "azurerm_vmware_private_cloud" "this_private_cloud" {
   resource_group_name = data.azurerm_resource_group.sddc_deployment.name
 }
 
-/*
-#create one or more ExpressRoute Gateway connections to virtual network hubs
-resource "azurerm_virtual_network_gateway_connection" "this" {
-  for_each = { for k, v in var.expressroute_connections : k => v if v.vwan_hub_connection == false }
-
-  location                     = var.location
-  name                         = each.key
-  resource_group_name          = data.azurerm_resource_group.sddc_deployment.name
-  type                         = "ExpressRoute"
-  virtual_network_gateway_id   = each.value.expressroute_gateway_resource_id
-  authorization_key            = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
-  enable_bgp                   = true
-  express_route_circuit_id     = azapi_resource.this_private_cloud.output.properties.circuit.expressRouteID
-  express_route_gateway_bypass = each.value.fast_path_enabled
-  tags                         = each.value.tags == {} ? var.tags : each.value.tags
-
-  depends_on = [
-    azapi_resource.this_private_cloud,
-    azapi_resource.clusters,
-    azurerm_role_assignment.this_private_cloud,
-    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
-    azapi_update_resource.customer_managed_key,
-    azapi_resource.hcx_addon,
-    azapi_resource.hcx_keys,
-    azapi_resource.srm_addon,
-    azapi_resource.vr_addon,
-    azapi_resource.globalreach_connections
-  ]
-
-  lifecycle {
-    ignore_changes = [express_route_circuit_id]
-  } #TODO - determine why this is returning 'known after apply'
-}
-*/
-
 #create one or more ExpressRoute Gateway connections to virtual network hubs
 resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == false && v.deployment_order == 1) }
 
-  type = "Microsoft.Network/connections@2023-11-01"
+  location  = coalesce(each.value.network_resource_group_location, var.location)
+  name      = each.value.name
+  parent_id = coalesce(each.value.network_resource_group_resource_id, var.resource_group_resource_id)
+  type      = "Microsoft.Network/connections@2023-11-01"
   body = {
     properties = {
       connectionType = "ExpressRoute"
@@ -96,10 +67,11 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
       }
     }
   }
-  location  = coalesce(each.value.network_resource_group_location, var.location)
-  name      = each.value.name
-  parent_id = coalesce(each.value.network_resource_group_resource_id, var.resource_group_resource_id)
-  tags      = each.value.tags == {} ? var.tags : each.value.tags
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags           = each.value.tags == {} ? var.tags : each.value.tags
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -120,7 +92,10 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
 resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connection_additional" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == false && v.deployment_order > 1) }
 
-  type = "Microsoft.Network/connections@2023-11-01"
+  location  = coalesce(each.value.network_resource_group_location, var.location)
+  name      = each.value.name
+  parent_id = coalesce(each.value.network_resource_group_resource_id, var.resource_group_resource_id)
+  type      = "Microsoft.Network/connections@2023-11-01"
   body = {
     properties = {
       connectionType = "ExpressRoute"
@@ -137,10 +112,11 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
       }
     }
   }
-  location  = coalesce(each.value.network_resource_group_location, var.location)
-  name      = each.value.name
-  parent_id = coalesce(each.value.network_resource_group_resource_id, var.resource_group_resource_id)
-  tags      = each.value.tags == {} ? var.tags : each.value.tags
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags           = each.value.tags == {} ? var.tags : each.value.tags
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -257,14 +233,18 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
 resource "azapi_resource" "avs_interconnect" {
   for_each = var.avs_interconnect_connections
 
-  type = "Microsoft.AVS/privateClouds/cloudLinks@2024-09-01-preview"
+  name      = each.key
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/cloudLinks@2024-09-01"
   body = {
     properties = {
       linkedCloud = each.value.linked_private_cloud_resource_id
     }
   }
-  name      = each.key
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,

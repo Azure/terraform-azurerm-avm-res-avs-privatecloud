@@ -4,7 +4,9 @@
 resource "azapi_resource" "clusters" {
   for_each = var.clusters
 
-  type = "Microsoft.AVS/privateClouds/clusters@2023-09-01"
+  name      = each.key
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/clusters@2023-09-01"
   body = {
     sku = {
       name = each.value.sku_name
@@ -14,8 +16,10 @@ resource "azapi_resource" "clusters" {
     }
 
   }
-  name      = each.key
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"

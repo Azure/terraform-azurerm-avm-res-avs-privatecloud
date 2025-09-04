@@ -11,8 +11,9 @@ module "regions" {
 }
 
 locals {
-  #dc_vm_sku             = "Standard_D2_v4"
+  #dc_vm_sku             = "Standard_D2s_v6"
   ldap_user_name        = "ldapuser"
+  location_zone         = 3
   test_admin_group_name = "vcenterAdmins"
   test_admin_user_name  = "testadmin"
   test_domain_dn        = "dc=test,dc=local"
@@ -24,10 +25,11 @@ data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
+
   #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   management_cluster_quota_required = 3
-  secondary_cluster_quota_required  = 3
   private_cloud_generation          = 2
+  secondary_cluster_quota_required  = 3
   test_regions = [
     "australiaeast",
     "brazilsouth",
@@ -76,16 +78,17 @@ resource "azurerm_resource_group" "this" {
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.1.0"
+  version = "0.3.0"
 
   location      = azurerm_resource_group.this.location
   cache_results = true
-
   vm_filters = {
     min_vcpus                      = 2
     max_vcpus                      = 2
     encryption_at_host_supported   = true
     accelerated_networking_enabled = true
+    cpu_architecture_type          = "x64"
+    low_priority_capable           = true
   }
 }
 
@@ -93,15 +96,11 @@ module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
   version = "0.10.0"
 
-  tenant_id              = data.azurerm_client_config.current.tenant_id
+  location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
-  location               = azurerm_resource_group.this.location
+  tenant_id              = data.azurerm_client_config.current.tenant_id
   enabled_for_deployment = true
-  network_acls = {
-    default_action = "Allow"
-    bypass         = "AzureServices"
-  }
   keys = {
     "cmk-disk-key" = {
       name     = "cmk-disk-key"
@@ -118,7 +117,10 @@ module "avm_res_keyvault_vault" {
       ]
     }
   }
-
+  network_acls = {
+    default_action = "Allow"
+    bypass         = "AzureServices"
+  }
   role_assignments = {
     deployment_user_secrets = {
       role_definition_id_or_name = "Key Vault Administrator"
@@ -133,30 +135,27 @@ module "avm_res_keyvault_vault" {
       principal_id               = module.test_private_cloud.identity.principalId
     }
   }
-
   wait_for_rbac_before_key_operations = {
     create = "60s"
   }
-
   wait_for_rbac_before_secret_operations = {
     create = "60s"
   }
 }
 
 data "azurerm_key_vault_key" "cmk_key" {
-  name         = split("/", module.avm_res_keyvault_vault.keys["cmk-disk-key"].resource_id)[-1]
   key_vault_id = module.avm_res_keyvault_vault.resource_id
+  name         = split("/", module.avm_res_keyvault_vault.keys["cmk-disk-key"].resource_id)[10]
 }
 
 module "avs_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.7.1"
 
-  resource_group_name = azurerm_resource_group.this.name
   address_space       = ["10.100.0.0/16"]
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
   location            = azurerm_resource_group.this.location
-
+  resource_group_name = azurerm_resource_group.this.name
+  name                = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     DCSubnet = {
       name             = "DCSubnet"
@@ -211,27 +210,27 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "create_dc" {
   source = "../../modules/create_test_domain_controllers"
-  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_domain_controllers"
 
-  resource_group_name         = azurerm_resource_group.this.name
-  resource_group_location     = azurerm_resource_group.this.location
+  dc_subnet_resource_id       = module.avs_vnet_primary_region.subnets["DCSubnet"].resource_id
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
   key_vault_resource_id       = module.avm_res_keyvault_vault.resource_id
-  create_bastion              = true
+  private_ip_address          = cidrhost("10.100.1.0/24", 4)
+  resource_group_location     = azurerm_resource_group.this.location
+  resource_group_name         = azurerm_resource_group.this.name
+  virtual_network_resource_id = module.avs_vnet_primary_region.resource_id
+  admin_group_name            = local.test_admin_group_name
   bastion_name                = module.naming.bastion_host.name_unique
   bastion_pip_name            = "${module.naming.bastion_host.name_unique}-pip"
   bastion_subnet_resource_id  = module.avs_vnet_primary_region.subnets["AzureBastionSubnet"].resource_id
-  dc_subnet_resource_id       = module.avs_vnet_primary_region.subnets["DCSubnet"].resource_id
-  dc_vm_sku                   = module.vm_sku.sku
-  domain_fqdn                 = local.test_domain_name
-  domain_netbios_name         = local.test_domain_netbios
-  domain_distinguished_name   = local.test_domain_dn
-  ldap_user                   = local.ldap_user_name
-  test_admin_user             = local.test_admin_user_name
-  admin_group_name            = local.test_admin_group_name
-  private_ip_address          = cidrhost("10.100.1.0/24", 4)
-  virtual_network_resource_id = module.avs_vnet_primary_region.resource_id
+  create_bastion              = true
+  #dc_vm_sku                   = module.vm_sku.sku
+  dc_vm_sku                 = "Standard_D2s_v3"
+  domain_distinguished_name = local.test_domain_dn
+  domain_fqdn               = local.test_domain_name
+  domain_netbios_name       = local.test_domain_netbios
+  ldap_user                 = local.ldap_user_name
+  test_admin_user           = local.test_admin_user_name
 
   depends_on = [module.avm_res_keyvault_vault, module.avs_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway]
 }
@@ -247,20 +246,20 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
 
 module "create_anf_volume" {
   source = "../../modules/create_test_netapp_volume"
-  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_netapp_volume"
 
-  resource_group_name     = azurerm_resource_group.this.name
-  resource_group_location = azurerm_resource_group.this.location
   anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
+  anf_nfs_allowed_clients = ["0.0.0.0/0"]
   anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
   anf_pool_size           = 4
+  anf_subnet_resource_id  = module.avs_vnet_primary_region.subnets["ANFSubnet"].resource_id
   anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
   anf_volume_size         = 4096
-  anf_subnet_resource_id  = module.avs_vnet_primary_region.subnets["ANFSubnet"].resource_id
   anf_zone_number         = module.test_private_cloud.resource.properties.availability.zone
-  anf_nfs_allowed_clients = ["0.0.0.0/0"]
+  resource_group_location = azurerm_resource_group.this.location
+  resource_group_name     = azurerm_resource_group.this.name
 }
 
+/* #Elastic SAN is not currently supported in the Gen 2 public preview.  
 module "elastic_san" {
   source = "../../modules/create_elastic_san_volume"
   #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
@@ -300,42 +299,75 @@ module "elastic_san" {
     }
   }
 }
+*/
 
 # create the virtual network for the avs private cloud 
 # this is required since the gen 2 AVS private cloud manages the subnets
-resource "azurerm_virtual_network" "example" {
-  name                = "AVSVnet-${azurerm_resource_group.this.location}"
+resource "azurerm_virtual_network" "avs_vnet_primary_region" {
   location            = azurerm_resource_group.this.location
+  name                = "AVSVnet-${azurerm_resource_group.this.location}"
   resource_group_name = azurerm_resource_group.this.name
   address_space       = ["10.200.0.0/16"]
 }
+/* test this first
+resource "azurerm_public_ip" "nat_gateway_avs" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.nat_gateway.name_unique}-pip-avs"
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "Standard"
+  zones               = ["1", "2", "3"]
+}
+
+resource "azurerm_nat_gateway" "this_nat_gateway_avs" {
+  location            = azurerm_resource_group.this.location
+  name                = "${module.naming.nat_gateway.name_unique}-avs"
+  resource_group_name = azurerm_resource_group.this.name
+  sku_name            = "Standard"
+}
+*/
 
 #peer to the hub vnet
+module "peering" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
+  version = "0.8.1"
+
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = true
+  allow_virtual_network_access = true
+  create_reverse_peering       = true
+  name                         = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
+  remote_virtual_network = {
+    resource_id = module.avs_vnet_primary_region.resource_id
+  }
+  reverse_allow_forwarded_traffic      = false
+  reverse_allow_gateway_transit        = false
+  reverse_allow_virtual_network_access = true
+  reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-hub-to-avs"
+  reverse_use_remote_gateways          = false
+  use_remote_gateways                  = false
+  virtual_network = {
+    resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
+  }
+}
 
 module "test_private_cloud" {
   source = "../../"
-  # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.9.0"
 
-  enable_telemetry               = var.enable_telemetry
-  resource_group_name            = azurerm_resource_group.this.name
-  location                       = azurerm_resource_group.this.location
-  resource_group_resource_id     = azurerm_resource_group.this.id
-  name                           = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-  sku_name                       = jsondecode(local_file.region_sku_cache.content).sku-mgmt
-  avs_network_cidr               = "10.100.12.0/22"
-  internet_enabled               = false
-  management_cluster_size        = 3
-  virtual_network_resource_id    = module.avs_vnet_primary_region.resource_id
-
+  avs_network_cidr           = "10.200.0.0/22"
+  location                   = azurerm_resource_group.this.location
+  name                       = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
+  resource_group_name        = azurerm_resource_group.this.name
+  resource_group_resource_id = azurerm_resource_group.this.id
+  sku_name                   = jsondecode(local_file.region_sku_cache.content).sku-mgmt
   addons = {
     HCX = {
-      hcx_key_names    = ["example_key_1", "example_key_2"]
-      hcx_license_type = "Enterprise"
+      hcx_key_names          = ["example_key_1", "example_key_2"]
+      hcx_license_type       = "Enterprise"
+      hcx_management_network = "192.168.0.0/24"
+      hcx_uplink_network     = "192.168.1.0/24"
     }
   }
-
-
   #example for adding additional clusters
   clusters = {
     "Cluster-2" = {
@@ -343,22 +375,19 @@ module "test_private_cloud" {
       sku_name           = jsondecode(local_file.region_sku_cache.content).sku-sec
     }
   }
-
   customer_managed_key = {
     key_vault_resource_id = module.avm_res_keyvault_vault.resource_id
     key_name              = data.azurerm_key_vault_key.cmk_key.name
     key_version           = data.azurerm_key_vault_key.cmk_key.version
   }
-
   dhcp_configuration = {
     server_config = {
       display_name      = "test_dhcp"
       dhcp_type         = "SERVER"
       server_lease_time = 14400
-      server_address    = "10.101.0.1/24"
+      server_address    = "10.201.0.1/24"
     }
   }
-
   diagnostic_settings = {
     avs_diags = {
       name                  = module.naming.monitor_diagnostic_setting.name_unique
@@ -367,7 +396,6 @@ module "test_private_cloud" {
       log_groups            = ["allLogs"]
     }
   }
-
   dns_forwarder_zones = {
     test_local = {
       display_name               = local.test_domain_name
@@ -376,30 +404,23 @@ module "test_private_cloud" {
       add_to_default_dns_service = true
     }
   }
-
-  elastic_san_datastores = {
-    esan_datastore_cluster1 = {
-      esan_volume_resource_id = module.elastic_san.volumes["vg_1-volume_1"].id
-      cluster_names           = ["Cluster-1"]
-    }
-  }
-
+  dns_zone_type    = "Private"
+  enable_telemetry = var.enable_telemetry
+  internet_enabled = false
   lock = {
     name = "lock-avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
     kind = "CanNotDelete"
   }
-
   managed_identities = {
     system_assigned = true
   }
-
+  management_cluster_size = 3
   netapp_files_datastores = {
     anf_datastore_cluster1 = {
       netapp_volume_resource_id = module.create_anf_volume.volume_id
       cluster_names             = ["Cluster-1"]
     }
   }
-
   role_assignments = {
     deployment_user_contributor = {
       role_definition_id_or_name = "Contributor"
@@ -407,7 +428,6 @@ module "test_private_cloud" {
       principal_type             = "ServicePrincipal"
     }
   }
-
   segments = {
     segment_1 = {
       display_name    = "segment_1"
@@ -419,11 +439,9 @@ module "test_private_cloud" {
       gateway_address = "10.30.0.1/24"
     }
   }
-
   tags = {
     scenario = "avs_full_example_gen_2"
   }
-
   vcenter_identity_sources = {
     test_local = {
       alias          = module.create_dc.domain_netbios_name
@@ -437,11 +455,11 @@ module "test_private_cloud" {
       ssl = "Enabled"
     }
   }
-
   vcenter_identity_sources_credentials = {
     test_local = {
       ldap_user          = module.create_dc.ldap_user
       ldap_user_password = module.create_dc.ldap_user_password
     }
   }
+  virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
 }

@@ -36,11 +36,13 @@ variable "sku_name" {
 
 variable "addons" {
   type = map(object({
-    arc_vcenter      = optional(string)
-    hcx_key_names    = optional(list(string), [])
-    hcx_license_type = optional(string, "Enterprise")
-    srm_license_key  = optional(string)
-    vr_vrs_count     = optional(number, 0)
+    arc_vcenter            = optional(string)
+    hcx_key_names          = optional(list(string), [])
+    hcx_license_type       = optional(string, "Enterprise")
+    hcx_management_network = optional(string, null)
+    hcx_uplink_network     = optional(string, null)
+    srm_license_key        = optional(string)
+    vr_vrs_count           = optional(number, 0)
   }))
   default     = {}
   description = <<ADDONS
@@ -51,6 +53,8 @@ Map object containing configurations for the different addon types.  Each addon 
 - `HCX` - Use this exact key value for deploying the HCX extension 
   - `hcx_key_names` (Optional) - A list of key names to create HCX key names.
   - `hcx_license_type` (Optional) - The type of license to configure for HCX.  Valid values are "Advanced" and "Enterprise".
+  - `hcx_management_network` (Optional) - The management network to use for HCX.  This should be non-overlapping, routable /24 or larger CIDR block.
+  - `hcx_uplink_network` (Optional) - The uplink network to use for HCX.  This should be non-overlapping, routable /24 or larger CIDR block.
 - `SRM` - Use this exact key value for deploying the SRM extension
   - `srm_license_key` (Optional) - the license key to use when enabling the SRM addon
 - `VR` - Use this exact key value for deploying the VR extension
@@ -275,9 +279,10 @@ DNS_FORWARDER_ZONES
 variable "dns_zone_type" {
   type        = string
   default     = "Public"
-  description = "The type of DNS zone to create. Valid values are Private and Public. This value is only valid for generation 2 private clouds. Defaults to Public."  
+  description = "The type of DNS zone to create. Valid values are Private and Public. This value is only valid for generation 2 private clouds. Defaults to Public. When set to `Private` an Azure DNS resolver or Virtual Machine based DNS server in the Vnet is required to resolve names of the ESX and NSX-T components. See this document for details.https://learn.microsoft.com/en-us/azure/azure-vmware/native-dns-forward-lookup-zone"
+
   validation {
-    condition     = contains(["Private", "Public",], var.dns_zone_type)
+    condition     = contains(["Private", "Public", ], var.dns_zone_type)
     error_message = "DNS zone type must be either Private or Public."
   }
 }
@@ -319,9 +324,10 @@ variable "enable_telemetry" {
   default     = true
   description = <<DESCRIPTION
 This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "expressroute_connections" {
@@ -691,19 +697,18 @@ variable "vcenter_password" {
 variable "virtual_network_resource_id" {
   type        = string
   default     = null
-  description = "The Azure Resource ID for the virtual network where the private cloud will be deployed. This is required when deploying a generation 2 AVS private cloud."  
+  description = "The Azure Resource ID for the virtual network where the private cloud will be deployed. This is required when deploying a generation 2 AVS private cloud."
 
   validation {
     condition = !(
-      var.virtual_network_resource_id != null && 
+      var.virtual_network_resource_id != null &&
       var.external_storage_address_block != null
     )
     error_message = "Setting the external storage address block is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `external_storage_address_block` is null when including a `virtual_network_resource_id`."
   }
-
   validation {
     condition = !(
-      var.virtual_network_resource_id != null && 
+      var.virtual_network_resource_id != null &&
       length(var.extended_network_blocks) > 0
     )
     error_message = "Setting extended address blocks is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `extended_network_blocks` is empty when including a `virtual_network_resource_id`."

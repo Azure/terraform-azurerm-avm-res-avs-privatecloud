@@ -20,8 +20,9 @@ module "generate_deployment_region" {
 
   #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   management_cluster_quota_required = 3
-  private_cloud_generation          = 1
+  private_cloud_generation          = 2
   secondary_cluster_quota_required  = 0
+  test_regions                      = ["uksouth"]
 }
 
 resource "local_file" "region_sku_cache" {
@@ -42,6 +43,15 @@ resource "azurerm_resource_group" "this" {
   }
 }
 
+# create the virtual network for the avs private cloud 
+# this is required since the gen 2 AVS private cloud manages the subnets
+resource "azurerm_virtual_network" "avs_vnet_primary_region" {
+  location            = azurerm_resource_group.this.location
+  name                = "AVSVnet-${azurerm_resource_group.this.location}"
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.100.0.0/16"]
+}
+
 module "test_private_cloud" {
   source = "../../"
 
@@ -51,11 +61,12 @@ module "test_private_cloud" {
   resource_group_name        = azurerm_resource_group.this.name
   resource_group_resource_id = azurerm_resource_group.this.id
   sku_name                   = jsondecode(local_file.region_sku_cache.content).sku-mgmt
+  dns_zone_type              = "Public"
   enable_telemetry           = var.enable_telemetry
-  extended_network_blocks    = ["10.100.4.0/23"]
   internet_enabled           = false
   management_cluster_size    = 3
   tags = {
-    scenario = "avs_minimal_gen_1"
+    scenario = "avs_minimal_gen_2"
   }
+  virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
 }

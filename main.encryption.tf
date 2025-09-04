@@ -16,7 +16,8 @@ data "azurerm_key_vault" "this_vault" {
 resource "azapi_update_resource" "customer_managed_key" {
   count = var.customer_managed_key == null ? 0 : 1
 
-  type = "Microsoft.AVS/privateClouds@2024-09-01-preview"
+  resource_id = azapi_resource.this_private_cloud.id
+  type        = "Microsoft.AVS/privateClouds@2024-09-01"
   body = {
     properties = {
       encryption = {
@@ -29,14 +30,13 @@ resource "azapi_update_resource" "customer_managed_key" {
       }
     }
   }
-  #name      = "${azapi_resource.this_private_cloud.name}-${var.customer_managed_key.key_name}"
-  resource_id = azapi_resource.this_private_cloud.id
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity
   ]
 }

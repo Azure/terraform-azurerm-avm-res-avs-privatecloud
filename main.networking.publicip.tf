@@ -2,16 +2,20 @@
 resource "azapi_resource" "public_ip" {
   for_each = var.internet_inbound_public_ips
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2024-09-01-preview"
+  name      = each.key
+  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  type      = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2024-09-01"
   body = {
     properties = {
       displayName       = each.key
       numberOfPublicIPs = each.value.number_of_ip_addresses
     }
   }
-  name                   = each.key
-  parent_id              = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = ["*"]
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -23,7 +27,6 @@ resource "azapi_resource" "public_ip" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
@@ -42,7 +45,10 @@ resource "azapi_resource" "public_ip" {
     #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources,
-    azapi_resource.this_netapp_attachment
+    azapi_resource.this_netapp_attachment,
+    azapi_resource.iscsi_path_network,
+    azapi_resource.this_esan_attachment
+
   ]
 }
 

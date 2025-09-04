@@ -1,6 +1,6 @@
 # Full AVS example with Vnet ExpressRoute Gateway
 
-This example demonstrates most of the deployment inputs using a single Azure VMware Solution private cloud with the following features and supporting test resources:
+This example demonstrates most of the deployment inputs using a single Azure VMware Solution Gen 2 private cloud with the following features and supporting test resources:
 
     - A 3-node management cluster and an additional 3-node cluster
     - The HCX Addon enabled with the Enterprise license sku
@@ -12,8 +12,6 @@ This example demonstrates most of the deployment inputs using a single Azure VMw
     - A DNS forwarder zone for the test domain
     - A DHCP server configured in NSX-T
     - An update to the default NSX-T DNS service adding the custom domain forwarder zone
-    - An ExpressRoute authorization key
-    - An ExpressRoute Gateway connection to an example ExpressRoute gateway in a virtual network.
     - A delete lock on the private cloud resource
     - The system-managed identity enabled
     - An Azure Netapp Files (ANF) Account, Pool, and Volume created in the same availalbility zone for testing external storage 
@@ -21,5 +19,7 @@ This example demonstrates most of the deployment inputs using a single Azure VMw
     - A role assignment assigning Contributor rights on the private cloud resource to the deployment user to demonstrate resource level RBAC
     - A tags block to demonstrate the assignment of resource level tags
     - A Vcenter identity sources block to demonstrate the use of the test domain for ldaps       
+
+Note that providing a vnet resource ID is the configuration element that creates a gen 2 private cloud.
 
 The following example code uses several test modules, so be sure to include them and update the deployment regions if copying verbatim.

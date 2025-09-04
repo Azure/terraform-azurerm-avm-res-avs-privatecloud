@@ -1,7 +1,3 @@
-locals {
-  vm_sku = "Standard_D2_v4"
-}
-
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "~> 0.4"
@@ -16,10 +12,11 @@ data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
+
   #source               = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/generate_deployment_region"
   management_cluster_quota_required = 3
-  secondary_cluster_quota_required  = 0
   private_cloud_generation          = 1
+  secondary_cluster_quota_required  = 0
 }
 
 resource "local_file" "region_sku_cache" {
@@ -28,6 +25,22 @@ resource "local_file" "region_sku_cache" {
 
   lifecycle {
     ignore_changes = [content]
+  }
+}
+
+module "vm_sku" {
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
+
+  location      = azurerm_resource_group.this.location
+  cache_results = true
+  vm_filters = {
+    min_vcpus                      = 2
+    max_vcpus                      = 2
+    encryption_at_host_supported   = true
+    accelerated_networking_enabled = true
+    premium_io_supported           = true
+    location_zone                  = null
   }
 }
 
@@ -89,27 +102,28 @@ module "vm_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.7.1"
 
-  resource_group_name           = azurerm_resource_group.this.name
-  address_space                 = ["10.100.0.0/16"]
-  name                          = "VMVnet"
-  location                      = azurerm_resource_group.this.location
-
+  address_space       = ["10.230.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  name                = "VMVnet"
   subnets = {
     VMSubnet = {
-      address_prefixes = ["10.100.1.0/24"]
+      name             = "VMSubnet"
+      address_prefixes = ["10.230.1.0/24"]
       nat_gateway = {
         id = azurerm_nat_gateway.this_nat_gateway.id
       }
     }
     AzureBastionSubnet = {
-      address_prefixes = ["10.100.2.0/24"]
+      name             = "AzureBastionSubnet"
+      address_prefixes = ["10.230.2.0/24"]
     }
   }
 }
 
 resource "azurerm_virtual_hub_connection" "vm_vnet_connection" {
   name                      = "${module.naming.virtual_wan.name_unique}-avs-hub-to-vmvnet"
-  remote_virtual_network_id = module.vm_vnet.vnet-resource.id
+  remote_virtual_network_id = module.vm_vnet.resource_id
   virtual_hub_id            = azurerm_virtual_hub.vwan_hub.id
 }
 
@@ -122,25 +136,24 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
 }
 
 module "avm_res_keyvault_vault" {
-  source                 = "Azure/avm-res-keyvault-vault/azurerm"
-  version                = "0.10.0"
-  tenant_id              = data.azurerm_client_config.current.tenant_id
+  source  = "Azure/avm-res-keyvault-vault/azurerm"
+  version = "0.10.0"
+
+  location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
-  location               = azurerm_resource_group.this.location
+  tenant_id              = data.azurerm_client_config.current.tenant_id
   enabled_for_deployment = true
   network_acls = {
     default_action = "Allow"
     bypass         = "AzureServices"
   }
-
   role_assignments = {
     deployment_user_secrets = {
       role_definition_id_or_name = "Key Vault Administrator"
       principal_id               = data.azurerm_client_config.current.object_id
     }
   }
-
   wait_for_rbac_before_secret_operations = {
     create = "60s"
   }
@@ -148,26 +161,19 @@ module "avm_res_keyvault_vault" {
 
 module "test_private_cloud" {
   source = "../../"
-  # source             = "Azure/avm-res-avs-privatecloud/azurerm"
-  # version            = "=0.9.0"
 
-  enable_telemetry           = var.enable_telemetry
-  resource_group_name        = azurerm_resource_group.this.name
-  location                   = azurerm_resource_group.this.location
-  resource_group_resource_id = azurerm_resource_group.this.id
-  name                       = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
-  sku_name                   = jsondecode(local_file.region_sku_cache.content).sku-mgmt
   avs_network_cidr           = "10.0.0.0/22"
-  internet_enabled           = false
-  management_cluster_size    = 3
-
+  location                   = azurerm_resource_group.this.location
+  name                       = "avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
+  resource_group_name        = azurerm_resource_group.this.name
+  resource_group_resource_id = azurerm_resource_group.this.id
+  sku_name                   = jsondecode(local_file.region_sku_cache.content).sku-mgmt
   addons = {
     HCX = {
       hcx_key_names    = ["example_key_1", "example_key_2"]
       hcx_license_type = "Enterprise"
     }
   }
-
   diagnostic_settings = {
     avs_diags = {
       name                  = module.naming.monitor_diagnostic_setting.name_unique
@@ -176,7 +182,7 @@ module "test_private_cloud" {
       log_groups            = ["allLogs"]
     }
   }
-
+  enable_telemetry = var.enable_telemetry
   expressroute_connections = {
     default = {
       name                             = "default_vwan_connection"
@@ -185,7 +191,8 @@ module "test_private_cloud" {
       authorization_key_name           = "test_auth_key"
     }
   }
-
+  internet_enabled        = false
+  management_cluster_size = 3
   tags = {
     scenario = "avs_default_vnet"
   }
@@ -193,19 +200,17 @@ module "test_private_cloud" {
 
 module "create_jump_vm" {
   source = "../../modules/create_jump_vm"
-  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_jump_vm"
 
-
-  resource_group_name        = azurerm_resource_group.this.name
+  key_vault_resource_id      = module.avm_res_keyvault_vault.resource_id
   resource_group_location    = azurerm_resource_group.this.location
+  resource_group_name        = azurerm_resource_group.this.name
   vm_name                    = "jump-${module.naming.virtual_machine.name_unique}"
-  key_vault_resource_id      = module.avm_res_keyvault_vault.resource.id
-  create_bastion             = true
+  vm_subnet_resource_id      = module.vm_vnet.subnets["VMSubnet"].resource_id
   bastion_name               = module.naming.bastion_host.name_unique
   bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
-  bastion_subnet_resource_id = module.vm_vnet.subnets["AzureBastionSubnet"].id
-  vm_subnet_resource_id      = module.vm_vnet.subnets["VMSubnet"].id
-  vm_sku                     = local.vm_sku
+  bastion_subnet_resource_id = module.vm_vnet.subnets["AzureBastionSubnet"].resource_id
+  create_bastion             = true
+  vm_sku                     = module.vm_sku.sku
 
   depends_on = [module.avm_res_keyvault_vault, module.vm_vnet, azurerm_nat_gateway.this_nat_gateway]
 }

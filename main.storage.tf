@@ -18,7 +18,9 @@ locals {
 resource "azapi_resource" "this_netapp_attachment" {
   for_each = { for datastore in local.netapp_attachments : datastore.attachment_name => datastore }
 
-  type = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
+  name      = each.value.attachment_name
+  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
+  type      = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
   body = {
     properties = {
       netAppVolume = {
@@ -26,8 +28,10 @@ resource "azapi_resource" "this_netapp_attachment" {
       }
     }
   }
-  name      = each.value.attachment_name
-  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -54,7 +58,6 @@ resource "azapi_resource" "this_netapp_attachment" {
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources
   ]
-
 }
 /*
 resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
@@ -96,18 +99,24 @@ resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
 resource "azapi_resource" "iscsi_path_network" {
   count = var.external_storage_address_block != null ? 1 : 0
 
-  type = "Microsoft.AVS/privateClouds/iscsiPaths@2023-09-01"
+  name      = "default"
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/iscsiPaths@2023-09-01"
   body = { properties = {
     networkBlock = var.external_storage_address_block
   } }
-  name      = "default"
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 resource "azapi_resource" "this_esan_attachment" {
   for_each = { for datastore in local.elastic_san_attachments : datastore.attachment_name => datastore }
 
-  type = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
+  name      = each.value.attachment_name
+  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
+  type      = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
   body = {
     properties = {
       elasticSanVolume = {
@@ -115,15 +124,16 @@ resource "azapi_resource" "this_esan_attachment" {
       }
     }
   }
-  name      = each.value.attachment_name
-  parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
