@@ -1,19 +1,12 @@
-
-locals {
-  vm_sku = "Standard_D2_v4"
-}
-
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.4"
+  version = "0.4.2"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.5.0"
 }
-
-data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
@@ -43,7 +36,7 @@ resource "azurerm_resource_group" "this" {
   }
 }
 
-# create the virtual network for the avs private cloud 
+# create the virtual network for the avs private cloud
 # this is required since the gen 2 AVS private cloud manages the subnets
 resource "azurerm_virtual_network" "avs_vnet_primary_region" {
   location            = azurerm_resource_group.this.location

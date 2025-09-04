@@ -1,19 +1,12 @@
-
-locals {
-  vm_sku = "Standard_D2_v4"
-}
-
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.4"
+  version = "0.4.2"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.5.0"
 }
-
-data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"

@@ -7,22 +7,15 @@ This example demonstrates a deployment with a single Azure VMware Solution Gen 2
     - A single 3-node management cluster
 
 ```hcl
-
-locals {
-  vm_sku = "Standard_D2_v4"
-}
-
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.4"
+  version = "0.4.2"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.5.0"
 }
-
-data "azurerm_client_config" "current" {}
 
 module "generate_deployment_region" {
   source = "../../modules/generate_deployment_region"
@@ -52,7 +45,7 @@ resource "azurerm_resource_group" "this" {
   }
 }
 
-# create the virtual network for the avs private cloud 
+# create the virtual network for the avs private cloud
 # this is required since the gen 2 AVS private cloud manages the subnets
 resource "azurerm_virtual_network" "avs_vnet_primary_region" {
   location            = azurerm_resource_group.this.location
@@ -86,9 +79,9 @@ module "test_private_cloud" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.6)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.10)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.106)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.35)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
@@ -99,7 +92,6 @@ The following resources are used by this module:
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_virtual_network.avs_vnet_primary_region](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [local_file.region_sku_cache](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -138,7 +130,7 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.4
+Version: 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 

@@ -29,7 +29,7 @@ The following example code uses several test modules, so be sure to include them
 ```hcl
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.4"
+  version = "0.4.2"
 }
 
 module "regions" {
@@ -641,11 +641,9 @@ module "test_private_cloud" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.8)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.10)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.115, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.35)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
@@ -764,7 +762,7 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.4
+Version: 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 

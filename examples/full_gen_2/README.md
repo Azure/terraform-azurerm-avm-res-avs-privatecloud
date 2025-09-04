@@ -29,7 +29,7 @@ The following example code uses several test modules, so be sure to include them
 ```hcl
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.4"
+  version = "0.4.2"
 }
 
 module "regions" {
@@ -40,9 +40,7 @@ module "regions" {
 }
 
 locals {
-  #dc_vm_sku             = "Standard_D2s_v6"
   ldap_user_name        = "ldapuser"
-  location_zone         = 3
   test_admin_group_name = "vcenterAdmins"
   test_admin_user_name  = "testadmin"
   test_domain_dn        = "dc=test,dc=local"
@@ -288,7 +286,7 @@ module "create_anf_volume" {
   resource_group_name     = azurerm_resource_group.this.name
 }
 
-/* #Elastic SAN is not currently supported in the Gen 2 public preview.  
+/* #Elastic SAN is not currently supported in the Gen 2 public preview.
 module "elastic_san" {
   source = "../../modules/create_elastic_san_volume"
   #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
@@ -330,7 +328,7 @@ module "elastic_san" {
 }
 */
 
-# create the virtual network for the avs private cloud 
+# create the virtual network for the avs private cloud
 # this is required since the gen 2 AVS private cloud manages the subnets
 resource "azurerm_virtual_network" "avs_vnet_primary_region" {
   location            = azurerm_resource_group.this.location
@@ -499,11 +497,9 @@ module "test_private_cloud" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.8)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.10)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.115, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.35)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
@@ -610,7 +606,7 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.4
+Version: 0.4.2
 
 ### <a name="module_peering"></a> [peering](#module\_peering)
 

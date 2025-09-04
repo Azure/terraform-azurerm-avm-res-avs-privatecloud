@@ -1,6 +1,6 @@
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.4"
+  version = "0.4.2"
 }
 
 module "regions" {
@@ -11,9 +11,7 @@ module "regions" {
 }
 
 locals {
-  #dc_vm_sku             = "Standard_D2s_v6"
   ldap_user_name        = "ldapuser"
-  location_zone         = 3
   test_admin_group_name = "vcenterAdmins"
   test_admin_user_name  = "testadmin"
   test_domain_dn        = "dc=test,dc=local"
@@ -259,7 +257,7 @@ module "create_anf_volume" {
   resource_group_name     = azurerm_resource_group.this.name
 }
 
-/* #Elastic SAN is not currently supported in the Gen 2 public preview.  
+/* #Elastic SAN is not currently supported in the Gen 2 public preview.
 module "elastic_san" {
   source = "../../modules/create_elastic_san_volume"
   #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
@@ -301,7 +299,7 @@ module "elastic_san" {
 }
 */
 
-# create the virtual network for the avs private cloud 
+# create the virtual network for the avs private cloud
 # this is required since the gen 2 AVS private cloud manages the subnets
 resource "azurerm_virtual_network" "avs_vnet_primary_region" {
   location            = azurerm_resource_group.this.location

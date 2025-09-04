@@ -646,14 +646,6 @@ Type: `string`
 
 Default: `"testAdmin"`
 
-### <a name="input_zone"></a> [zone](#input\_zone)
-
-Description: The availability zone to use for the domain controller.  Defaults to 3.
-
-Type: `number`
-
-Default: `"3"`
-
 ## Outputs
 
 The following outputs are exported:
