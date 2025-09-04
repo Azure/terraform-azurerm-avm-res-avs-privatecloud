@@ -132,9 +132,3 @@ variable "test_admin_user" {
   default     = "testAdmin"
   description = "the username to use for the account used to query ldap."
 }
-
-variable "zone" {
-  type        = number
-  default     = "3"
-  description = "The availability zone to use for the domain controller.  Defaults to 3."
-}
