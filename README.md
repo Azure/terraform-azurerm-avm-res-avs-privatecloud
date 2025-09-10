@@ -112,7 +112,7 @@ Type: `string`
 
 ### <a name="input_sku_name"></a> [sku\_name](#input\_sku\_name)
 
-Description: The sku value for the AVS SDDC management cluster nodes. Valid values are av20, av36, av36t, av36pt, av52, av64.
+Description: The sku value for the AVS SDDC management cluster nodes. Valid values are av20, av36, av36t, av36pt, av48, av52, and av64.
 
 Type: `string`
 
@@ -265,7 +265,7 @@ Description: This map object describes the DHCP configuration to use for the pri
 - `<map key>` - Provide a custom key value that will be used as the dhcp configuration name
   - `display_name`           = (Required) - The display name for the dhcp configuration being created
   - `dhcp_type`              = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.
-  - `relay_server_addresses` = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.  
+  - `relay_server_addresses` = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.
   - `server_lease_time`      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations
   - `server_address`         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
 
@@ -275,7 +275,7 @@ Example Input:
 relay_config = {
   display_name           = "relay_example"
   dhcp_type              = "RELAY"
-  relay_server_addresses = ["10.0.1.50", "10.0.2.50"]      
+  relay_server_addresses = ["10.0.1.50", "10.0.2.50"]
 }
 
 #SERVER example
@@ -305,7 +305,7 @@ Default: `{}`
 
 Description: This map object is used to define the diagnostic settings on the virtual machine.  This functionality does not implement the diagnostic settings extension, but instead can be used to configure sending the vm metrics to one of the standard targets.
 
-- `<map key>` - Provide a map key that will be used for the name of the diagnostic settings configuration  
+- `<map key>` - Provide a map key that will be used for the name of the diagnostic settings configuration
   - `name`                                     = (required) - Name to use for the Diagnostic setting configuration.  Changing this creates a new resource
   - `log_categories_and_groups`                = (Optional) - List of strings used to define log categories and groups. Currently not valid for the VM resource
   - `log_groups`                               = (Optional) - A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`
@@ -355,7 +355,7 @@ Description: Map of string objects describing one or more dns forwarder zones fo
   - `display_name`               = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.
   - `dns_server_ips`             = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.
   - `domain_names`               = (Required) - A list of domain names that will be forwarded as part of this zone.
-  - `source_ip`                  = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
+  - `source_ip`                  = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.
   - `add_to_default_dns_service` = (Optional) - Set to try to associate this zone with the default DNS service.  Up to 5 zones can be linked.
 
 Example Input:
@@ -504,7 +504,7 @@ Default: `{}`
 
 ### <a name="input_extended_network_blocks"></a> [extended\_network\_blocks](#input\_extended\_network\_blocks)
 
-Description: If using AV64 sku's in non-management clusters it is required to provide one /23 CIDR block or three /23 CIDR blocks. Provide a list of CIDR strings if planning to use AV64 nodes.
+Description: If using AV64 sku's in non-management Gen 1 clusters it is required to provide one /23 CIDR block or three /23 CIDR blocks. Provide a list of CIDR strings if planning to use AV64 nodes.
 
 Type: `list(string)`
 
@@ -725,7 +725,7 @@ Example Input:
 segment_1 = {
   display_name    = "segment_1"
   gateway_address = "10.20.0.1/24"
-  dhcp_ranges     = ["10.20.0.5-10.20.0.100"]      
+  dhcp_ranges     = ["10.20.0.5-10.20.0.100"]
 }
 segment_2 = {
   display_name    = "segment_2"

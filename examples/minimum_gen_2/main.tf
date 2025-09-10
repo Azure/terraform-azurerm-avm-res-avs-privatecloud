@@ -15,7 +15,10 @@ module "generate_deployment_region" {
   management_cluster_quota_required = 3
   private_cloud_generation          = 2
   secondary_cluster_quota_required  = 0
-  test_regions                      = ["uksouth"]
+  test_regions = [
+    "eastus2",
+    "uksouth"
+  ]
 }
 
 resource "local_file" "region_sku_cache" {

@@ -29,30 +29,8 @@ module "generate_deployment_region" {
   private_cloud_generation          = 2
   secondary_cluster_quota_required  = 3
   test_regions = [
-    "australiaeast",
-    "brazilsouth",
-    "centralindia",
-    "centralus",
-    "eastasia",
-    "eastus",
     "eastus2",
-    "francecentral",
-    "germanywestcentral",
-    "italynorth",
-    "japaneast",
-    "japanwest",
-    "northeurope",
-    "qatarcentral",
-    "southafricanorth",
-    "southcentralus",
-    "southeastasia",
-    "swedencentral",
-    "switzerlandnorth",
-    "uaenorth",
-    "uksouth",
-    "westeurope",
-    "westus2",
-    "westus3"
+    "uksouth"
   ]
 }
 
@@ -87,6 +65,8 @@ module "vm_sku" {
     accelerated_networking_enabled = true
     cpu_architecture_type          = "x64"
     low_priority_capable           = true
+    premium_io_supported           = true
+    location_zone                  = null
   }
 }
 

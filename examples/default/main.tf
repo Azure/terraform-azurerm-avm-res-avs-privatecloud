@@ -21,6 +21,33 @@ module "generate_deployment_region" {
   management_cluster_quota_required = 3
   private_cloud_generation          = 1
   secondary_cluster_quota_required  = 0
+  test_regions = [
+    "australiaeast",
+    "brazilsouth",
+    "canadaeast",
+    "centralindia",
+    "centralus",
+    "eastasia",
+    "eastus",
+    "eastus2",
+    "francecentral",
+    "germanywestcentral",
+    "italynorth",
+    "japaneast",
+    "japanwest",
+    "northeurope",
+    "qatarcentral",
+    "southafricanorth",
+    "southcentralus",
+    "southeastasia",
+    "swedencentral",
+    "switzerlandnorth",
+    "uaenorth",
+    "uksouth",
+    "westeurope",
+    "westus2",
+    "westus3"
+  ]
 }
 
 resource "local_file" "region_sku_cache" {
@@ -112,7 +139,7 @@ resource "azurerm_virtual_network_gateway" "gateway" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.express_route_gateway.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "ErGw1AZ"
+  sku                 = "Standard" #Setting this to Standard so we can test in non-AZ regions
   type                = "ExpressRoute"
 
   ip_configuration {

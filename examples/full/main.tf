@@ -32,6 +32,7 @@ module "generate_deployment_region" {
   test_regions = [
     "australiaeast",
     "brazilsouth",
+    "canadaeast",
     "centralindia",
     "centralus",
     "eastasia",
@@ -82,8 +83,10 @@ module "vm_sku" {
   location      = "westus3" #azurerm_resource_group.this.location
   cache_results = true
   vm_filters = {
-    min_vcpus = 2
-    max_vcpus = 2
+    min_vcpus            = 2
+    max_vcpus            = 2
+    premium_io_supported = true
+    location_zone        = null
 
     #location_zone = module.test_private_cloud.resource.properties.availability.zone
   }
@@ -210,7 +213,7 @@ resource "azurerm_public_ip" "nat_gateway" {
   name                = "${module.naming.nat_gateway.name_unique}-pip"
   resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard"
-  zones               = ["1", "2", "3"]
+  zones               = null
 }
 
 resource "azurerm_nat_gateway" "this_nat_gateway" {
@@ -385,14 +388,14 @@ resource "azurerm_public_ip" "gatewaypip" {
   name                = module.naming.public_ip.name_unique
   resource_group_name = azurerm_resource_group.this.name
   sku                 = "Standard" #required for an ultraperformance gateway
-  zones               = ["1", "2", "3"]
+  zones               = null
 }
 
 resource "azurerm_virtual_network_gateway" "gateway" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.express_route_gateway.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "ErGw1AZ"
+  sku                 = "Standard" #Setting this to Standard so we can test in non-AZ regions
   type                = "ExpressRoute"
 
   ip_configuration {

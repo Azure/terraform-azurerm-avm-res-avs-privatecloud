@@ -17,6 +17,33 @@ module "generate_deployment_region" {
   management_cluster_quota_required = 3
   private_cloud_generation          = 1
   secondary_cluster_quota_required  = 0
+  test_regions = [
+    "australiaeast",
+    "brazilsouth",
+    "canadaeast",
+    "centralindia",
+    "centralus",
+    "eastasia",
+    "eastus",
+    "eastus2",
+    "francecentral",
+    "germanywestcentral",
+    "italynorth",
+    "japaneast",
+    "japanwest",
+    "northeurope",
+    "qatarcentral",
+    "southafricanorth",
+    "southcentralus",
+    "southeastasia",
+    "swedencentral",
+    "switzerlandnorth",
+    "uaenorth",
+    "uksouth",
+    "westeurope",
+    "westus2",
+    "westus3"
+  ]
 }
 
 resource "local_file" "region_sku_cache" {
