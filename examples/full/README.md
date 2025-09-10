@@ -452,7 +452,7 @@ resource "azurerm_virtual_network_gateway" "gateway_secondary" {
   location            = azurerm_resource_group.this_secondary.location
   name                = "${module.naming.express_route_gateway.name_unique}-secondary"
   resource_group_name = azurerm_resource_group.this_secondary.name
-  sku                 = "ErGw1AZ"
+  sku                 = "Standard" #Setting this to Standard so we can test in non-AZ regions
   type                = "ExpressRoute"
 
   ip_configuration {
