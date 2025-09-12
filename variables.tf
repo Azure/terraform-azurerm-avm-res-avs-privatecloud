@@ -31,33 +31,37 @@ variable "resource_group_resource_id" {
 
 variable "sku_name" {
   type        = string
-  description = "The sku value for the AVS SDDC management cluster nodes. Valid values are av20, av36, av36t, av36pt, av52, av64."
+  description = "The sku value for the AVS SDDC management cluster nodes. Valid values are av20, av36, av36t, av36pt, av48, av52, and av64."
 }
 
 variable "addons" {
   type = map(object({
-    arc_vcenter      = optional(string)
-    hcx_key_names    = optional(list(string), [])
-    hcx_license_type = optional(string, "Enterprise")
-    srm_license_key  = optional(string)
-    vr_vrs_count     = optional(number, 0)
+    arc_vcenter            = optional(string)
+    hcx_key_names          = optional(list(string), [])
+    hcx_license_type       = optional(string, "Enterprise")
+    hcx_management_network = optional(string, null)
+    hcx_uplink_network     = optional(string, null)
+    srm_license_key        = optional(string)
+    vr_vrs_count           = optional(number, 0)
   }))
   default     = {}
   description = <<ADDONS
 Map object containing configurations for the different addon types.  Each addon type has associated fields and specific naming requirements.  A full input example is provided below.
-  
+
 - `Arc`- Use this exact key value for deploying the ARC extension
   - `arc_vcenter` (Optional) - The VMware vcenter resource id as a string
-- `HCX` - Use this exact key value for deploying the HCX extension 
+- `HCX` - Use this exact key value for deploying the HCX extension
   - `hcx_key_names` (Optional) - A list of key names to create HCX key names.
   - `hcx_license_type` (Optional) - The type of license to configure for HCX.  Valid values are "Advanced" and "Enterprise".
+  - `hcx_management_network` (Optional) - The management network to use for HCX.  This should be non-overlapping, routable /24 or larger CIDR block.
+  - `hcx_uplink_network` (Optional) - The uplink network to use for HCX.  This should be non-overlapping, routable /24 or larger CIDR block.
 - `SRM` - Use this exact key value for deploying the SRM extension
   - `srm_license_key` (Optional) - the license key to use when enabling the SRM addon
 - `VR` - Use this exact key value for deploying the VR extension
   - `vr_vrs_count` (Optional) - The Vsphere replication server count
 
 Example Input:
-```hcl 
+```hcl
 {
   Arc = {
     arc_vcenter = "<vcenter resource id>"
@@ -136,13 +140,13 @@ variable "customer_managed_key" {
   })
   default     = null
   description = <<CUSTOMER_MANAGED_KEY
-This object defines the customer managed key details to use when encrypting the VSAN datastore. 
+This object defines the customer managed key details to use when encrypting the VSAN datastore.
 
 - `<map key>` - Provide a custom key value that will be used as the dhcp configuration name
   - `key_vault_resource_id` = (Required) - The full Azure resource ID of the key vault where the encryption key will be sourced from
   - `key_name`              = (Required) - The name for the encryption key
-  - `key_version`           = (Optional) - The key version value for the encryption key. 
-  - `user_assigned_identity` = (Non-Functional) - AVS doesn't currently 
+  - `key_version`           = (Optional) - The key version value for the encryption key.
+  - `user_assigned_identity` = (Non-Functional) - AVS doesn't currently
 
 Example Inputs:
 ```hcl
@@ -170,7 +174,7 @@ This map object describes the DHCP configuration to use for the private cloud. I
 - `<map key>` - Provide a custom key value that will be used as the dhcp configuration name
   - `display_name`           = (Required) - The display name for the dhcp configuration being created
   - `dhcp_type`              = (Required) - The type for the DHCP server configuration.  Valid types are RELAY or SERVER. RELAY defines a relay configuration pointing to your existing DHCP servers. SERVER configures NSX-T to act as the DHCP server.
-  - `relay_server_addresses` = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.    
+  - `relay_server_addresses` = (Optional) - A list of existing DHCP server ip addresses from 1 to 3 servers.  Required when type is set to RELAY.
   - `server_lease_time`      = (Optional) - The lease time in seconds for the DHCP server. Defaults to 84600 seconds.(24 hours) Only valid for SERVER configurations
   - `server_address`         = (Optional) - The CIDR range that NSX-T will use for the DHCP Server.
 
@@ -180,7 +184,7 @@ Example Input:
 relay_config = {
   display_name           = "relay_example"
   dhcp_type              = "RELAY"
-  relay_server_addresses = ["10.0.1.50", "10.0.2.50"]      
+  relay_server_addresses = ["10.0.1.50", "10.0.2.50"]
 }
 
 #SERVER example
@@ -212,7 +216,7 @@ variable "diagnostic_settings" {
   description = <<DIAGNOSTIC_SETTINGS
 This map object is used to define the diagnostic settings on the virtual machine.  This functionality does not implement the diagnostic settings extension, but instead can be used to configure sending the vm metrics to one of the standard targets.
 
-- `<map key>` - Provide a map key that will be used for the name of the diagnostic settings configuration  
+- `<map key>` - Provide a map key that will be used for the name of the diagnostic settings configuration
   - `name`                                     = (required) - Name to use for the Diagnostic setting configuration.  Changing this creates a new resource
   - `log_categories_and_groups`                = (Optional) - List of strings used to define log categories and groups. Currently not valid for the VM resource
   - `log_groups`                               = (Optional) - A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`
@@ -254,7 +258,7 @@ Map of string objects describing one or more dns forwarder zones for NSX within 
   - `display_name`               = (Required) - The display name for the new forwarder zone being created.  Commonly this aligns with the domain name.
   - `dns_server_ips`             = (Required) - A list of up to 3 IP addresses where zone traffic will be forwarded.
   - `domain_names`               = (Required) - A list of domain names that will be forwarded as part of this zone.
-  - `source_ip`                  = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.  
+  - `source_ip`                  = (Optional) - Source IP of the DNS zone.  Defaults to an empty string.
   - `add_to_default_dns_service` = (Optional) - Set to try to associate this zone with the default DNS service.  Up to 5 zones can be linked.
 
 Example Input:
@@ -270,6 +274,18 @@ Example Input:
 ```
 DNS_FORWARDER_ZONES
   nullable    = false
+}
+
+#TODO: Should this default to null.  What happens on gen1 private clouds if not null?
+variable "dns_zone_type" {
+  type        = string
+  default     = "Public"
+  description = "The type of DNS zone to create. Valid values are Private and Public. This value is only valid for generation 2 private clouds. Defaults to Public. When set to `Private` an Azure DNS resolver or Virtual Machine based DNS server in the Vnet is required to resolve names of the ESX and NSX-T components. See this document for details.https://learn.microsoft.com/en-us/azure/azure-vmware/native-dns-forward-lookup-zone"
+
+  validation {
+    condition     = contains(["Private", "Public", ], var.dns_zone_type)
+    error_message = "DNS zone type must be either Private or Public."
+  }
 }
 
 variable "elastic_san_datastores" {
@@ -309,9 +325,10 @@ variable "enable_telemetry" {
   default     = true
   description = <<DESCRIPTION
 This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "expressroute_connections" {
@@ -357,7 +374,7 @@ Map of string objects describing one or more ExpressRoute connections to be conf
     - `associated_route_table_resource_id` = (Optional) - The Azure Resource ID of the Virtual Hub Route Table associated with this Express Route Connection.
     - `inbound_route_map_resource_id`      = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for inbound learned routes
     - `outbound_route_map_resource_id`     = (Optional) - The Azure Resource ID Of the Route Map associated with this Express Route Connection for outbound advertised routes
-    - `propagated_route_table` = object({ 
+    - `propagated_route_table` = object({
       - `labels` = (Optional) - The list of labels for route tables where the routes will be propagated to
       - `ids`    = (Optional) - The list of Azure Resource IDs for route tables where the routes will be propagated to
 
@@ -377,7 +394,7 @@ EXPRESSROUTE_CONNECTIONS
 variable "extended_network_blocks" {
   type        = list(string)
   default     = []
-  description = "If using AV64 sku's in non-management clusters it is required to provide one /23 CIDR block or three /23 CIDR blocks. Provide a list of CIDR strings if planning to use AV64 nodes."
+  description = "If using AV64 sku's in non-management Gen 1 clusters it is required to provide one /23 CIDR block or three /23 CIDR blocks. Provide a list of CIDR strings if planning to use AV64 nodes."
 }
 
 variable "external_storage_address_block" {
@@ -396,7 +413,7 @@ variable "global_reach_connections" {
 Map of string objects describing one or more global reach connections to be configured by the private cloud. The map key will be used for the connection name.
 
 - `<map key>` - Provide a key value that will be used as the global reach connection name
-  - `authorization_key`                     = (Required) - The authorization key from the peer expressroute 
+  - `authorization_key`                     = (Required) - The authorization key from the peer expressroute
   - `peer_expressroute_circuit_resource_id` = (Optional) - Identifier of the ExpressRoute Circuit to peer within the global reach connection
 
 Example Input:
@@ -431,9 +448,10 @@ This map object that describes the public IP configuration. Configure this value
 
 Example Input:
 ```hcl
-public_ip_config = {
-  display_name = "public_ip_configuration"
-  number_of_ip_addresses = 1
+internet_inbound_public_ips = {
+  public_ip_config = { #this key will be used as the display name
+    number_of_ip_addresses = 1
+  }
 }
 ```
 PUBLIC_IPS
@@ -468,7 +486,7 @@ variable "managed_identities" {
   default     = {}
   description = <<DESCRIPTION
   Controls the Managed Identity configuration on this resource. The following properties can be specified:
-  
+
   - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled. This is used to configure encryption using customer managed keys.
   - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource. Currently unused by this resource.
   DESCRIPTION
@@ -488,7 +506,7 @@ variable "netapp_files_datastores" {
   }))
   default     = {}
   description = <<NETAPP_FILES_ATTACHMENTS
-This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique. 
+This map of objects describes one or more netapp volume attachments.  The map key will be used for the datastore name and should be unique.
 
 - `<map key>` - Provide a key value that will be used as the netapp files datastore name
   - `netapp_volume_resource_id` = (required) - The azure resource ID for the Azure Netapp Files volume being attached to the cluster nodes.
@@ -577,7 +595,7 @@ Example Input:
 segment_1 = {
   display_name    = "segment_1"
   gateway_address = "10.20.0.1/24"
-  dhcp_ranges     = ["10.20.0.5-10.20.0.100"]      
+  dhcp_ranges     = ["10.20.0.5-10.20.0.100"]
 }
 segment_2 = {
   display_name    = "segment_2"
@@ -675,4 +693,67 @@ variable "vcenter_password" {
   default     = null
   description = "The password value to use for the cloudadmin account password in the local domain in vcenter. If this is left as null a random password will be generated for the deployment"
   sensitive   = true
+}
+
+variable "virtual_network_resource_id" {
+  type        = string
+  default     = null
+  description = "The Azure Resource ID for the virtual network where the private cloud will be deployed. This is required when deploying a generation 2 AVS private cloud."
+
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      var.external_storage_address_block != null
+    )
+    error_message = "Setting the external storage address block is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `external_storage_address_block` is null when including a `virtual_network_resource_id`."
+  }
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      length(var.extended_network_blocks) > 0
+    )
+    error_message = "Setting extended address blocks is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `extended_network_blocks` is empty when including a `virtual_network_resource_id`."
+  }
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      var.sku_name != "av64"
+    )
+    error_message = "Gen2 private clouds only support AV64 SKU when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `sku_name` is set to `av64` when including a `virtual_network_resource_id`."
+  }
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      length(var.avs_interconnect_connections) > 0
+    )
+    error_message = "Gen2 private clouds don't support AVS expressRoute interconnect connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the AVS interconnect connections."
+  }
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      length(var.expressroute_connections) > 0
+    )
+    error_message = "Gen2 private clouds don't support expressRoute connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the expressRoute connections."
+  }
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      length(var.global_reach_connections) > 0
+    )
+    error_message = "Gen2 private clouds don't support global reach connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the global reach connections."
+  }
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      length(var.internet_inbound_public_ips) > 0
+    )
+    error_message = "Gen2 private clouds don't support inbound public IPs. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the internet inbound public IPs."
+  }
+  validation {
+    condition = !(
+      var.virtual_network_resource_id != null &&
+      var.internet_enabled != false
+    )
+    error_message = "Gen2 private clouds don't support internet enabled configuration. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that `internet_enabled` is set to false."
+  }
 }

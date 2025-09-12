@@ -2,7 +2,9 @@
 resource "azapi_resource" "dhcp" {
   for_each = var.dhcp_configuration
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/dhcpConfigurations@2023-09-01"
+  name      = each.key
+  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  type      = "Microsoft.AVS/privateClouds/workloadNetworks/dhcpConfigurations@2023-09-01"
   body = jsondecode(upper(each.value.dhcp_type) == "RELAY" ? jsonencode(
     {
       properties = {
@@ -20,8 +22,10 @@ resource "azapi_resource" "dhcp" {
       }
     }
   ))
-  name      = each.key
-  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -33,7 +37,6 @@ resource "azapi_resource" "dhcp" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,

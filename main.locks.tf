@@ -12,7 +12,6 @@ resource "azurerm_management_lock" "this" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,
@@ -31,7 +30,9 @@ resource "azurerm_management_lock" "this" {
     #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources,
-    azurerm_vmware_netapp_volume_attachment.attach_datastores,
+    azapi_resource.this_netapp_attachment,
+    azapi_resource.iscsi_path_network,
+    azapi_resource.this_esan_attachment,
     azapi_resource.public_ip
   ]
 }

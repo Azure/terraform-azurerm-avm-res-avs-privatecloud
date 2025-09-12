@@ -42,31 +42,6 @@ resource "azurerm_role_assignment" "this_private_cloud" {
   ]
 }
 
-
-
-
-/*
-#toggle the system managed identity
-resource "azapi_update_resource" "managed_identity" {
-  count = var.managed_identities.system_assigned ? 1 : 0
-
-  type = "Microsoft.AVS/privateClouds@2023-03-01"
-  body = {
-    identity = {
-      type = "systemassigned"
-    }
-  }
-  resource_id            = azapi_resource.this_private_cloud.id
-  response_export_values = ["identity"]
-
-  depends_on = [
-    azapi_resource.this_private_cloud,
-    azapi_resource.clusters,
-    azurerm_role_assignment.this_private_cloud,
-    azurerm_monitor_diagnostic_setting.this_private_cloud_diags
-  ]
-}
-
 /* TODO: add this back if we can get a working API call to modify the credentials
 #Update the vcenter or nsxt passwords using Terraform instead of deferring to the portal
 #This allows for password rotation using Terraform Idempotency
@@ -87,8 +62,8 @@ resource "azapi_update_resource" "manual_passwords" {
 
 #get SDDC credentials for use with the credentials output
 data "azapi_resource_action" "sddc_creds" {
-  type                   = "Microsoft.AVS/privateClouds@2023-09-01"
   action                 = "listAdminCredentials"
   resource_id            = azapi_resource.this_private_cloud.id
+  type                   = "Microsoft.AVS/privateClouds@2024-09-01"
   response_export_values = ["*"]
 }

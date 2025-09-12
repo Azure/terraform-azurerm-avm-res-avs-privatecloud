@@ -12,7 +12,9 @@ resource "terraform_data" "rerun_get" {
 resource "azapi_resource" "remove_existing_identity_source" {
   for_each = var.vcenter_identity_sources
 
-  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-09-01"
+  name      = "TF-AVM-RemoveIdentitySources-${each.key}"
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/scriptExecutions@2024-09-01"
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = ({ #remove the current identity source
     properties = {
@@ -23,10 +25,12 @@ resource "azapi_resource" "remove_existing_identity_source" {
     }
     }
   )
-  name                      = "TF-AVM-RemoveIdentitySources-${each.key}"
-  parent_id                 = azapi_resource.this_private_cloud.id
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values    = ["*"]
   schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -65,7 +69,9 @@ resource "azapi_resource" "remove_existing_identity_source" {
 resource "azapi_resource" "configure_identity_sources" {
   for_each = var.vcenter_identity_sources
 
-  type = "Microsoft.AVS/privateClouds/scriptExecutions@2023-09-01"
+  name      = "TF-AVM-SetIdentitySources-${each.key}"
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/scriptExecutions@2023-09-01"
   body = ({
     properties = {
       timeout        = "PT15M"
@@ -157,8 +163,10 @@ resource "azapi_resource" "configure_identity_sources" {
       ]
     }
   })
-  name      = "TF-AVM-SetIdentitySources-${each.key}"
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -170,7 +178,6 @@ resource "azapi_resource" "configure_identity_sources" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,

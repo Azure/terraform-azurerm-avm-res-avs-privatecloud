@@ -28,27 +28,10 @@ resource "azurerm_bastion_host" "bastion" {
 #create the virtual machine
 module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.14.0"
+  version = "=0.19.3"
 
-  resource_group_name                    = var.resource_group_name
-  location                               = var.resource_group_location
-  virtualmachine_os_type                 = "Windows"
-  name                                   = var.vm_name
-  admin_credential_key_vault_resource_id = var.key_vault_resource_id
-  virtualmachine_sku_size                = var.vm_sku
-  zone                                   = "1"
-
-  source_image_reference = {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2022-datacenter-g2"
-    version   = "latest"
-  }
-
-  managed_identities = {
-    system_assigned = true
-  }
-
+  location = var.resource_group_location
+  name     = var.vm_name
   network_interfaces = {
     network_interface_1 = {
       name = "${var.vm_name}-nic1"
@@ -59,5 +42,23 @@ module "jumpvm" {
         }
       }
     }
+  }
+  resource_group_name = var.resource_group_name
+  zone                = "1"
+  account_credentials = {
+    key_vault_configuration = {
+      resource_id = var.key_vault_resource_id
+    }
+  }
+  managed_identities = {
+    system_assigned = true
+  }
+  os_type  = "Windows"
+  sku_size = var.vm_sku
+  source_image_reference = {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2022-datacenter-g2"
+    version   = "latest"
   }
 }

@@ -1,8 +1,8 @@
 #Get the currently configured gateways
 data "azapi_resource_action" "avs_gateways" {
-  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/gateways@2023-09-01"
   method                 = "GET"
   resource_id            = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/gateways"
+  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/gateways@2024-09-01"
   response_export_values = ["*"]
 }
 
@@ -10,10 +10,12 @@ data "azapi_resource_action" "avs_gateways" {
 resource "azapi_resource" "segments" {
   for_each = var.segments
 
-  type = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2023-09-01"
+  name      = each.key
+  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  type      = "Microsoft.AVS/privateClouds/workloadNetworks/segments@2023-09-01"
   body = {
     properties = {
-      connectedGateway = each.value.connected_gateway == null ? [for value in jsondecode(data.azapi_resource_action.avs_gateways.output).value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
+      connectedGateway = each.value.connected_gateway == null ? [for value in data.azapi_resource_action.avs_gateways.output.value : upper(value.name) if strcontains(value.name, "tnt")][0] : each.value.connected_gateway
       displayName      = each.value.display_name
       subnet = {
         dhcpRanges     = each.value.dhcp_ranges
@@ -21,8 +23,10 @@ resource "azapi_resource" "segments" {
       }
     }
   }
-  name      = each.key
-  parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -34,7 +38,6 @@ resource "azapi_resource" "segments" {
     azapi_resource.clusters,
     azurerm_role_assignment.this_private_cloud,
     azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
-    #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key,
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys,

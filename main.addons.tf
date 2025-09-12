@@ -15,16 +15,23 @@ resource "time_sleep" "wait_60_seconds_hcx" {
 resource "azapi_resource" "hcx_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "hcx" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
-  body = {
-    properties = {
-      addonType = "HCX"
-      offer     = lower(each.value.hcx_license_type) == "advanced" ? "VMware MaaS Cloud Provider" : "VMware MaaS Cloud Provider (Enterprise)"
-    }
-  }
   #Resource Name must match the addonType
   name      = "HCX"
   parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/addons@2024-09-01"
+  body = {
+    properties = {
+      addonType         = "HCX"
+      offer             = lower(each.value.hcx_license_type) == "advanced" ? "VMware MaaS Cloud Provider" : "VMware MaaS Cloud Provider (Enterprise)"
+      managementNetwork = each.value.hcx_management_network
+      uplinkNetwork     = each.value.hcx_uplink_network
+    }
+  }
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  schema_validation_enabled = false
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -59,10 +66,14 @@ resource "time_sleep" "wait_120_seconds" {
 resource "azapi_resource" "hcx_keys" {
   for_each = toset(try(var.addons.hcx.hcx_key_names, []))
 
-  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2023-09-01"
   name                   = each.key
   parent_id              = azapi_resource.this_private_cloud.id
+  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2024-09-01"
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = ["*"]
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     time_sleep.wait_120_seconds,
@@ -83,16 +94,20 @@ resource "azapi_resource" "hcx_keys" {
 resource "azapi_resource" "srm_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "srm" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
+  #Resource Name must match the addonType
+  name      = "SRM"
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/addons@2023-09-01"
   body = {
     properties = {
       addonType  = "SRM"
       licenseKey = each.value.srm_license_key
     }
   }
-  #Resource Name must match the addonType
-  name      = "SRM"
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -126,16 +141,20 @@ resource "azapi_resource" "srm_addon" {
 resource "azapi_resource" "vr_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "vr" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
+  #Resource Name must match the addonType
+  name      = "VR"
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/addons@2023-09-01"
   body = {
     properties = {
       addonType = "VR"
       vrsCount  = each.value.vr_vrs_count
     }
   }
-  #Resource Name must match the addonType
-  name      = "VR"
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   timeouts {
     create = "4h"
@@ -169,16 +188,20 @@ resource "azapi_resource" "vr_addon" {
 resource "azapi_resource" "arc_addon" {
   for_each = { for k, v in var.addons : k => v if lower(k) == "arc" }
 
-  type = "Microsoft.AVS/privateClouds/addons@2023-09-01"
+  #Resource Name must match the addonType
+  name      = "Arc"
+  parent_id = azapi_resource.this_private_cloud.id
+  type      = "Microsoft.AVS/privateClouds/addons@2023-09-01"
   body = {
     properties = {
       addonType = "Arc"
       vCenter   = each.value.arc_vcenter
     }
   }
-  #Resource Name must match the addonType
-  name      = "Arc"
-  parent_id = azapi_resource.this_private_cloud.id
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   #adding lifecycle block to handle replacement issue with parent_id
   lifecycle {
