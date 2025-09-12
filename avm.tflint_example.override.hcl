@@ -1,3 +1,3 @@
 rule "azurerm_virtual_network_gateway.sku" {
-  enabled = true
+  enabled = false
 }
