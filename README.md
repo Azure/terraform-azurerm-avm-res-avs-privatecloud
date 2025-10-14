@@ -112,7 +112,7 @@ Type: `string`
 
 ### <a name="input_sku_name"></a> [sku\_name](#input\_sku\_name)
 
-Description: The sku value for the AVS SDDC management cluster nodes. Valid values are av20, av36, av36t, av36pt, av48, av52, and av64.
+Description: The sku value for the AVS SDDC management cluster nodes. Valid values are av20, av36, av36p, av36t, av36pt, av48, av52, and av64.
 
 Type: `string`
 
@@ -452,7 +452,7 @@ Description: Map of string objects describing one or more ExpressRoute connectio
   - `routing_weight`                       = (Optional) - The routing weight value to use for this connection.  Defaults to 0.
   - `enable_internet_security`             = (Optional) - Set this to true if connecting to a secure VWAN hub and you want the hub NVA to publish a default route to AVS.
   - `tags`                                 = (Optional) - Map of strings describing any custom tags to apply to this connection resource
-  - `network_resource_group_resource_id`   = (Optional) - The resource ID of an external resource group. This is used to place the virtual network gateway connection resource with the virtual network gateway if the gateway is in a separate location.
+  - `network_resource_group_resource_id`   = (Optional) - The resource ID of an external resource group, **must be the same resource group as the virtual network gateway you are connecting to**. This is used to place the virtual network gateway connection resource with the virtual network gateway if the gateway is in a separate location.
   - `network_resource_group_location`      = (Optional) - The location of an external resource group. This is used to place the virtual network gateway connection resource with the virtual network gateway if the gateway is in a separate location.
   - `routing`                              = (Optional) - Map of objects used to describe any VWAN and Virtual Hub custom routing for this connection
     - `associated_route_table_resource_id` = (Optional) - The Azure Resource ID of the Virtual Hub Route Table associated with this Express Route Connection.
@@ -716,7 +716,7 @@ Description: This map object describes the additional segments to configure on t
 
 - `<map key>` - Provide a key value that will be used as the segment name
   - `display_name`       = (Required) - The display name for the dhcp configuration being created
-  - `gateway_address`    = (Required) - The CIDR range to use for the segment
+  - `gateway_address`    = (Required) - The CIDR range to use for the segment, starting with the gateway address.  Example: `10.20.0.1/24` **notice the range starts with `1` and not `0`**.
   - `dhcp_ranges`        = (Optional) - One or more ranges of IP addresses or CIDR blocks entered as a list of string
   - `connected_gateway`  = (Optional) - The name of the T1 gateway to connect this segment to.  Defaults to the managed t1 gateway if left unconfigured.
 
