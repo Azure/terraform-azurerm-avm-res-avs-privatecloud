@@ -20,7 +20,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
     properties = {
       timeout        = "PT15M"
       retention      = "P30D"
-      scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*/scriptCmdlets/Remove-ExternalIdentitySources"
+      scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Identity@*/scriptCmdlets/Remove-ExternalIdentitySources"
       DomainName     = each.value.domain
     }
     }
@@ -76,7 +76,7 @@ resource "azapi_resource" "configure_identity_sources" {
     properties = {
       timeout        = "PT15M"
       retention      = "P30D"
-      scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Management@*/scriptCmdlets/${each.value.ssl == "Enabled" ? "New-LDAPSIdentitySource" : "New-LDAPIdentitySource"}"
+      scriptCmdletId = "${azapi_resource.this_private_cloud.id}/scriptPackages/Microsoft.AVS.Identity@*/scriptCmdlets/${each.value.ssl == "Enabled" ? "New-LDAPSIdentitySource" : "New-LDAPIdentitySource"}"
       hiddenParameters = [{
         name     = "Credential"
         type     = "Credential"
