@@ -843,6 +843,54 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_vcf_license"></a> [vcf\_license](#input\_vcf\_license)
+
+Description: This object defines the VCF (VMware Cloud Foundation) license configuration for the private cloud. This is required for new AVS private clouds using the VCF licensing model.
+
+- `kind`                   = (Optional) - The kind of VCF license. Defaults to "vcf5".
+- `broadcomContractNumber` = (Required) - The Broadcom contract number associated with the license.
+- `cores`                  = (Required) - The number of cores covered by the license.
+- `endDate`                = (Required) - The end date of the license in ISO 8601 format (e.g., "2026-12-31").
+- `labels`                 = (Optional) - A list of label objects to associate with the license. Defaults to an empty list.
+  - `key`   = (Required) - The label key.
+  - `value` = (Required) - The label value.
+- `licenseKey`             = (Required) - The VCF license key string.
+
+Example Input:
+```hcl
+vcf_license = {
+  kind                   = "vcf5"
+  broadcomContractNumber = "12345678"
+  cores                  = 128
+  endDate                = "2026-12-31"
+  labels = [
+    {
+      key   = "environment"
+      value = "production"
+    }
+  ]
+  licenseKey = "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+}
+```
+
+Type:
+
+```hcl
+object({
+    kind                   = optional(string, "vcf5")
+    broadcomContractNumber = string
+    cores                  = number
+    endDate                = string
+    labels = optional(list(object({
+      key   = string
+      value = string
+    })), [])
+    licenseKey = string
+  })
+```
+
+Default: `null`
+
 ### <a name="input_virtual_network_resource_id"></a> [virtual\_network\_resource\_id](#input\_virtual\_network\_resource\_id)
 
 Description: The Azure Resource ID for the virtual network where the private cloud will be deployed. This is required when deploying a generation 2 AVS private cloud.

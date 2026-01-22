@@ -18,6 +18,7 @@ locals {
     nsxtPassword    = local.nsxt_password
     vcenterPassword = local.vcenter_password
     internet        = var.internet_enabled ? "Enabled" : "Disabled"
+    vcfLicense      = var.vcf_license
   }
   base_properties_availability = {
     strategy = var.enable_stretch_cluster ? "DualZone" : "SingleZone"
