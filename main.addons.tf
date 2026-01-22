@@ -18,7 +18,7 @@ resource "azapi_resource" "hcx_addon" {
   #Resource Name must match the addonType
   name      = "HCX"
   parent_id = azapi_resource.this_private_cloud.id
-  type      = "Microsoft.AVS/privateClouds/addons@2024-09-01"
+  type      = "Microsoft.AVS/privateClouds/addons@2025-09-01"
   body = {
     properties = {
       addonType         = "HCX"
@@ -68,7 +68,7 @@ resource "azapi_resource" "hcx_keys" {
 
   name                   = each.key
   parent_id              = azapi_resource.this_private_cloud.id
-  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2024-09-01"
+  type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2025-09-01"
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

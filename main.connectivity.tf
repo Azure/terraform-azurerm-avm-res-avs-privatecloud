@@ -12,7 +12,7 @@ resource "azapi_resource" "globalreach_connections" {
 
   name      = each.key
   parent_id = azapi_resource.this_private_cloud.id
-  type      = "Microsoft.AVS/privateClouds/globalReachConnections@2024-09-01"
+  type      = "Microsoft.AVS/privateClouds/globalReachConnections@2025-09-01"
   body = {
     properties = {
       authorizationKey        = each.value.authorization_key
@@ -235,7 +235,7 @@ resource "azapi_resource" "avs_interconnect" {
 
   name      = each.key
   parent_id = azapi_resource.this_private_cloud.id
-  type      = "Microsoft.AVS/privateClouds/cloudLinks@2024-09-01"
+  type      = "Microsoft.AVS/privateClouds/cloudLinks@2025-09-01"
   body = {
     properties = {
       linkedCloud = each.value.linked_private_cloud_resource_id

@@ -46,7 +46,7 @@ resource "azurerm_role_assignment" "this_private_cloud" {
 #Update the vcenter or nsxt passwords using Terraform instead of deferring to the portal
 #This allows for password rotation using Terraform Idempotency
 resource "azapi_update_resource" "manual_passwords" {
-  count = var.nsxt_password != null || var.vcenter_password != null ? 1 : 0 #if either password value is set, then update the password.  
+  count = var.nsxt_password != null || var.vcenter_password != null ? 1 : 0 #if either password value is set, then update the password.
 
   type      = "Microsoft.AVS/privateClouds@2023-03-01"
   #name      = "${azapi_resource.this_private_cloud.name}-passwords"
@@ -56,7 +56,7 @@ resource "azapi_update_resource" "manual_passwords" {
       nsxtPassword    = local.nsxt_password
       vcenterPassword = local.vcenter_password
     }
-  })      
+  })
 }
 */
 
@@ -64,6 +64,6 @@ resource "azapi_update_resource" "manual_passwords" {
 data "azapi_resource_action" "sddc_creds" {
   action                 = "listAdminCredentials"
   resource_id            = azapi_resource.this_private_cloud.id
-  type                   = "Microsoft.AVS/privateClouds@2024-09-01"
+  type                   = "Microsoft.AVS/privateClouds@2025-09-01"
   response_export_values = ["*"]
 }

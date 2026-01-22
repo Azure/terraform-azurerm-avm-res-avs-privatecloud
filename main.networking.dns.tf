@@ -127,7 +127,7 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
 
   method      = "PATCH"
   resource_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/dnsServices/dns-forwarder"
-  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2024-09-01"
+  type        = "Microsoft.AVS/privateClouds/workloadNetworks/dnsServices@2025-09-01"
   #if zone information defined populate the properties
   body = {
     properties = {
