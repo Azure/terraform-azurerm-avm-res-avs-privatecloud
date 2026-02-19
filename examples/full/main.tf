@@ -382,15 +382,6 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
   sku                 = "PerGB2018"
 }
 
-resource "azurerm_public_ip" "gatewaypip" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.public_ip.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard" #required for an ultraperformance gateway
-  zones               = null
-}
-
 resource "azurerm_virtual_network_gateway" "gateway" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.express_route_gateway.name_unique
@@ -402,21 +393,11 @@ resource "azurerm_virtual_network_gateway" "gateway" {
     subnet_id                     = module.gateway_vnet_primary_region.subnets["GatewaySubnet"].resource_id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.gatewaypip.id
   }
 
   lifecycle {
     ignore_changes = [ip_configuration]
   }
-}
-
-resource "azurerm_public_ip" "gatewaypip_secondary" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this_secondary.location
-  name                = "${module.naming.public_ip.name_unique}-secondary"
-  resource_group_name = azurerm_resource_group.this_secondary.name
-  sku                 = "Standard" #required for an ultraperformance gateway
-  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_virtual_network_gateway" "gateway_secondary" {
@@ -430,7 +411,6 @@ resource "azurerm_virtual_network_gateway" "gateway_secondary" {
     subnet_id                     = module.gateway_vnet_secondary_region.subnets["GatewaySubnet"].resource_id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.gatewaypip_secondary.id
   }
 
   lifecycle {
