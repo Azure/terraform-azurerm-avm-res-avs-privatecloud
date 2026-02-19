@@ -64,6 +64,8 @@ resource "azapi_resource" "this_private_cloud" {
   body                      = local.full_body
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_casing             = true
+  ignore_missing_property   = true
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values    = ["*"]
   schema_validation_enabled = false
@@ -84,7 +86,7 @@ resource "azapi_resource" "this_private_cloud" {
   }
 
   lifecycle {
-    ignore_changes = [body.properties.nsxtPassword, body.properties.vcenterPassword]
+    ignore_changes = [body.properties.nsxtPassword, body.properties.vcenterPassword, body.properties.managementCluster.hosts, body.properties.availability.zone]
   }
 }
 
