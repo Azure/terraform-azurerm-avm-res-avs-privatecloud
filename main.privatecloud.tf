@@ -18,6 +18,7 @@ locals {
     nsxtPassword    = local.nsxt_password
     vcenterPassword = local.vcenter_password
     internet        = var.internet_enabled ? "Enabled" : "Disabled"
+    vcfLicense      = var.vcf_license
   }
   base_properties_availability = {
     strategy = var.enable_stretch_cluster ? "DualZone" : "SingleZone"
@@ -59,10 +60,13 @@ resource "azapi_resource" "this_private_cloud" {
   location                  = var.location
   name                      = var.name
   parent_id                 = var.resource_group_resource_id
-  type                      = "Microsoft.AVS/privateClouds@2024-09-01"
+  type                      = "Microsoft.AVS/privateClouds@2025-09-01"
   body                      = local.full_body
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_casing             = true
+  ignore_missing_property   = true
+  ignore_null_property      = true
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values    = ["*"]
   schema_validation_enabled = false
@@ -83,14 +87,14 @@ resource "azapi_resource" "this_private_cloud" {
   }
 
   lifecycle {
-    ignore_changes = [body.properties.nsxtPassword, body.properties.vcenterPassword]
+    ignore_changes = [body.properties.nsxtPassword, body.properties.vcenterPassword, body.properties.managementCluster.hosts, body.properties.availability.zone]
   }
 }
 
 #use a data resource to get the identity details to avoid terraform import issues
 data "azapi_resource" "this_private_cloud" {
   resource_id            = azapi_resource.this_private_cloud.id
-  type                   = "Microsoft.AVS/privateClouds@2024-09-01"
+  type                   = "Microsoft.AVS/privateClouds@2025-09-01"
   response_export_values = ["*"]
 
   depends_on = [azapi_resource.this_private_cloud]

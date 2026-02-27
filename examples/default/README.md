@@ -163,7 +163,6 @@ resource "azurerm_virtual_network_gateway" "gateway" {
     subnet_id                     = module.gateway_vnet.subnets["GatewaySubnet"].resource_id
     name                          = "default"
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.gatewaypip.id
   }
 }
 
