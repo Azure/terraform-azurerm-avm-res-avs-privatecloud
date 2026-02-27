@@ -4,7 +4,7 @@ resource "azapi_resource" "public_ip" {
 
   name      = each.key
   parent_id = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default"
-  type      = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2025-09-01"
+  type      = "Microsoft.AVS/privateClouds/workloadNetworks/publicIPs@2024-09-01"
   body = {
     properties = {
       displayName       = each.key

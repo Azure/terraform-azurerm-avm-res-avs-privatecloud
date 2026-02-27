@@ -17,7 +17,7 @@ resource "azapi_update_resource" "customer_managed_key" {
   count = var.customer_managed_key == null ? 0 : 1
 
   resource_id = azapi_resource.this_private_cloud.id
-  type        = "Microsoft.AVS/privateClouds@2025-09-01"
+  type        = "Microsoft.AVS/privateClouds@2024-09-01"
   body = {
     properties = {
       encryption = {

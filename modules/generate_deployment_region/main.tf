@@ -52,7 +52,7 @@ data "azapi_resource_action" "quota" {
   action                 = "checkQuotaAvailability"
   method                 = "POST"
   resource_id            = "${data.azurerm_subscription.current.id}/providers/Microsoft.AVS/locations/${each.key}"
-  type                   = "Microsoft.AVS/locations@2025-09-01"
+  type                   = "Microsoft.AVS/locations@2024-09-01"
   response_export_values = ["hostsRemaining"]
 }
 

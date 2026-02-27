@@ -14,7 +14,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
 
   name      = "TF-AVM-RemoveIdentitySources-${each.key}"
   parent_id = azapi_resource.this_private_cloud.id
-  type      = "Microsoft.AVS/privateClouds/scriptExecutions@2025-09-01"
+  type      = "Microsoft.AVS/privateClouds/scriptExecutions@2024-09-01"
   #Set the body to remove the domain if the conditions match, otherwise just run the get.
   body = ({ #remove the current identity source
     properties = {

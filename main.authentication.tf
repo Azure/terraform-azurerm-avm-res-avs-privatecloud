@@ -64,6 +64,6 @@ resource "azapi_update_resource" "manual_passwords" {
 data "azapi_resource_action" "sddc_creds" {
   action                 = "listAdminCredentials"
   resource_id            = azapi_resource.this_private_cloud.id
-  type                   = "Microsoft.AVS/privateClouds@2025-09-01"
+  type                   = "Microsoft.AVS/privateClouds@2024-09-01"
   response_export_values = ["*"]
 }

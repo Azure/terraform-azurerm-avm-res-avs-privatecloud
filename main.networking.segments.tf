@@ -2,7 +2,7 @@
 data "azapi_resource_action" "avs_gateways" {
   method                 = "GET"
   resource_id            = "${azapi_resource.this_private_cloud.id}/workloadNetworks/default/gateways"
-  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/gateways@2025-09-01"
+  type                   = "Microsoft.AVS/privateClouds/workloadNetworks/gateways@2024-09-01"
   response_export_values = ["*"]
 }
 
