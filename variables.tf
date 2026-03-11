@@ -292,6 +292,7 @@ variable "elastic_san_datastores" {
   type = map(object({
     cluster_names           = set(string)
     esan_volume_resource_id = string
+    datastore_name          = optional(string, null)
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -300,7 +301,7 @@ Map of objects describing one or more elastic sAN based datastore to configure o
 - `<map key>` - Unique map key that will be used as the prefix for the datastore attachment name.
   - `cluster_names` = (Required) - Set of cluster names that should use the volume as a datastore
   - `esan_volume_resource_id`- The Azure Resource id for the elastic san volume used to host the datastore.
-
+  - `datastore_name` = (Optional) - The name of the datastore. This can be used to override the datastore naming when attaching the same volume to multiple clusters. If left as null the datastore name will be generated using the map key value. 
 
 Example Input:
 ```hcl
