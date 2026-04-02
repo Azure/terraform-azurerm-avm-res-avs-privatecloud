@@ -195,7 +195,7 @@ resource "azapi_update_resource" "dns_default_service_ips" {
   body = {
     properties = {
       displayName  = data.azapi_resource_action.avs_default_dns["default"].output.value[0].properties.displayName
-      dnsServerIps = [module.firewall.resource.ip_configuration[0].private_ip_address]
+      dnsServerIps = var.default_dns_ips
       domain       = []
       dnsServices  = 1
     }
