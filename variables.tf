@@ -159,6 +159,12 @@ Example Inputs:
 CUSTOMER_MANAGED_KEY
 }
 
+variable "default_dns_ips" {
+  type        = list(string)
+  default     = []
+  description = "A list of up to DNS IP addresses to use for the private cloud's default DNS service. If provided, these will replace the default Cloudflare DNS IPs."
+}
+
 variable "dhcp_configuration" {
   type = map(object({
     display_name           = string
@@ -301,7 +307,7 @@ Map of objects describing one or more elastic sAN based datastore to configure o
 - `<map key>` - Unique map key that will be used as the prefix for the datastore attachment name.
   - `cluster_names` = (Required) - Set of cluster names that should use the volume as a datastore
   - `esan_volume_resource_id`- The Azure Resource id for the elastic san volume used to host the datastore.
-  - `datastore_name` = (Optional) - The name of the datastore. This can be used to override the datastore naming when attaching the same volume to multiple clusters. If left as null the datastore name will be generated using the map key value. 
+  - `datastore_name` = (Optional) - The name of the datastore. This can be used to override the datastore naming when attaching the same volume to multiple clusters. If left as null the datastore name will be generated using the map key value.
 
 Example Input:
 ```hcl
