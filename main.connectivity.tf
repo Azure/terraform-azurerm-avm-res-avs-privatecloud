@@ -134,7 +134,135 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
   ]
 }
 
+resource "azapi_resource" "avs_private_cloud_connection" {
+  for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order == 1) }
 
+  name      = each.key
+  parent_id = each.value.expressroute_gateway_resource_id
+  type      = "Microsoft.Network/expressRouteGateways/expressRouteConnections@2025-05-01"
+  body = {
+    properties = {
+      expressRouteCircuitPeering = {
+        id = data.azurerm_vmware_private_cloud.this_private_cloud.circuit[0].express_route_private_peering_id
+      }
+      authorizationKey          = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+      enableInternetSecurity    = each.value.enable_internet_security
+      expressRouteGatewayBypass = each.value.fast_path_enabled
+      enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
+      routingWeight             = each.value.routing_weight
+      routingConfiguration = {
+        associatedRouteTable = {
+          id = each.value.routing[0].associated_route_table_id
+        }
+        inboundRouteMap = each.value.routing[0].inbound_route_map_id != null ? {
+          id = each.value.routing[0].inbound_route_map_id
+        } : null
+        outboundRouteMap = each.value.routing[0].outbound_route_map_id != null ? {
+          id = each.value.routing[0].outbound_route_map_id
+        } : null
+        propagatedRouteTables = {
+          ids    = each.value.routing[0].propagated_route_table.route_table_ids
+          labels = each.value.routing[0].propagated_route_table.labels
+        }
+      }
+    }
+  }
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    #azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azapi_resource.globalreach_connections,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional
+  ]
+}
+
+resource "azapi_resource" "avs_private_cloud_connection_additional" {
+  for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order > 1) }
+
+  name      = each.key
+  parent_id = each.value.expressroute_gateway_resource_id
+  type      = "Microsoft.Network/expressRouteGateways/expressRouteConnections@2025-05-01"
+  body = {
+    properties = {
+      expressRouteCircuitPeering = {
+        id = data.azurerm_vmware_private_cloud.this_private_cloud.circuit[0].express_route_private_peering_id
+      }
+      authorizationKey          = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
+      enableInternetSecurity    = each.value.enable_internet_security
+      expressRouteGatewayBypass = each.value.fast_path_enabled
+      enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
+      routingWeight             = each.value.routing_weight
+      routingConfiguration = {
+        associatedRouteTable = {
+          id = each.value.routing[0].associated_route_table_id
+        }
+        inboundRouteMap = each.value.routing[0].inbound_route_map_id != null ? {
+          id = each.value.routing[0].inbound_route_map_id
+        } : null
+        outboundRouteMap = each.value.routing[0].outbound_route_map_id != null ? {
+          id = each.value.routing[0].outbound_route_map_id
+        } : null
+        propagatedRouteTables = {
+          ids    = each.value.routing[0].propagated_route_table.route_table_ids
+          labels = each.value.routing[0].propagated_route_table.labels
+        }
+      }
+    }
+  }
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    #azapi_update_resource.managed_identity,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azapi_resource.globalreach_connections,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
+    azapi_resource.avs_private_cloud_connection
+  ]
+}
+
+moved {
+  from = azurerm_express_route_connection.avs_private_cloud_connection
+  to   = azapi_resource.avs_private_cloud_connection
+}
+
+moved {
+  from = azurerm_express_route_connection.avs_private_cloud_connection_additional
+  to   = azapi_resource.avs_private_cloud_connection_additional
+}
+
+#TODO: Add a moved block for the resource?  Test the moved confiugration doesn't error
+#TODOL duplicate the AzAPI config for the deployment order issues
+
+
+
+
+
+/*
 #Create one or more ExpressRoute Gateway connections to a VWAN hub
 resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order == 1) }
@@ -143,7 +271,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   express_route_gateway_id         = each.value.expressroute_gateway_resource_id
   name                             = each.key
   authorization_key                = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
-  enable_internet_security         = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
+  internet_security_enabled        = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
   routing_weight                   = each.value.routing_weight
 
   dynamic "routing" {
@@ -178,7 +306,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   ]
 
   lifecycle {
-    ignore_changes = [express_route_circuit_peering_id]
+    ignore_changes = [express_route_circuit_peering_id, authorization_key]
   } #TODO - determine why this is returning 'known after apply'
 }
 
@@ -190,7 +318,7 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
   express_route_gateway_id         = each.value.expressroute_gateway_resource_id
   name                             = each.key
   authorization_key                = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
-  enable_internet_security         = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
+  internet_security_enabled        = each.value.enable_internet_security #publish a default route to the internet through Hub NVA when true
   routing_weight                   = each.value.routing_weight
 
   dynamic "routing" {
@@ -225,9 +353,10 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
   ]
 
   lifecycle {
-    ignore_changes = [express_route_circuit_peering_id]
+    ignore_changes = [express_route_circuit_peering_id, authorization_key]
   } #TODO - determine why this is returning 'known after apply'
 }
+*/
 
 #create one or more cross SDDC regional connections
 resource "azapi_resource" "avs_interconnect" {
@@ -260,7 +389,7 @@ resource "azapi_resource" "avs_interconnect" {
     azapi_resource.globalreach_connections,
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
-    azurerm_express_route_connection.avs_private_cloud_connection,
-    azurerm_express_route_connection.avs_private_cloud_connection_additional
+    azapi_resource.avs_private_cloud_connection,
+    azapi_resource.avs_private_cloud_connection_additional
   ]
 }
