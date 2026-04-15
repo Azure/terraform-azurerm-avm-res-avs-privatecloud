@@ -148,9 +148,9 @@ resource "azapi_resource" "avs_private_cloud_connection" {
       authorizationKey          = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
       enableInternetSecurity    = each.value.enable_internet_security
       expressRouteGatewayBypass = each.value.fast_path_enabled
-      enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
-      routingWeight             = each.value.routing_weight
-      routingConfiguration      = local.expressroute_connection_routing_configuration[each.key]
+      #enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
+      routingWeight        = each.value.routing_weight
+      routingConfiguration = local.expressroute_connection_routing_configuration[each.key]
     }
   }
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -217,9 +217,9 @@ resource "azapi_resource" "avs_private_cloud_connection_additional" {
       authorizationKey          = azurerm_vmware_express_route_authorization.this_authorization_key[each.key].express_route_authorization_key
       enableInternetSecurity    = each.value.enable_internet_security
       expressRouteGatewayBypass = each.value.fast_path_enabled
-      enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
-      routingWeight             = each.value.routing_weight
-      routingConfiguration      = local.expressroute_connection_routing_configuration[each.key]
+      #enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
+      routingWeight        = each.value.routing_weight
+      routingConfiguration = local.expressroute_connection_routing_configuration[each.key]
     }
   }
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
