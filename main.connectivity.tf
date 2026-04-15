@@ -134,6 +134,7 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
   ]
 }
 
+/*
 resource "azapi_resource" "avs_private_cloud_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order == 1) }
 
@@ -174,7 +175,9 @@ resource "azapi_resource" "avs_private_cloud_connection" {
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional
   ]
 }
+*/
 
+/*
 locals {
   expressroute_connection_routing_configuration = {
     for k, v in var.expressroute_connections :
@@ -201,8 +204,10 @@ locals {
     k => (v.routing == null || length(v.routing) == 0 ? null : keys(v.routing)[0])
   }
 }
+*/
 
 
+/*
 resource "azapi_resource" "avs_private_cloud_connection_additional" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order > 1) }
 
@@ -254,6 +259,7 @@ moved {
   from = azurerm_express_route_connection.avs_private_cloud_connection_additional
   to   = azapi_resource.avs_private_cloud_connection_additional
 }
+*/
 
 #TODO: Add a moved block for the resource?  Test the moved confiugration doesn't error
 #TODOL duplicate the AzAPI config for the deployment order issues
@@ -262,7 +268,6 @@ moved {
 
 
 
-/*
 #Create one or more ExpressRoute Gateway connections to a VWAN hub
 resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order == 1) }
@@ -275,16 +280,16 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   routing_weight                   = each.value.routing_weight
 
   dynamic "routing" {
-    for_each = each.value.routing
+    for_each = each.value.routing == null ? [] : values(each.value.routing)
 
     content {
-      associated_route_table_id = routing.value.associated_route_table_id
-      inbound_route_map_id      = routing.value.inbound_route_map_id
-      outbound_route_map_id     = routing.value.outbound_route_map_id
+      associated_route_table_id = routing.value.associated_route_table_resource_id
+      inbound_route_map_id      = routing.value.inbound_route_map_resource_id
+      outbound_route_map_id     = routing.value.outbound_route_map_resource_id
 
       propagated_route_table {
         labels          = routing.value.propagated_route_table.labels
-        route_table_ids = routing.value.propagated_route_table.route_table_ids
+        route_table_ids = routing.value.propagated_route_table.ids
       }
     }
   }
@@ -322,16 +327,16 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
   routing_weight                   = each.value.routing_weight
 
   dynamic "routing" {
-    for_each = each.value.routing
+    for_each = each.value.routing == null ? [] : values(each.value.routing)
 
     content {
-      associated_route_table_id = routing.value.associated_route_table_id
-      inbound_route_map_id      = routing.value.inbound_route_map_id
-      outbound_route_map_id     = routing.value.outbound_route_map_id
+      associated_route_table_id = routing.value.associated_route_table_resource_id
+      inbound_route_map_id      = routing.value.inbound_route_map_resource_id
+      outbound_route_map_id     = routing.value.outbound_route_map_resource_id
 
       propagated_route_table {
         labels          = routing.value.propagated_route_table.labels
-        route_table_ids = routing.value.propagated_route_table.route_table_ids
+        route_table_ids = routing.value.propagated_route_table.ids
       }
     }
   }
@@ -356,7 +361,6 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
     ignore_changes = [express_route_circuit_peering_id, authorization_key]
   } #TODO - determine why this is returning 'known after apply'
 }
-*/
 
 #create one or more cross SDDC regional connections
 resource "azapi_resource" "avs_interconnect" {
@@ -389,7 +393,7 @@ resource "azapi_resource" "avs_interconnect" {
     azapi_resource.globalreach_connections,
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
-    azapi_resource.avs_private_cloud_connection,
-    azapi_resource.avs_private_cloud_connection_additional
+    azurerm_express_route_connection.avs_private_cloud_connection,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional
   ]
 }
