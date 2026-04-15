@@ -64,7 +64,7 @@ resource "time_sleep" "wait_120_seconds" {
 
 #create the hcx key(s) if defined
 resource "azapi_resource" "hcx_keys" {
-  for_each = toset([for k, v in var.addons : v.hcx_key_names if lower(k) == "hcx"])
+  for_each = toset(flatten([for k, v in var.addons : v.hcx_key_names if lower(k) == "hcx"]))
 
   name                   = each.value
   parent_id              = azapi_resource.this_private_cloud.id
