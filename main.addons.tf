@@ -64,9 +64,9 @@ resource "time_sleep" "wait_120_seconds" {
 
 #create the hcx key(s) if defined
 resource "azapi_resource" "hcx_keys" {
-  for_each = toset(try(var.addons.HCX.hcx_key_names, []))
+  for_each = [for k, v in var.addons : v.hcx_key_names if lower(k) == "hcx"]
 
-  name                   = each.key
+  name                   = each.value
   parent_id              = azapi_resource.this_private_cloud.id
   type                   = "Microsoft.AVS/privateClouds/hcxEnterpriseSites@2024-09-01"
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

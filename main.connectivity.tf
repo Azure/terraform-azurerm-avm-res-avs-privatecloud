@@ -150,21 +150,7 @@ resource "azapi_resource" "avs_private_cloud_connection" {
       expressRouteGatewayBypass = each.value.fast_path_enabled
       enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
       routingWeight             = each.value.routing_weight
-      routingConfiguration = {
-        associatedRouteTable = {
-          id = each.value.routing[0].associated_route_table_id
-        }
-        inboundRouteMap = each.value.routing[0].inbound_route_map_id != null ? {
-          id = each.value.routing[0].inbound_route_map_id
-        } : null
-        outboundRouteMap = each.value.routing[0].outbound_route_map_id != null ? {
-          id = each.value.routing[0].outbound_route_map_id
-        } : null
-        propagatedRouteTables = {
-          ids    = each.value.routing[0].propagated_route_table.route_table_ids
-          labels = each.value.routing[0].propagated_route_table.labels
-        }
-      }
+      routingConfiguration      = local.expressroute_connection_routing_configuration[each.key]
     }
   }
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -189,6 +175,34 @@ resource "azapi_resource" "avs_private_cloud_connection" {
   ]
 }
 
+locals {
+  expressroute_connection_routing_configuration = {
+    for k, v in var.expressroute_connections :
+    k => (
+      local.expressroute_connection_routing_key[k] == null ? null : {
+        associatedRouteTable = v.routing[local.expressroute_connection_routing_key[k]].associated_route_table_resource_id != null ? {
+          id = v.routing[local.expressroute_connection_routing_key[k]].associated_route_table_resource_id
+        } : null
+        inboundRouteMap = v.routing[local.expressroute_connection_routing_key[k]].inbound_route_map_resource_id != null ? {
+          id = v.routing[local.expressroute_connection_routing_key[k]].inbound_route_map_resource_id
+        } : null
+        outboundRouteMap = v.routing[local.expressroute_connection_routing_key[k]].outbound_route_map_resource_id != null ? {
+          id = v.routing[local.expressroute_connection_routing_key[k]].outbound_route_map_resource_id
+        } : null
+        propagatedRouteTables = {
+          ids    = v.routing[local.expressroute_connection_routing_key[k]].propagated_route_table.ids
+          labels = v.routing[local.expressroute_connection_routing_key[k]].propagated_route_table.labels
+        }
+      }
+    )
+  }
+  expressroute_connection_routing_key = {
+    for k, v in var.expressroute_connections :
+    k => (v.routing == null || length(v.routing) == 0 ? null : keys(v.routing)[0])
+  }
+}
+
+
 resource "azapi_resource" "avs_private_cloud_connection_additional" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order > 1) }
 
@@ -205,21 +219,7 @@ resource "azapi_resource" "avs_private_cloud_connection_additional" {
       expressRouteGatewayBypass = each.value.fast_path_enabled
       enablePrivateLinkFastPath = each.value.private_link_fast_path_enabled
       routingWeight             = each.value.routing_weight
-      routingConfiguration = {
-        associatedRouteTable = {
-          id = each.value.routing[0].associated_route_table_id
-        }
-        inboundRouteMap = each.value.routing[0].inbound_route_map_id != null ? {
-          id = each.value.routing[0].inbound_route_map_id
-        } : null
-        outboundRouteMap = each.value.routing[0].outbound_route_map_id != null ? {
-          id = each.value.routing[0].outbound_route_map_id
-        } : null
-        propagatedRouteTables = {
-          ids    = each.value.routing[0].propagated_route_table.route_table_ids
-          labels = each.value.routing[0].propagated_route_table.labels
-        }
-      }
+      routingConfiguration      = local.expressroute_connection_routing_configuration[each.key]
     }
   }
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
