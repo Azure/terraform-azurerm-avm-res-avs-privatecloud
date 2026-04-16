@@ -51,7 +51,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
-    azapi_update_resource.dns_default_service_ips,
+    azapi_resource_action.dns_default_zone,
     azapi_resource.dhcp,
     azapi_resource.segments,
     #azapi_resource.current_status_identity_sources
@@ -162,7 +162,7 @@ resource "azapi_resource" "configure_identity_sources" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
-    azapi_update_resource.dns_default_service_ips,
+    azapi_resource_action.dns_default_zone,
     azapi_resource.dhcp,
     azapi_resource.segments,
     #azapi_resource.current_status_identity_sources,
