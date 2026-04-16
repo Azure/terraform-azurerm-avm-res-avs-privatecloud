@@ -79,12 +79,6 @@ resource "azapi_resource" "hcx_keys" {
     time_sleep.wait_120_seconds,
     azapi_resource.hcx_addon
   ]
-
-  lifecycle {
-    ignore_changes = [
-      parent_id
-    ]
-  }
 }
 
 #####################################################################################################################################
