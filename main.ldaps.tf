@@ -51,6 +51,7 @@ resource "azapi_resource" "remove_existing_identity_source" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
+    azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp,
     azapi_resource.segments,
     #azapi_resource.current_status_identity_sources
@@ -83,84 +84,54 @@ resource "azapi_resource" "configure_identity_sources" {
         username = var.vcenter_identity_sources_credentials[each.key].ldap_user
         password = var.vcenter_identity_sources_credentials[each.key].ldap_user_password
       }]
-      parameters = each.value.secondary_server != null ? [ #list with a primary and secondary server value
-        {
-          name  = "GroupName"
-          type  = "Value"
-          value = each.value.group_name
-        },
-        {
-          name  = "BaseDNGroups"
-          type  = "Value"
-          value = each.value.base_group_dn
-        },
-        {
-          name  = "BaseDNUsers"
-          type  = "Value"
-          value = each.value.base_user_dn
-        },
-        {
-          name  = "PrimaryUrl"
-          type  = "Value"
-          value = each.value.primary_server
-        },
-        {
-          name  = "DomainAlias"
-          type  = "Value"
-          value = each.value.alias
-        },
-        {
-          name  = "DomainName"
-          type  = "Value"
-          value = each.value.domain
-        },
-        {
-          name  = "Name"
-          type  = "Value"
-          value = each.value.name
-        },
-        {
-          name  = "SecondaryUrl"
-          type  = "Value"
-          value = each.value.secondary_server
-        }
-        ] : [ #list with only a primary value
-        {
-          name  = "GroupName"
-          type  = "Value"
-          value = each.value.group_name
-        },
-        {
-          name  = "BaseDNGroups"
-          type  = "Value"
-          value = each.value.base_group_dn
-        },
-        {
-          name  = "BaseDNUsers"
-          type  = "Value"
-          value = each.value.base_user_dn
-        },
-        {
-          name  = "PrimaryUrl"
-          type  = "Value"
-          value = each.value.primary_server
-        },
-        {
-          name  = "DomainAlias"
-          type  = "Value"
-          value = each.value.alias
-        },
-        {
-          name  = "DomainName"
-          type  = "Value"
-          value = each.value.domain
-        },
-        {
-          name  = "Name"
-          type  = "Value"
-          value = each.value.name
-        }
-      ]
+      parameters = concat(
+        each.value.group_name != null ? [
+          {
+            name  = "GroupName"
+            type  = "Value"
+            value = each.value.group_name
+          }
+        ] : [],
+        [
+          {
+            name  = "BaseDNGroups"
+            type  = "Value"
+            value = each.value.base_group_dn
+          },
+          {
+            name  = "BaseDNUsers"
+            type  = "Value"
+            value = each.value.base_user_dn
+          },
+          {
+            name  = "PrimaryUrl"
+            type  = "Value"
+            value = each.value.primary_server
+          },
+          {
+            name  = "DomainAlias"
+            type  = "Value"
+            value = each.value.alias
+          },
+          {
+            name  = "DomainName"
+            type  = "Value"
+            value = each.value.domain
+          },
+          {
+            name  = "Name"
+            type  = "Value"
+            value = each.value.name
+          }
+        ],
+        each.value.secondary_server != null ? [
+          {
+            name  = "SecondaryUrl"
+            type  = "Value"
+            value = each.value.secondary_server
+          }
+        ] : []
+      )
     }
   })
   create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -191,6 +162,7 @@ resource "azapi_resource" "configure_identity_sources" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
+    azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp,
     azapi_resource.segments,
     #azapi_resource.current_status_identity_sources,

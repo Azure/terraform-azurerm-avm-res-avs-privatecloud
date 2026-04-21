@@ -52,6 +52,7 @@ The following resources are used by this module:
 - [azapi_resource_action.dns_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.dns_service_destroy_non_empty_start](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.customer_managed_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.dns_default_service_ips](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_express_route_connection.avs_private_cloud_connection](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
 - [azurerm_express_route_connection.avs_private_cloud_connection_additional](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
@@ -67,6 +68,7 @@ The following resources are used by this module:
 - [time_sleep.wait_60_seconds_hcx](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource_action.avs_default_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.avs_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.avs_gateways](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.sddc_creds](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
@@ -258,6 +260,14 @@ object({
 
 Default: `null`
 
+### <a name="input_default_dns_ips"></a> [default\_dns\_ips](#input\_default\_dns\_ips)
+
+Description: A list of up to DNS IP addresses to use for the private cloud's default DNS service. If provided, these will replace the default Cloudflare DNS IPs.
+
+Type: `list(string)`
+
+Default: `[]`
+
 ### <a name="input_dhcp_configuration"></a> [dhcp\_configuration](#input\_dhcp\_configuration)
 
 Description: This map object describes the DHCP configuration to use for the private cloud. It can remain unconfigured or define a RELAY or SERVER based configuration. Defaults to unconfigured. This allows for new segments to define DHCP ranges as part of their definition. Only one DHCP configuration is allowed.
@@ -399,6 +409,7 @@ Description: Map of objects describing one or more elastic sAN based datastore t
 - `<map key>` - Unique map key that will be used as the prefix for the datastore attachment name.
   - `cluster_names` = (Required) - Set of cluster names that should use the volume as a datastore
   - `esan_volume_resource_id`- The Azure Resource id for the elastic san volume used to host the datastore.
+  - `datastore_name` = (Optional) - The name of the datastore. This can be used to override the datastore naming when attaching the same volume to multiple clusters. If left as null the datastore name will be generated using the map key value.
 
 Example Input:
 ```hcl
@@ -416,6 +427,7 @@ Type:
 map(object({
     cluster_names           = set(string)
     esan_volume_resource_id = string
+    datastore_name          = optional(string, null)
   }))
 ```
 

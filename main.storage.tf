@@ -4,6 +4,7 @@ locals {
       attachment_name         = "${ds_key}-${cluster_name}"
       esan_volume_resource_id = datastore.esan_volume_resource_id
       cluster_name            = cluster_name
+      datastore_name          = datastore.datastore_name != null ? datastore.datastore_name : "${ds_key}-${cluster_name}"
     }
   ]])
   netapp_attachments = flatten([for ds_key, datastore in var.netapp_files_datastores : [
@@ -52,6 +53,7 @@ resource "azapi_resource" "this_netapp_attachment" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
+    azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp,
     azapi_resource.segments,
     #azapi_resource.current_status_identity_sources,
@@ -86,6 +88,7 @@ resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
+    azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp,
     azapi_resource.segments,
     #azapi_resource.current_status_identity_sources,
@@ -114,7 +117,7 @@ resource "azapi_resource" "iscsi_path_network" {
 resource "azapi_resource" "this_esan_attachment" {
   for_each = { for datastore in local.elastic_san_attachments : datastore.attachment_name => datastore }
 
-  name      = each.value.attachment_name
+  name      = each.value.datastore_name
   parent_id = "${azapi_resource.this_private_cloud.id}/clusters/${each.value.cluster_name}"
   type      = "Microsoft.AVS/privateClouds/clusters/datastores@2023-09-01"
   body = {
@@ -147,6 +150,7 @@ resource "azapi_resource" "this_esan_attachment" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
+    azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp,
     azapi_resource.segments,
     #azapi_resource.current_status_identity_sources,
