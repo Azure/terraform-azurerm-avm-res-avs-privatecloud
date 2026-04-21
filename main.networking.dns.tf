@@ -185,7 +185,7 @@ data "azapi_resource_action" "avs_default_dns" {
     azapi_resource.this_private_cloud
   ]
 }
-/*
+
 resource "azapi_update_resource" "dns_default_service_ips" {
   for_each = length(var.default_dns_ips) > 0 ? { "default" : var.default_dns_ips } : {}
 
@@ -223,8 +223,9 @@ resource "azapi_update_resource" "dns_default_service_ips" {
     data.azapi_resource_action.avs_default_dns
   ]
 }
-*/
 
+
+/*
 ### Testing
 resource "azapi_resource_action" "dns_default_zone" {
   for_each = length(var.default_dns_ips) > 0 ? { "default" : var.default_dns_ips } : {}
@@ -309,3 +310,4 @@ resource "azapi_resource_action" "dns_zone_destroy_non_empty_start" {
     azapi_resource.dns_forwarder_zones
   ]
 }
+*/

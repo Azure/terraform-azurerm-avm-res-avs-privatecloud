@@ -49,6 +49,6 @@ resource "azapi_resource" "dhcp" {
     azapi_resource.globalreach_connections,
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
-    azapi_resource_action.dns_default_zone
+    azapi_update_resource.dns_default_service_ips
   ]
 }

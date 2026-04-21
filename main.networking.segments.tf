@@ -51,7 +51,7 @@ resource "azapi_resource" "segments" {
     azapi_resource.avs_interconnect,
     azapi_resource.dns_forwarder_zones,
     azapi_resource_action.dns_service,
-    azapi_resource_action.dns_default_zone,
+    azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp
   ]
 }
