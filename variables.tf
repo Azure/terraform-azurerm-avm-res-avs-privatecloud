@@ -410,6 +410,59 @@ variable "external_storage_address_block" {
   description = "If using Elastic SAN or other ISCSI storage, provide an /24 CIDR range as a string for use in connecting the external storage.  Example: 10.10.0.0/24"
 }
 
+variable "gen2_subnets_user_defined_routes" {
+  type = map(object({
+    is_mgmnt                      = bool
+    bgp_route_propagation_enabled = optional(bool, true)
+    name                          = optional(string)
+    routes = map(object({
+      address_prefix         = string
+      next_hop_type          = string
+      next_hop_in_ip_address = optional(string)
+    }))
+  }))
+  default     = {}
+  description = <<ROUTES
+Map of string objects describing the user-defined routes for each subnet. The map key will be used as the subnet name.
+
+- `<map key>` - Provide a key value that is unique for the UDR config
+
+  - `is_mgmnt` - (Required) - A boolean value indicating whether the subnet is the AVS management subnet. This modifies the service created UDR. Only one management configuration should be used. If false, the configuration will create/update the two -gw* subnet UDRs.
+  - `bgp_route_propagation_enabled` - (Optional) - A boolean value indicating whether BGP route propagation is enabled for the UDR. Defaults to true.
+  - `name` - (Optional) - The name to use for the route table. If is_mgmt is true, this value will be ignored.
+  - `routes` - (Required) - A map of route objects for the subnet UDR
+    - `<route key>` - Provide a key value that will be used as the route name
+      - `address_prefix` - (Required) - The address prefix for the route
+      - `next_hop_type` - (Required) - The type of the next hop for the route
+      - `next_hop_in_ip_address` - (Optional) - The IP address of the next hop for the route
+
+Example Input:
+```hcl
+gen2_subnets_user_defined_routes = {
+  gw_subnets = {
+    is_mgmnt = false
+    bgp_route_propagation_enabled = false
+    routes = {
+      route1 = {
+        address_prefix = "0.0.0.0/0"
+        next_hop_type = "VirtualAppliance"
+        next_hop_in_ip_address = "10.0.0.4"
+      }
+    }
+  }
+}
+```
+ROUTES
+
+  validation {
+    condition = (
+      length([for _, v in var.gen2_subnets_user_defined_routes : v if v.is_mgmnt]) <= 1 &&
+      length([for _, v in var.gen2_subnets_user_defined_routes : v if !v.is_mgmnt]) <= 1
+    )
+    error_message = "Only one management (is_mgmnt=true) and one gateway/non-management (is_mgmnt=false) configuration are supported in gen2_subnets_user_defined_routes."
+  }
+}
+
 variable "global_reach_connections" {
   type = map(object({
     authorization_key                     = string

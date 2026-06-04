@@ -53,11 +53,14 @@ The following resources are used by this module:
 - [azapi_resource_action.dns_service_destroy_non_empty_start](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_update_resource.customer_managed_key](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azapi_update_resource.dns_default_service_ips](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.gen2_mgmt_route_table](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.gen2_nsx_gw_subnet_udr_association](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_express_route_connection.avs_private_cloud_connection](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
 - [azurerm_express_route_connection.avs_private_cloud_connection_additional](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/express_route_connection) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this_private_cloud_diags](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_role_assignment.this_private_cloud](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azurerm_route_table.gen2_nsx_gw_udr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/route_table) (resource)
 - [azurerm_vmware_express_route_authorization.this_authorization_key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/vmware_express_route_authorization) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/Azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_password.nsxt](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) (resource)
@@ -67,11 +70,13 @@ The following resources are used by this module:
 - [time_sleep.wait_120_seconds](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.wait_60_seconds_hcx](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.gen2_mgmt_route_table](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azapi_resource_action.avs_default_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.avs_dns](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.avs_gateways](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
 - [azapi_resource_action.sddc_creds](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_list.gen2_subnets](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azurerm_key_vault.this_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) (data source)
 - [azurerm_resource_group.sddc_deployment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) (data source)
 - [azurerm_vmware_private_cloud.this_private_cloud](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/vmware_private_cloud) (data source)
@@ -529,6 +534,55 @@ Description: If using Elastic SAN or other ISCSI storage, provide an /24 CIDR ra
 Type: `string`
 
 Default: `null`
+
+### <a name="input_gen2_subnets_user_defined_routes"></a> [gen2\_subnets\_user\_defined\_routes](#input\_gen2\_subnets\_user\_defined\_routes)
+
+Description: Map of string objects describing the user-defined routes for each subnet. The map key will be used as the subnet name.
+
+- `<map key>` - Provide a key value that is unique for the UDR config
+
+  - `is_mgmnt` - (Required) - A boolean value indicating whether the subnet is the AVS management subnet. This modifies the service created UDR. Only one management configuration should be used. If false, the configuration will create/update the two -gw* subnet UDRs.
+  - `bgp_route_propagation_enabled` - (Optional) - A boolean value indicating whether BGP route propagation is enabled for the UDR. Defaults to true.
+  - `name` - (Optional) - The name to use for the route table. If is\_mgmt is true, this value will be ignored.
+  - `routes` - (Required) - A map of route objects for the subnet UDR
+    - `<route key>` - Provide a key value that will be used as the route name
+      - `address_prefix` - (Required) - The address prefix for the route
+      - `next_hop_type` - (Required) - The type of the next hop for the route
+      - `next_hop_in_ip_address` - (Optional) - The IP address of the next hop for the route
+
+Example Input:
+```hcl
+gen2_subnets_user_defined_routes = {
+  gw_subnets = {
+    is_mgmnt = false
+    bgp_route_propagation_enabled = false
+    routes = {
+      route1 = {
+        address_prefix = "0.0.0.0/0"
+        next_hop_type = "VirtualAppliance"
+        next_hop_in_ip_address = "10.0.0.4"
+      }
+    }
+  }
+}
+```
+
+Type:
+
+```hcl
+map(object({
+    is_mgmnt                      = bool
+    bgp_route_propagation_enabled = optional(bool, true)
+    name                          = optional(string)
+    routes = map(object({
+      address_prefix         = string
+      next_hop_type          = string
+      next_hop_in_ip_address = optional(string)
+    }))
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_global_reach_connections"></a> [global\_reach\_connections](#input\_global\_reach\_connections)
 
