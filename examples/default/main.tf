@@ -10,7 +10,7 @@ module "naming" {
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.12.0"
 }
 
 data "azurerm_client_config" "current" {}
