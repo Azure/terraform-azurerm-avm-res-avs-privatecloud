@@ -164,7 +164,7 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.10.2"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
