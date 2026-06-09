@@ -166,7 +166,7 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.17.1"
 
   address_space       = ["10.100.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -230,7 +230,7 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.17.1"
 
   address_space       = ["10.101.0.0/16"]
   location            = azurerm_resource_group.this_secondary.location
