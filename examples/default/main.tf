@@ -90,7 +90,7 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.8.1"
+  version = "0.17.1"
 
   address_space       = ["10.230.0.0/16"]
   location            = azurerm_resource_group.this.location
