@@ -103,7 +103,7 @@ resource "azurerm_resource_group" "this_secondary" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.10.2"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
@@ -298,7 +298,7 @@ resource "azurerm_nat_gateway" "this_nat_gateway_2" {
 
 module "avm_res_keyvault_vault_2" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.10.2"
 
   location               = "westus3"
   name                   = "${module.naming.key_vault.name_unique}-2"
