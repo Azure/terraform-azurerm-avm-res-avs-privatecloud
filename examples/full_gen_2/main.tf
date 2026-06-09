@@ -128,7 +128,7 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "avs_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.17.1"
 
   address_space       = ["10.100.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -308,7 +308,7 @@ resource "azurerm_nat_gateway" "this_nat_gateway_avs" {
 #peer to the hub vnet
 module "peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
-  version = "0.8.1"
+  version = "0.17.1"
 
   allow_forwarded_traffic      = true
   allow_gateway_transit        = true
