@@ -54,8 +54,12 @@ locals {
       id = subnet.id
     } if startswith(lower(name), "avs-nsx-gw-")
   }
-  gen2_mgmt_route_table_id = try(distinct(compact([for s in values(local.gen2_mgmt_subnets) : s.route_table_id]))[0], null)
-  gen2_subnets             = { for s in try(data.azapi_resource_list.gen2_subnets[0].output.value, []) : s.name => s }
+  # Use sorted names for stable, idempotent resource ordering
+  gen2_nsx_gw_subnets_sorted_names = sort(keys(local.gen2_nsx_gw_subnets))
+  # Use sorted route table IDs for stable, idempotent reference
+  gen2_mgmt_route_table_ids_sorted = sort(distinct(compact([for s in values(local.gen2_mgmt_subnets) : s.route_table_id])))
+  gen2_mgmt_route_table_id         = try(local.gen2_mgmt_route_table_ids_sorted[0], null)
+  gen2_subnets                     = { for s in try(data.azapi_resource_list.gen2_subnets[0].output.value, []) : s.name => s }
 }
 
 # Read the user defined route table for the mgmt subnet(s) (if UDR config is defined)
@@ -209,7 +213,7 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
 resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
   count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
 
-  resource_id = values(local.gen2_nsx_gw_subnets)[0].id
+  resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[0]].id
   type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   body = {
     properties = {
@@ -253,7 +257,7 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
 resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
   count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
 
-  resource_id = values(local.gen2_nsx_gw_subnets)[1].id
+  resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[1]].id
   type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   body = {
     properties = {
