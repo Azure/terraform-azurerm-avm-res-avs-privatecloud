@@ -54,14 +54,15 @@ locals {
       id = subnet.id
     } if startswith(lower(name), "avs-nsx-gw-")
   }
+  gen2_mgmt_route_table_id = try(distinct(compact([for s in values(local.gen2_mgmt_subnets) : s.route_table_id]))[0], null)
   gen2_subnets = { for s in try(data.azapi_resource_list.gen2_subnets[0].output.value, []) : s.name => s }
 }
 
 # Read the user defined route table for the mgmt subnet(s) (if UDR config is defined)
 data "azapi_resource" "gen2_mgmt_route_table" {
-  for_each = (local.gen2_enabled && local.gen2_udr_mgmt_config != null) ? toset(distinct(compact([for s in values(local.gen2_mgmt_subnets) : s.route_table_id]))) : toset([])
+  count = (local.gen2_enabled && local.gen2_udr_mgmt_config != null) ? 1 : 0
 
-  resource_id            = each.key
+  resource_id            = local.gen2_mgmt_route_table_id
   type                   = "Microsoft.Network/routeTables@2024-05-01"
   response_export_values = ["*"]
 
@@ -105,16 +106,16 @@ locals {
 
 # Modify the service-created mgmt route table by merging in the user-defined routes
 resource "azapi_update_resource" "gen2_mgmt_route_table" {
-  for_each = data.azapi_resource.gen2_mgmt_route_table
+  count = (local.gen2_enabled && local.gen2_udr_mgmt_config != null) ? 1 : 0
 
-  resource_id = each.key
+  resource_id = data.azapi_resource.gen2_mgmt_route_table[0].resource_id
   type        = "Microsoft.Network/routeTables@2024-05-01"
   body = {
     properties = {
       disableBgpRoutePropagation = !(try(local.gen2_udr_mgmt_config.bgp_route_propagation_enabled, true))
       routes = [
         for r in values(merge(
-          { for existing in try(each.value.output.properties.routes, []) : lower(existing.name) => existing },
+          { for existing in try(data.azapi_resource.gen2_mgmt_route_table[0].output.properties.routes, []) : lower(existing.name) => existing },
           local.gen2_udr_mgmt_custom_routes
           )) : {
           name = r.name
