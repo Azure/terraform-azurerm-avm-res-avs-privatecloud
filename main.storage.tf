@@ -64,6 +64,7 @@ resource "azapi_resource" "this_netapp_attachment" {
     azapi_resource.configure_identity_sources
   ]
 }
+
 /*
 resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
   for_each = { for datastore in local.netapp_attachments : datastore.attachment_name => datastore }

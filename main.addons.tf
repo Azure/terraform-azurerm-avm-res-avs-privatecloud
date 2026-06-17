@@ -8,7 +8,6 @@ resource "time_sleep" "wait_60_seconds_hcx" {
   depends_on = [azapi_resource.this_private_cloud]
 }
 
-
 #####################################################################################################################################
 # Deploy and configure the HCX Addon
 #####################################################################################################################################
@@ -38,6 +37,12 @@ resource "azapi_resource" "hcx_addon" {
     delete = "4h"
   }
 
+  #adding lifecycle block to handle replacement issue with parent_id
+  lifecycle {
+    ignore_changes = [
+      parent_id
+    ]
+  }
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
@@ -46,13 +51,6 @@ resource "azapi_resource" "hcx_addon" {
     #azapi_update_resource.managed_identity,
     azapi_update_resource.customer_managed_key
   ]
-
-  #adding lifecycle block to handle replacement issue with parent_id
-  lifecycle {
-    ignore_changes = [
-      parent_id
-    ]
-  }
 }
 
 #adding sleep wait to handle lag in hcx registration for keys
@@ -108,6 +106,12 @@ resource "azapi_resource" "srm_addon" {
     delete = "4h"
   }
 
+  #adding lifecycle block to handle replacement issue with parent_id
+  lifecycle {
+    ignore_changes = [
+      parent_id
+    ]
+  }
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
@@ -118,15 +122,7 @@ resource "azapi_resource" "srm_addon" {
     azapi_resource.hcx_addon,
     azapi_resource.hcx_keys
   ]
-
-  #adding lifecycle block to handle replacement issue with parent_id
-  lifecycle {
-    ignore_changes = [
-      parent_id
-    ]
-  }
 }
-
 
 #####################################################################################################################################
 # Deploy and configure the VR Addon
@@ -155,6 +151,12 @@ resource "azapi_resource" "vr_addon" {
     delete = "4h"
   }
 
+  #adding lifecycle block to handle replacement issue with parent_id
+  lifecycle {
+    ignore_changes = [
+      parent_id
+    ]
+  }
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
@@ -166,15 +168,7 @@ resource "azapi_resource" "vr_addon" {
     azapi_resource.hcx_keys,
     azapi_resource.srm_addon
   ]
-
-  #adding lifecycle block to handle replacement issue with parent_id
-  lifecycle {
-    ignore_changes = [
-      parent_id
-    ]
-  }
 }
-
 
 #####################################################################################################################################
 # Deploy and configure the ARC Addon
@@ -204,5 +198,3 @@ resource "azapi_resource" "arc_addon" {
     ]
   }
 }
-
-

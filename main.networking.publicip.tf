@@ -55,4 +55,3 @@ resource "azapi_resource" "public_ip" {
 
   ]
 }
-

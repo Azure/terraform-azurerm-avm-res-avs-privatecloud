@@ -24,6 +24,7 @@ resource "azurerm_monitor_diagnostic_setting" "this_private_cloud_diags" {
       category_group = enabled_log.value
     }
   }
+
   dynamic "metric" {
     for_each = each.value.metric_categories
 
@@ -38,4 +39,3 @@ resource "azurerm_monitor_diagnostic_setting" "this_private_cloud_diags" {
     azurerm_role_assignment.this_private_cloud
   ]
 }
-

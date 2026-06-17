@@ -554,7 +554,7 @@ Example Input:
 ```hcl
 gen2_subnets_user_defined_routes = {
   gw_subnets = {
-    is_mgmnt = false
+    is_mgmt = false
     bgp_route_propagation_enabled = false
     routes = {
       route1 = {
@@ -571,7 +571,7 @@ Type:
 
 ```hcl
 map(object({
-    is_mgmnt                      = bool
+    is_mgmt                       = bool
     bgp_route_propagation_enabled = optional(bool, true)
     name                          = optional(string)
     routes = map(object({

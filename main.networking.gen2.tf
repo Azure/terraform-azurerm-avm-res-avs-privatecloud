@@ -156,7 +156,6 @@ resource "azapi_update_resource" "gen2_mgmt_route_table" {
   ]
 }
 
-
 # Create new User defined route table for the gen2 AVS avs-nsx-gw-* subnets if defined
 resource "azurerm_route_table" "gen2_nsx_gw_udr" {
   count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
@@ -165,7 +164,6 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
   name                          = coalesce(try(local.gen2_udr_gw_config.name, null), "${var.name}-avs-nsx-gw-udr")
   resource_group_name           = local.gen2_network_resource_group_name
   bgp_route_propagation_enabled = try(local.gen2_udr_gw_config.bgp_route_propagation_enabled, true)
-  tags                          = var.tags
 
   dynamic "route" {
     for_each = local.gen2_udr_gw_config == null ? {} : local.gen2_udr_gw_config.routes
@@ -177,6 +175,7 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
       next_hop_type          = route.value.next_hop_type
     }
   }
+  tags = var.tags
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -207,9 +206,10 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
 
 # Attach the GW UDR to both AVS NSX GW subnets
 resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association" {
-  for_each = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? local.gen2_nsx_gw_subnets : {}
+  # Gen2 AVS always creates two NSX GW subnets; use fixed instance keys to keep planning deterministic.
+  count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 2 : 0
 
-  resource_id = each.value.id
+  resource_id = values(local.gen2_nsx_gw_subnets)[count.index].id
   type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   body = {
     properties = {

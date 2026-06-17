@@ -170,7 +170,6 @@ resource "azapi_resource_action" "dns_service_destroy_non_empty_start" {
   ]
 }
 
-
 #If the user has specified default DNS IPs, patch the default DNS service to use those instead of the Cloudflare defaults
 #read the current naming details for the default DNS zone
 data "azapi_resource_action" "avs_default_dns" {
@@ -223,7 +222,6 @@ resource "azapi_update_resource" "dns_default_service_ips" {
     data.azapi_resource_action.avs_default_dns
   ]
 }
-
 
 /*
 ### Testing

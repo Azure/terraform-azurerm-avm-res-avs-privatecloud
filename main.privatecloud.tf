@@ -80,6 +80,7 @@ resource "azapi_resource" "this_private_cloud" {
       type = identity.value.type
     }
   }
+
   #TODO: Test to see if a lifecycle block is needed when the NSXT or VCenter passwords change
   timeouts {
     create = "15h"
