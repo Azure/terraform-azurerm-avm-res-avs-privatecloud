@@ -210,20 +210,11 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
 }
 
 # Attach the GW UDR to the first AVS NSX GW subnet
-resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
+resource "azurerm_subnet_route_table_association" "gen2_nsx_gw_subnet_udr_association_0" {
   count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
 
-  resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[0]].id
-  type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
-  body = {
-    properties = {
-      routeTable = {
-        id = azurerm_route_table.gen2_nsx_gw_udr[0].id
-      }
-    }
-  }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  route_table_id = azurerm_route_table.gen2_nsx_gw_udr[0].id
+  subnet_id      = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[0]].id
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -254,20 +245,11 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
 }
 
 # Attach the GW UDR to the second AVS NSX GW subnet (with hard dependency on first)
-resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
+resource "azurerm_subnet_route_table_association" "gen2_nsx_gw_subnet_udr_association_1" {
   count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
 
-  resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[1]].id
-  type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
-  body = {
-    properties = {
-      routeTable = {
-        id = azurerm_route_table.gen2_nsx_gw_udr[0].id
-      }
-    }
-  }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  route_table_id = azurerm_route_table.gen2_nsx_gw_udr[0].id
+  subnet_id      = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[1]].id
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -294,6 +276,6 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
     data.azapi_resource.gen2_mgmt_route_table,
     azapi_update_resource.gen2_mgmt_route_table,
     azurerm_route_table.gen2_nsx_gw_udr,
-    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_0
+    azurerm_subnet_route_table_association.gen2_nsx_gw_subnet_udr_association_0
   ]
 }
