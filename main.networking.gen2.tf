@@ -2,11 +2,11 @@ locals {
   gen2_enabled                     = var.virtual_network_resource_id != null
   gen2_network_resource_group_name = local.gen2_enabled ? element(split("/", var.virtual_network_resource_id), 4) : null
   gen2_udr_gw_config               = try(values(local.gen2_udr_gw_configs)[0], null)
-  gen2_udr_gw_configs              = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if !v.is_mgmnt } : {}
+  gen2_udr_gw_configs              = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if !v.is_mgmt } : {}
   # This module is designed for a single mgmt and a single gw UDR config.
   gen2_udr_mgmt_config = try(values(local.gen2_udr_mgmt_configs)[0], null)
   # Split the configuration into mgmt and gw configs. The map key is treated as a unique label.
-  gen2_udr_mgmt_configs = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if v.is_mgmnt } : {}
+  gen2_udr_mgmt_configs = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if v.is_mgmt } : {}
 }
 
 # Read all of the subnets in the Gen2 private cloud VNet. These subnets are created/managed by AVS.
