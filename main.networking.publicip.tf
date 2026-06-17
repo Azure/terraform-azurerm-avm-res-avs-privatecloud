@@ -44,6 +44,7 @@ resource "azapi_resource" "public_ip" {
     azapi_resource.dhcp,
     azapi_resource.segments,
     azapi_update_resource.gen2_mgmt_route_table,
+    azapi_resource.gen2_mgmt_route,
     azurerm_route_table.gen2_nsx_gw_udr,
     azurerm_subnet_route_table_association.gen2_nsx_gw_subnet_udr_association_0,
     azurerm_subnet_route_table_association.gen2_nsx_gw_subnet_udr_association_1,
