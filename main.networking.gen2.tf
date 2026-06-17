@@ -55,7 +55,7 @@ locals {
     } if startswith(lower(name), "avs-nsx-gw-")
   }
   gen2_mgmt_route_table_id = try(distinct(compact([for s in values(local.gen2_mgmt_subnets) : s.route_table_id]))[0], null)
-  gen2_subnets = { for s in try(data.azapi_resource_list.gen2_subnets[0].output.value, []) : s.name => s }
+  gen2_subnets             = { for s in try(data.azapi_resource_list.gen2_subnets[0].output.value, []) : s.name => s }
 }
 
 # Read the user defined route table for the mgmt subnet(s) (if UDR config is defined)
@@ -205,12 +205,11 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
   ]
 }
 
-# Attach the GW UDR to both AVS NSX GW subnets
-resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association" {
-  # Gen2 AVS always creates two NSX GW subnets; use fixed instance keys to keep planning deterministic.
-  count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 2 : 0
+# Attach the GW UDR to the first AVS NSX GW subnet
+resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
+  count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
 
-  resource_id = values(local.gen2_nsx_gw_subnets)[count.index].id
+  resource_id = values(local.gen2_nsx_gw_subnets)[0].id
   type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   body = {
     properties = {
@@ -247,5 +246,50 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association" {
     data.azapi_resource.gen2_mgmt_route_table,
     azapi_update_resource.gen2_mgmt_route_table,
     azurerm_route_table.gen2_nsx_gw_udr
+  ]
+}
+
+# Attach the GW UDR to the second AVS NSX GW subnet (with hard dependency on first)
+resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
+  count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
+
+  resource_id = values(local.gen2_nsx_gw_subnets)[1].id
+  type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      routeTable = {
+        id = azurerm_route_table.gen2_nsx_gw_udr[0].id
+      }
+    }
+  }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [
+    azapi_resource.this_private_cloud,
+    azapi_resource.clusters,
+    azurerm_role_assignment.this_private_cloud,
+    azurerm_monitor_diagnostic_setting.this_private_cloud_diags,
+    azapi_update_resource.customer_managed_key,
+    azapi_resource.hcx_addon,
+    azapi_resource.hcx_keys,
+    azapi_resource.srm_addon,
+    azapi_resource.vr_addon,
+    azurerm_express_route_connection.avs_private_cloud_connection,
+    azurerm_express_route_connection.avs_private_cloud_connection_additional,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
+    azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional,
+    azapi_resource.globalreach_connections,
+    azapi_resource.avs_interconnect,
+    azapi_resource.dns_forwarder_zones,
+    azapi_resource_action.dns_service,
+    azapi_update_resource.dns_default_service_ips,
+    azapi_resource.dhcp,
+    azapi_resource.segments,
+    data.azapi_resource_list.gen2_subnets,
+    data.azapi_resource.gen2_mgmt_route_table,
+    azapi_update_resource.gen2_mgmt_route_table,
+    azurerm_route_table.gen2_nsx_gw_udr,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_0
   ]
 }

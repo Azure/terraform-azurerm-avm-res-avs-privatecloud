@@ -60,7 +60,8 @@ resource "azapi_resource" "remove_existing_identity_source" {
     azapi_resource.segments,
     azapi_update_resource.gen2_mgmt_route_table,
     azurerm_route_table.gen2_nsx_gw_udr,
-    azapi_update_resource.gen2_nsx_gw_subnet_udr_association,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_0,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_1,
     #azapi_resource.current_status_identity_sources
   ]
 }
@@ -172,7 +173,8 @@ resource "azapi_resource" "configure_identity_sources" {
     azapi_resource.segments,
     azapi_update_resource.gen2_mgmt_route_table,
     azurerm_route_table.gen2_nsx_gw_udr,
-    azapi_update_resource.gen2_nsx_gw_subnet_udr_association,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_0,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_1,
     #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source
   ]
