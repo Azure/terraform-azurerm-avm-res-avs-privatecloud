@@ -162,11 +162,10 @@ resource "azapi_resource" "gen2_mgmt_route" {
       nextHopIpAddress = try(each.value.properties.nextHopIpAddress, null)
     }
   }
-
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 # Create new User defined route table for the gen2 AVS avs-nsx-gw-* subnets if defined
@@ -219,11 +218,20 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
 }
 
 # Attach the GW UDR to the first AVS NSX GW subnet
-resource "azurerm_subnet_route_table_association" "gen2_nsx_gw_subnet_udr_association_0" {
+resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
   count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
 
-  route_table_id = azurerm_route_table.gen2_nsx_gw_udr[0].id
-  subnet_id      = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[0]].id
+  resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[0]].id
+  type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      routeTable = {
+        id = azurerm_route_table.gen2_nsx_gw_udr[0].id
+      }
+    }
+  }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -255,11 +263,20 @@ resource "azurerm_subnet_route_table_association" "gen2_nsx_gw_subnet_udr_associ
 }
 
 # Attach the GW UDR to the second AVS NSX GW subnet (with hard dependency on first)
-resource "azurerm_subnet_route_table_association" "gen2_nsx_gw_subnet_udr_association_1" {
+resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
   count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
 
-  route_table_id = azurerm_route_table.gen2_nsx_gw_udr[0].id
-  subnet_id      = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[1]].id
+  resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[1]].id
+  type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
+  body = {
+    properties = {
+      routeTable = {
+        id = azurerm_route_table.gen2_nsx_gw_udr[0].id
+      }
+    }
+  }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
