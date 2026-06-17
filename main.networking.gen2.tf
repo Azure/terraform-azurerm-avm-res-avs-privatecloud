@@ -144,8 +144,7 @@ resource "azapi_update_resource" "gen2_mgmt_route_table" {
     azapi_resource.dhcp,
     azapi_resource.segments,
     data.azapi_resource_list.gen2_subnets,
-    data.azapi_resource.gen2_mgmt_route_table,
-    azapi_resource.gen2_mgmt_route
+    data.azapi_resource.gen2_mgmt_route_table
   ]
 }
 
@@ -164,9 +163,6 @@ resource "azapi_resource" "gen2_mgmt_route" {
     }
   }
 
-  depends_on = [
-    azapi_update_resource.gen2_mgmt_route_table
-  ]
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
