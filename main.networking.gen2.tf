@@ -154,7 +154,7 @@ resource "azapi_resource" "gen2_mgmt_route" {
 
   name      = each.value.name
   parent_id = data.azapi_resource.gen2_mgmt_route_table[0].resource_id
-  type      = "Microsoft.Network/routeTables/routes@2025-07-01"
+  type      = "Microsoft.Network/routeTables/routes@2025-05-01"
   body = {
     properties = {
       addressPrefix    = each.value.properties.addressPrefix
