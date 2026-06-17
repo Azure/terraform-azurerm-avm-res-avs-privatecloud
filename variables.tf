@@ -456,10 +456,10 @@ ROUTES
 
   validation {
     condition = (
-      length([for _, v in var.gen2_subnets_user_defined_routes : v if v.is_mgmnt]) <= 1 &&
-      length([for _, v in var.gen2_subnets_user_defined_routes : v if !v.is_mgmnt]) <= 1
+      length([for _, v in var.gen2_subnets_user_defined_routes : v if v.is_mgmt]) <= 1 &&
+      length([for _, v in var.gen2_subnets_user_defined_routes : v if !v.is_mgmt]) <= 1
     )
-    error_message = "Only one management (is_mgmnt=true) and one gateway/non-management (is_mgmnt=false) configuration are supported in gen2_subnets_user_defined_routes."
+    error_message = "Only one management (is_mgmt=true) and one gateway/non-management (is_mgmt=false) configuration are supported in gen2_subnets_user_defined_routes."
   }
 }
 
