@@ -230,6 +230,10 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = resource_id
+  }
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
@@ -274,6 +278,9 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
         id = azurerm_route_table.gen2_nsx_gw_udr[0].id
       }
     }
+  }
+    lifecycle {
+    ignore_changes = resource_id
   }
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
