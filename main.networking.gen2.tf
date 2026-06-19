@@ -122,6 +122,9 @@ resource "azapi_update_resource" "gen2_mgmt_route_table" {
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
+  lifecycle {
+    ignore_changes = [resource_id]
+  }
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
@@ -166,6 +169,10 @@ resource "azapi_resource" "gen2_mgmt_route" {
   delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  lifecycle {
+    ignore_changes = [parent_id]
+  }
 }
 
 # Create new User defined route table for the gen2 AVS avs-nsx-gw-* subnets if defined
@@ -230,13 +237,12 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
       }
     }
   }
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   lifecycle {
     ignore_changes = [resource_id]
   }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
@@ -279,12 +285,12 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
       }
     }
   }
-  lifecycle {
-    ignore_changes = [resource_id]
-  }
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
+  lifecycle {
+    ignore_changes = [resource_id]
+  }
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,

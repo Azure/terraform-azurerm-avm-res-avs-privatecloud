@@ -202,6 +202,9 @@ resource "azapi_update_resource" "dns_default_service_ips" {
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
+  lifecycle {
+    ignore_changes = [name]
+  }
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
