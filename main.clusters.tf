@@ -26,13 +26,11 @@ resource "azapi_resource" "clusters" {
     delete = "4h"
   }
 
-  depends_on = [azapi_resource.this_private_cloud] #setting explicit dependencies to force deployment order
-
   #adding lifecycle block to handle deployment issue with parent_id 
   lifecycle {
     ignore_changes = [
       parent_id
     ]
   }
+  depends_on = [azapi_resource.this_private_cloud] #setting explicit dependencies to force deployment order
 }
-

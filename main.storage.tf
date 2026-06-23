@@ -56,11 +56,17 @@ resource "azapi_resource" "this_netapp_attachment" {
     azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp,
     azapi_resource.segments,
+    azapi_update_resource.gen2_mgmt_route_table,
+    azapi_resource.gen2_mgmt_route,
+    azurerm_route_table.gen2_nsx_gw_udr,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_0,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_1,
     #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources
   ]
 }
+
 /*
 resource "azurerm_vmware_netapp_volume_attachment" "attach_datastores" {
   for_each = { for datastore in local.netapp_attachments : datastore.attachment_name => datastore }
@@ -153,6 +159,11 @@ resource "azapi_resource" "this_esan_attachment" {
     azapi_update_resource.dns_default_service_ips,
     azapi_resource.dhcp,
     azapi_resource.segments,
+    azapi_update_resource.gen2_mgmt_route_table,
+    azapi_resource.gen2_mgmt_route,
+    azurerm_route_table.gen2_nsx_gw_udr,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_0,
+    azapi_update_resource.gen2_nsx_gw_subnet_udr_association_1,
     #azapi_resource.current_status_identity_sources,
     azapi_resource.remove_existing_identity_source,
     azapi_resource.configure_identity_sources,

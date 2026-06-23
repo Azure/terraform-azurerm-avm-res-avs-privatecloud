@@ -206,7 +206,6 @@ locals {
 }
 */
 
-
 /*
 resource "azapi_resource" "avs_private_cloud_connection_additional" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order > 1) }
@@ -265,9 +264,6 @@ moved {
 #TODOL duplicate the AzAPI config for the deployment order issues
 
 
-
-
-
 #Create one or more ExpressRoute Gateway connections to a VWAN hub
 resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
   for_each = { for k, v in var.expressroute_connections : k => v if(v.vwan_hub_connection == true && v.deployment_order == 1) }
@@ -294,6 +290,9 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [express_route_circuit_peering_id, authorization_key]
+  } #TODO - determine why this is returning 'known after apply'
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
@@ -309,10 +308,6 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection" {
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional
   ]
-
-  lifecycle {
-    ignore_changes = [express_route_circuit_peering_id, authorization_key]
-  } #TODO - determine why this is returning 'known after apply'
 }
 
 #Create one or more ExpressRoute Gateway connections to a VWAN hub
@@ -341,6 +336,9 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
     }
   }
 
+  lifecycle {
+    ignore_changes = [express_route_circuit_peering_id, authorization_key]
+  } #TODO - determine why this is returning 'known after apply'
   depends_on = [
     azapi_resource.this_private_cloud,
     azapi_resource.clusters,
@@ -356,10 +354,6 @@ resource "azurerm_express_route_connection" "avs_private_cloud_connection_additi
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection,
     azapi_resource.avs_private_cloud_expressroute_vnet_gateway_connection_additional
   ]
-
-  lifecycle {
-    ignore_changes = [express_route_circuit_peering_id, authorization_key]
-  } #TODO - determine why this is returning 'known after apply'
 }
 
 #create one or more cross SDDC regional connections

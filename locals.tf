@@ -3,5 +3,3 @@ locals {
   role_definition_resource_substring = "providers/Microsoft.Authorization/roleDefinitions"
   vcenter_password                   = coalesce(var.vcenter_password, random_password.vcenter.result)
 }
-
-
