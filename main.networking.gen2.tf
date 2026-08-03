@@ -97,19 +97,6 @@ data "azapi_resource" "gen2_mgmt_route_table" {
   ]
 }
 
-locals {
-  gen2_udr_mgmt_custom_routes = local.gen2_udr_mgmt_config == null ? {} : {
-    for route_name, route in local.gen2_udr_mgmt_config.routes : lower(route_name) => {
-      name = route_name
-      properties = {
-        addressPrefix    = route.address_prefix
-        nextHopType      = route.next_hop_type
-        nextHopIpAddress = try(route.next_hop_in_ip_address, null)
-      }
-    }
-  }
-}
-
 # Modify the service-created mgmt route table by merging in the user-defined routes
 resource "azapi_update_resource" "gen2_mgmt_route_table" {
   count = (local.gen2_enabled && local.gen2_has_udr_mgmt_config) ? 1 : 0
@@ -119,6 +106,16 @@ resource "azapi_update_resource" "gen2_mgmt_route_table" {
   body = {
     properties = {
       disableBgpRoutePropagation = !(try(local.gen2_udr_mgmt_config.bgp_route_propagation_enabled, true))
+      routes = [
+        for route_name, route in try(local.gen2_udr_mgmt_config.routes, {}) : {
+          name = route_name
+          properties = {
+            addressPrefix    = route.address_prefix
+            nextHopType      = route.next_hop_type
+            nextHopIpAddress = try(route.next_hop_in_ip_address, null)
+          }
+        }
+      ]
     }
   }
   read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -151,30 +148,6 @@ resource "azapi_update_resource" "gen2_mgmt_route_table" {
     data.azapi_resource_list.gen2_subnets,
     data.azapi_resource.gen2_mgmt_route_table
   ]
-}
-
-# Manage each user-defined management route as an independent child resource.
-resource "azapi_resource" "gen2_mgmt_route" {
-  for_each = (local.gen2_enabled && local.gen2_has_udr_mgmt_config) ? local.gen2_udr_mgmt_custom_routes : {}
-
-  name      = each.value.name
-  parent_id = data.azapi_resource.gen2_mgmt_route_table[0].resource_id
-  type      = "Microsoft.Network/routeTables/routes@2025-05-01"
-  body = {
-    properties = {
-      addressPrefix    = each.value.properties.addressPrefix
-      nextHopType      = each.value.properties.nextHopType
-      nextHopIpAddress = try(each.value.properties.nextHopIpAddress, null)
-    }
-  }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-
-  lifecycle {
-    ignore_changes = [parent_id]
-  }
 }
 
 # Create new User defined route table for the gen2 AVS avs-nsx-gw-* subnets if defined
@@ -221,8 +194,7 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
     azapi_resource.segments,
     data.azapi_resource_list.gen2_subnets,
     data.azapi_resource.gen2_mgmt_route_table,
-    azapi_update_resource.gen2_mgmt_route_table,
-    azapi_resource.gen2_mgmt_route
+    azapi_update_resource.gen2_mgmt_route_table
   ]
 }
 
@@ -269,7 +241,6 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
     data.azapi_resource_list.gen2_subnets,
     data.azapi_resource.gen2_mgmt_route_table,
     azapi_update_resource.gen2_mgmt_route_table,
-    azapi_resource.gen2_mgmt_route,
     azurerm_route_table.gen2_nsx_gw_udr
   ]
 }
@@ -317,7 +288,6 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
     data.azapi_resource_list.gen2_subnets,
     data.azapi_resource.gen2_mgmt_route_table,
     azapi_update_resource.gen2_mgmt_route_table,
-    azapi_resource.gen2_mgmt_route,
     azurerm_route_table.gen2_nsx_gw_udr,
     azapi_update_resource.gen2_nsx_gw_subnet_udr_association_0
   ]
