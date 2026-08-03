@@ -410,6 +410,33 @@ variable "external_storage_address_block" {
   description = "If using Elastic SAN or other ISCSI storage, provide an /24 CIDR range as a string for use in connecting the external storage.  Example: 10.10.0.0/24"
 }
 
+variable "gen2_private_cloud" {
+  type = map(object({
+    virtual_network_resource_id = string
+  }))
+  default     = {}
+  description = <<GEN2_PRIVATE_CLOUD
+Map input used for generation 2 private cloud configuration. This map allows the module to make gen2 decisions at plan time even when the virtual network resource ID is unknown until apply.
+
+- `<map key>` - Provide a single custom key for the gen2 configuration object.
+  - `virtual_network_resource_id` = (Required) - The Azure Resource ID for the virtual network where the private cloud will be deployed.
+
+Example Input:
+```hcl
+gen2_private_cloud = {
+  primary = {
+    virtual_network_resource_id = module.vnet.id
+  }
+}
+```
+GEN2_PRIVATE_CLOUD
+
+  validation {
+    condition     = length(var.gen2_private_cloud) <= 1
+    error_message = "Only one gen2 configuration object is supported in `gen2_private_cloud`."
+  }
+}
+
 variable "gen2_subnets_user_defined_routes" {
   type = map(object({
     is_mgmt                       = bool
@@ -804,60 +831,70 @@ variable "virtual_network_resource_id" {
   default     = null
   description = "The Azure Resource ID for the virtual network where the private cloud will be deployed. This is required when deploying a generation 2 AVS private cloud."
 
+  deprecated = "This variable is deprecated and will be removed in the next minor release, use 'gen2_private_cloud' variable instead."
+
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       var.external_storage_address_block != null
     )
     error_message = "Setting the external storage address block is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `external_storage_address_block` is null when including a `virtual_network_resource_id`."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.extended_network_blocks) > 0
     )
     error_message = "Setting extended address blocks is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `extended_network_blocks` is empty when including a `virtual_network_resource_id`."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       var.sku_name != "av64"
     )
     error_message = "Gen2 private clouds only support AV64 SKU when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `sku_name` is set to `av64` when including a `virtual_network_resource_id`."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.avs_interconnect_connections) > 0
     )
     error_message = "Gen2 private clouds don't support AVS expressRoute interconnect connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the AVS interconnect connections."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.expressroute_connections) > 0
     )
     error_message = "Gen2 private clouds don't support expressRoute connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the expressRoute connections."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.global_reach_connections) > 0
     )
     error_message = "Gen2 private clouds don't support global reach connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the global reach connections."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.internet_inbound_public_ips) > 0
     )
     error_message = "Gen2 private clouds don't support inbound public IPs. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the internet inbound public IPs."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       var.internet_enabled != false
     )
     error_message = "Gen2 private clouds don't support internet enabled configuration. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that `internet_enabled` is set to false."
+  }
+  validation {
+    condition = (
+      length(var.gen2_private_cloud) == 0 ||
+      var.virtual_network_resource_id == null ||
+      try(values(var.gen2_private_cloud)[0].virtual_network_resource_id, null) == var.virtual_network_resource_id
+    )
+    error_message = "When both `gen2_private_cloud` and `virtual_network_resource_id` are provided, they must reference the same virtual network resource ID."
   }
 }

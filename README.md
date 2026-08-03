@@ -13,7 +13,7 @@ It leverages both the AzAPI and AzureRM providers to implement the child-level r
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.10)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.15.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -536,6 +536,32 @@ Description: If using Elastic SAN or other ISCSI storage, provide an /24 CIDR ra
 Type: `string`
 
 Default: `null`
+
+### <a name="input_gen2_private_cloud"></a> [gen2\_private\_cloud](#input\_gen2\_private\_cloud)
+
+Description: Map input used for generation 2 private cloud configuration. This map allows the module to make gen2 decisions at plan time even when the virtual network resource ID is unknown until apply.
+
+- `<map key>` - Provide a single custom key for the gen2 configuration object.
+  - `virtual_network_resource_id` = (Required) - The Azure Resource ID for the virtual network where the private cloud will be deployed.
+
+Example Input:
+```hcl
+gen2_private_cloud = {
+  primary = {
+    virtual_network_resource_id = module.vnet.id
+  }
+}
+```
+
+Type:
+
+```hcl
+map(object({
+    virtual_network_resource_id = string
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_gen2_subnets_user_defined_routes"></a> [gen2\_subnets\_user\_defined\_routes](#input\_gen2\_subnets\_user\_defined\_routes)
 

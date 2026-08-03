@@ -23,9 +23,9 @@ locals {
   base_properties_availability = {
     strategy = var.enable_stretch_cluster ? "DualZone" : "SingleZone"
   }
-  #assumes that a vnetID is the flag for gen 2 private clouds.  Sets the DNS Zone type since it is only valid with gen 2 private clouds.
-  base_properties_vnet = var.virtual_network_resource_id != null ? {
-    virtualNetworkId = var.virtual_network_resource_id
+  # Uses the effective gen2 VNet input (new map input first, legacy string fallback).
+  base_properties_vnet = local.gen2_effective_virtual_network_id != null ? {
+    virtualNetworkId = local.gen2_effective_virtual_network_id
     dnsZoneType      = var.dns_zone_type
   } : {}
   full_body = merge(local.base_body, { properties = merge(local.properties_map, local.base_properties_vnet) }) #merge the properties map into the body map

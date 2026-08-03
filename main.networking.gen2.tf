@@ -1,6 +1,6 @@
 locals {
-  gen2_enabled                     = var.virtual_network_resource_id != null
-  gen2_network_resource_group_name = local.gen2_enabled ? element(split("/", var.virtual_network_resource_id), 4) : null
+  gen2_enabled                     = local.gen2_effective_enabled
+  gen2_network_resource_group_name = local.gen2_enabled ? element(split("/", local.gen2_effective_virtual_network_id), 4) : null
   gen2_udr_gw_config               = try(values(local.gen2_udr_gw_configs)[0], null)
   gen2_udr_gw_configs              = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if !v.is_mgmt } : {}
   # This module is designed for a single mgmt and a single gw UDR config.
@@ -13,7 +13,7 @@ locals {
 data "azapi_resource_list" "gen2_subnets" {
   count = local.gen2_enabled ? 1 : 0
 
-  parent_id              = var.virtual_network_resource_id
+  parent_id              = local.gen2_effective_virtual_network_id
   type                   = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
   response_export_values = ["value"]
 
