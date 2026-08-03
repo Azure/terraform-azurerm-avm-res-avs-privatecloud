@@ -3,10 +3,12 @@ locals {
   gen2_network_resource_group_name = local.gen2_enabled ? element(split("/", local.gen2_effective_virtual_network_id), 4) : null
   gen2_udr_gw_config               = try(values(local.gen2_udr_gw_configs)[0], null)
   gen2_udr_gw_configs              = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if !v.is_mgmt } : {}
+  gen2_has_udr_gw_config           = length(local.gen2_udr_gw_configs) > 0
   # This module is designed for a single mgmt and a single gw UDR config.
   gen2_udr_mgmt_config = try(values(local.gen2_udr_mgmt_configs)[0], null)
   # Split the configuration into mgmt and gw configs. The map key is treated as a unique label.
-  gen2_udr_mgmt_configs = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if v.is_mgmt } : {}
+  gen2_udr_mgmt_configs    = local.gen2_enabled ? { for k, v in var.gen2_subnets_user_defined_routes : k => v if v.is_mgmt } : {}
+  gen2_has_udr_mgmt_config = length(local.gen2_udr_mgmt_configs) > 0
 }
 
 # Read all of the subnets in the Gen2 private cloud VNet. These subnets are created/managed by AVS.
@@ -64,7 +66,7 @@ locals {
 
 # Read the user defined route table for the mgmt subnet(s) (if UDR config is defined)
 data "azapi_resource" "gen2_mgmt_route_table" {
-  count = (local.gen2_enabled && local.gen2_udr_mgmt_config != null) ? 1 : 0
+  count = (local.gen2_enabled && local.gen2_has_udr_mgmt_config) ? 1 : 0
 
   resource_id            = local.gen2_mgmt_route_table_id
   type                   = "Microsoft.Network/routeTables@2024-05-01"
@@ -110,7 +112,7 @@ locals {
 
 # Modify the service-created mgmt route table by merging in the user-defined routes
 resource "azapi_update_resource" "gen2_mgmt_route_table" {
-  count = (local.gen2_enabled && local.gen2_udr_mgmt_config != null) ? 1 : 0
+  count = (local.gen2_enabled && local.gen2_has_udr_mgmt_config) ? 1 : 0
 
   resource_id = data.azapi_resource.gen2_mgmt_route_table[0].resource_id
   type        = "Microsoft.Network/routeTables@2024-05-01"
@@ -153,7 +155,7 @@ resource "azapi_update_resource" "gen2_mgmt_route_table" {
 
 # Manage each user-defined management route as an independent child resource.
 resource "azapi_resource" "gen2_mgmt_route" {
-  for_each = (local.gen2_enabled && local.gen2_udr_mgmt_config != null) ? local.gen2_udr_mgmt_custom_routes : {}
+  for_each = (local.gen2_enabled && local.gen2_has_udr_mgmt_config) ? local.gen2_udr_mgmt_custom_routes : {}
 
   name      = each.value.name
   parent_id = data.azapi_resource.gen2_mgmt_route_table[0].resource_id
@@ -177,7 +179,7 @@ resource "azapi_resource" "gen2_mgmt_route" {
 
 # Create new User defined route table for the gen2 AVS avs-nsx-gw-* subnets if defined
 resource "azurerm_route_table" "gen2_nsx_gw_udr" {
-  count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
+  count = (local.gen2_enabled && local.gen2_has_udr_gw_config) ? 1 : 0
 
   location                      = var.location
   name                          = coalesce(try(local.gen2_udr_gw_config.name, null), "${var.name}-avs-nsx-gw-udr")
@@ -226,7 +228,7 @@ resource "azurerm_route_table" "gen2_nsx_gw_udr" {
 
 # Attach the GW UDR to the first AVS NSX GW subnet
 resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
-  count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
+  count = (local.gen2_enabled && local.gen2_has_udr_gw_config) ? 1 : 0
 
   resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[0]].id
   type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
@@ -274,7 +276,7 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
 
 # Attach the GW UDR to the second AVS NSX GW subnet (with hard dependency on first)
 resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
-  count = (local.gen2_enabled && local.gen2_udr_gw_config != null) ? 1 : 0
+  count = (local.gen2_enabled && local.gen2_has_udr_gw_config) ? 1 : 0
 
   resource_id = local.gen2_nsx_gw_subnets[local.gen2_nsx_gw_subnets_sorted_names[1]].id
   type        = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
