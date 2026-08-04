@@ -782,10 +782,58 @@ variable "vcenter_password" {
   sensitive   = true
 }
 
+variable "vcf_firewall_license" {
+  type = object({
+    kind                   = optional(string, "VmwareFirewall")
+    broadcomContractNumber = optional(string)
+    broadcomSiteId         = optional(string)
+    cores                  = number
+    endDate                = string
+    labels = optional(list(object({
+      key   = string
+      value = string
+    })), [])
+    licenseKey = string
+  })
+  default     = null
+  description = <<VCF_FIREWALL_LICENSE
+  This object defines the VMware Firewall license configuration for the private cloud. By providing this data, you confirm you have purchased the above VCF license from Broadcom for use on Azure VMware Solution, and that the information provided is accurate. By providing this information, you also attest that you understand that providing false information may impact the continuity of the private cloud.
+
+- `kind`                   = (Optional) - The license kind. Defaults to `VmwareFirewall`.
+- `broadcomContractNumber` = (Optional) - The Broadcom contract number associated with the license.
+- `broadcomSiteId`         = (Optional) - The Broadcom site ID associated with the license.
+- `cores`                  = (Required) - The number of cores included in the license, measured per hour.
+- `endDate`                = (Required) - The UTC expiration date and time for the license.
+- `labels`                 = (Optional) - A list of label objects to associate with the license. Defaults to an empty list.
+  - `key`   = (Required) - The label key.
+  - `value` = (Required) - The label value.
+- `licenseKey`             = (Required) - The VMware Firewall license key.
+
+Example Input:
+```hcl
+vcf_firewall_license = {
+  broadcomContractNumber = "12345678"
+  broadcomSiteId         = "87654321"
+  cores                  = 128
+  endDate                = "2026-12-31"
+  labels = [
+    {
+      key   = "environment"
+      value = "production"
+    }
+  ]
+  licenseKey = "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+}
+```
+VCF_FIREWALL_LICENSE
+  sensitive   = true
+}
+
 variable "vcf_license" {
   type = object({
     kind                   = optional(string, "vcf5")
     broadcomContractNumber = string
+    broadcomSiteId         = string
     cores                  = number
     endDate                = string
     labels = optional(list(object({
@@ -796,10 +844,10 @@ variable "vcf_license" {
   })
   default     = null
   description = <<VCF_LICENSE
-This object defines the VCF (VMware Cloud Foundation) license configuration for the private cloud. This is required for new AVS private clouds using the VCF licensing model.
-
+This object defines the VCF (VMware Cloud Foundation) license configuration for the private cloud. This is required for new AVS private clouds using the VCF licensing model. By providing this data, you confirm you have purchased the above VCF license from Broadcom for use on Azure VMware Solution, and that the information provided is accurate. By providing this information, you also attest that you understand that providing false information may impact the continuity of the private cloud.
 - `kind`                   = (Optional) - The kind of VCF license. Defaults to "vcf5".
 - `broadcomContractNumber` = (Required) - The Broadcom contract number associated with the license.
+- `broadcomSiteId`         = (Required) - The Broadcom site ID associated with the license.
 - `cores`                  = (Required) - The number of cores covered by the license.
 - `endDate`                = (Required) - The end date of the license in ISO 8601 format (e.g., "2026-12-31").
 - `labels`                 = (Optional) - A list of label objects to associate with the license. Defaults to an empty list.
@@ -824,6 +872,7 @@ vcf_license = {
 }
 ```
 VCF_LICENSE
+  sensitive   = true
 }
 
 variable "virtual_network_resource_id" {

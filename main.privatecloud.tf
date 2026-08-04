@@ -92,6 +92,23 @@ resource "azapi_resource" "this_private_cloud" {
   }
 }
 
+resource "azapi_resource" "vcf_firewall_license" {
+  count = var.vcf_firewall_license != null ? 1 : 0
+
+  name                   = "VmwareFirewall"
+  parent_id              = azapi_resource.this_private_cloud.id
+  type                   = "Microsoft.AVS/privateClouds/licenses@2025-09-01"
+  body                   = { properties = var.vcf_firewall_license }
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs  = ["body.properties"]
+  response_export_values = ["*"]
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.this_private_cloud]
+}
+
 #use a data resource to get the identity details to avoid terraform import issues
 data "azapi_resource" "this_private_cloud" {
   resource_id            = azapi_resource.this_private_cloud.id
