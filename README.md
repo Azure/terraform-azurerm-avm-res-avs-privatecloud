@@ -1005,6 +1005,7 @@ Example Input:
 vcf_license = {
   kind                   = "vcf5"
   broadcomContractNumber = "12345678"
+  broadcomSiteId         = "87654321"
   cores                  = 128
   endDate                = "2026-12-31"
   labels = [
