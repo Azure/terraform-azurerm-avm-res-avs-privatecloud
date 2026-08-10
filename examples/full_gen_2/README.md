@@ -468,7 +468,11 @@ module "test_private_cloud" {
       ldap_user_password = module.create_dc.ldap_user_password
     }
   }
-  virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
+  gen2_private_cloud = {
+    primary = {
+      virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
+    }
+  }
 }
 ```
 

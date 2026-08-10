@@ -73,7 +73,11 @@ module "test_private_cloud" {
   tags = {
     scenario = "avs_minimal_gen_2"
   }
-  virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
+  gen2_private_cloud = {
+    primary = {
+      virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
+    }
+  }
 }
 ```
 

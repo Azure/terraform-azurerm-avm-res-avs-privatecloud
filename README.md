@@ -13,7 +13,7 @@ It leverages both the AzAPI and AzureRM providers to implement the child-level r
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.10)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.15.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
@@ -37,7 +37,6 @@ The following resources are used by this module:
 - [azapi_resource.configure_identity_sources](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.dhcp](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.dns_forwarder_zones](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.gen2_mgmt_route](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.globalreach_connections](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.hcx_keys](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
@@ -49,6 +48,7 @@ The following resources are used by this module:
 - [azapi_resource.this_esan_attachment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this_netapp_attachment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.this_private_cloud](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.vcf_firewall_license](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.vr_addon](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.dns_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.dns_service_destroy_non_empty_start](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
@@ -537,6 +537,32 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_gen2_private_cloud"></a> [gen2\_private\_cloud](#input\_gen2\_private\_cloud)
+
+Description: Map input used for generation 2 private cloud configuration. This map allows the module to make gen2 decisions at plan time even when the virtual network resource ID is unknown until apply.
+
+- `<map key>` - Provide a single custom key for the gen2 configuration object.
+  - `virtual_network_resource_id` = (Required) - The Azure Resource ID for the virtual network where the private cloud will be deployed.
+
+Example Input:
+```hcl
+gen2_private_cloud = {
+  primary = {
+    virtual_network_resource_id = module.vnet.id
+  }
+}
+```
+
+Type:
+
+```hcl
+map(object({
+    virtual_network_resource_id = string
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_gen2_subnets_user_defined_routes"></a> [gen2\_subnets\_user\_defined\_routes](#input\_gen2\_subnets\_user\_defined\_routes)
 
 Description: Map of string objects describing the user-defined routes for each subnet. The map key will be used as the subnet name.
@@ -911,12 +937,62 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_vcf_firewall_license"></a> [vcf\_firewall\_license](#input\_vcf\_firewall\_license)
+
+Description:   This object defines the VMware Firewall license configuration for the private cloud. By providing this data, you confirm you have purchased the above VCF license from Broadcom for use on Azure VMware Solution, and that the information provided is accurate. By providing this information, you also attest that you understand that providing false information may impact the continuity of the private cloud.
+
+- `kind`                   = (Optional) - The license kind. Defaults to `VmwareFirewall`.
+- `broadcomContractNumber` = (Optional) - The Broadcom contract number associated with the license.
+- `broadcomSiteId`         = (Optional) - The Broadcom site ID associated with the license.
+- `cores`                  = (Required) - The number of cores included in the license, measured per hour.
+- `endDate`                = (Required) - The UTC expiration date and time for the license.
+- `labels`                 = (Optional) - A list of label objects to associate with the license. Defaults to an empty list.
+  - `key`   = (Required) - The label key.
+  - `value` = (Required) - The label value.
+- `licenseKey`             = (Required) - The VMware Firewall license key.
+
+Example Input:
+```hcl
+vcf_firewall_license = {
+  broadcomContractNumber = "12345678"
+  broadcomSiteId         = "87654321"
+  cores                  = 128
+  endDate                = "2026-12-31"
+  labels = [
+    {
+      key   = "environment"
+      value = "production"
+    }
+  ]
+  licenseKey = "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+}
+```
+
+Type:
+
+```hcl
+object({
+    kind                   = optional(string, "VmwareFirewall")
+    broadcomContractNumber = optional(string)
+    broadcomSiteId         = optional(string)
+    cores                  = number
+    endDate                = string
+    labels = optional(list(object({
+      key   = string
+      value = string
+    })), [])
+    licenseKey = string
+  })
+```
+
+Default: `null`
+
 ### <a name="input_vcf_license"></a> [vcf\_license](#input\_vcf\_license)
 
-Description: This object defines the VCF (VMware Cloud Foundation) license configuration for the private cloud. This is required for new AVS private clouds using the VCF licensing model.
-
+Description: This object defines the VCF (VMware Cloud Foundation) license configuration for the private cloud. This is required for new AVS private clouds using the VCF licensing model. By providing this data, you confirm you have purchased the above VCF license from Broadcom for use on Azure VMware Solution, and that the information provided is accurate. By providing this information, you also attest that you understand that providing false information may impact the continuity of the private cloud.
 - `kind`                   = (Optional) - The kind of VCF license. Defaults to "vcf5".
 - `broadcomContractNumber` = (Required) - The Broadcom contract number associated with the license.
+- `broadcomSiteId`         = (Required) - The Broadcom site ID associated with the license.
 - `cores`                  = (Required) - The number of cores covered by the license.
 - `endDate`                = (Required) - The end date of the license in ISO 8601 format (e.g., "2026-12-31").
 - `labels`                 = (Optional) - A list of label objects to associate with the license. Defaults to an empty list.
@@ -929,6 +1005,7 @@ Example Input:
 vcf_license = {
   kind                   = "vcf5"
   broadcomContractNumber = "12345678"
+  broadcomSiteId         = "87654321"
   cores                  = 128
   endDate                = "2026-12-31"
   labels = [
@@ -947,6 +1024,7 @@ Type:
 object({
     kind                   = optional(string, "vcf5")
     broadcomContractNumber = string
+    broadcomSiteId         = string
     cores                  = number
     endDate                = string
     labels = optional(list(object({

@@ -410,6 +410,34 @@ variable "external_storage_address_block" {
   description = "If using Elastic SAN or other ISCSI storage, provide an /24 CIDR range as a string for use in connecting the external storage.  Example: 10.10.0.0/24"
 }
 
+variable "gen2_private_cloud" {
+  type = map(object({
+    virtual_network_resource_id = string
+  }))
+  default     = {}
+  nullable    = false
+  description = <<GEN2_PRIVATE_CLOUD
+Map input used for generation 2 private cloud configuration. This map allows the module to make gen2 decisions at plan time even when the virtual network resource ID is unknown until apply.
+
+- `<map key>` - Provide a single custom key for the gen2 configuration object.
+  - `virtual_network_resource_id` = (Required) - The Azure Resource ID for the virtual network where the private cloud will be deployed.
+
+Example Input:
+```hcl
+gen2_private_cloud = {
+  primary = {
+    virtual_network_resource_id = module.vnet.id
+  }
+}
+```
+GEN2_PRIVATE_CLOUD
+
+  validation {
+    condition     = length(var.gen2_private_cloud) <= 1
+    error_message = "Only one gen2 configuration object is supported in `gen2_private_cloud`."
+  }
+}
+
 variable "gen2_subnets_user_defined_routes" {
   type = map(object({
     is_mgmt                       = bool
@@ -755,10 +783,58 @@ variable "vcenter_password" {
   sensitive   = true
 }
 
+variable "vcf_firewall_license" {
+  type = object({
+    kind                   = optional(string, "VmwareFirewall")
+    broadcomContractNumber = optional(string)
+    broadcomSiteId         = optional(string)
+    cores                  = number
+    endDate                = string
+    labels = optional(list(object({
+      key   = string
+      value = string
+    })), [])
+    licenseKey = string
+  })
+  default     = null
+  description = <<VCF_FIREWALL_LICENSE
+  This object defines the VMware Firewall license configuration for the private cloud. By providing this data, you confirm you have purchased the above VCF license from Broadcom for use on Azure VMware Solution, and that the information provided is accurate. By providing this information, you also attest that you understand that providing false information may impact the continuity of the private cloud.
+
+- `kind`                   = (Optional) - The license kind. Defaults to `VmwareFirewall`.
+- `broadcomContractNumber` = (Optional) - The Broadcom contract number associated with the license.
+- `broadcomSiteId`         = (Optional) - The Broadcom site ID associated with the license.
+- `cores`                  = (Required) - The number of cores included in the license, measured per hour.
+- `endDate`                = (Required) - The UTC expiration date and time for the license.
+- `labels`                 = (Optional) - A list of label objects to associate with the license. Defaults to an empty list.
+  - `key`   = (Required) - The label key.
+  - `value` = (Required) - The label value.
+- `licenseKey`             = (Required) - The VMware Firewall license key.
+
+Example Input:
+```hcl
+vcf_firewall_license = {
+  broadcomContractNumber = "12345678"
+  broadcomSiteId         = "87654321"
+  cores                  = 128
+  endDate                = "2026-12-31"
+  labels = [
+    {
+      key   = "environment"
+      value = "production"
+    }
+  ]
+  licenseKey = "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+}
+```
+VCF_FIREWALL_LICENSE
+  sensitive   = true
+}
+
 variable "vcf_license" {
   type = object({
     kind                   = optional(string, "vcf5")
     broadcomContractNumber = string
+    broadcomSiteId         = string
     cores                  = number
     endDate                = string
     labels = optional(list(object({
@@ -769,10 +845,10 @@ variable "vcf_license" {
   })
   default     = null
   description = <<VCF_LICENSE
-This object defines the VCF (VMware Cloud Foundation) license configuration for the private cloud. This is required for new AVS private clouds using the VCF licensing model.
-
+This object defines the VCF (VMware Cloud Foundation) license configuration for the private cloud. This is required for new AVS private clouds using the VCF licensing model. By providing this data, you confirm you have purchased the above VCF license from Broadcom for use on Azure VMware Solution, and that the information provided is accurate. By providing this information, you also attest that you understand that providing false information may impact the continuity of the private cloud.
 - `kind`                   = (Optional) - The kind of VCF license. Defaults to "vcf5".
 - `broadcomContractNumber` = (Required) - The Broadcom contract number associated with the license.
+- `broadcomSiteId`         = (Required) - The Broadcom site ID associated with the license.
 - `cores`                  = (Required) - The number of cores covered by the license.
 - `endDate`                = (Required) - The end date of the license in ISO 8601 format (e.g., "2026-12-31").
 - `labels`                 = (Optional) - A list of label objects to associate with the license. Defaults to an empty list.
@@ -785,6 +861,7 @@ Example Input:
 vcf_license = {
   kind                   = "vcf5"
   broadcomContractNumber = "12345678"
+  broadcomSiteId         = "87654321"
   cores                  = 128
   endDate                = "2026-12-31"
   labels = [
@@ -797,6 +874,7 @@ vcf_license = {
 }
 ```
 VCF_LICENSE
+  sensitive   = true
 }
 
 variable "virtual_network_resource_id" {
@@ -804,60 +882,70 @@ variable "virtual_network_resource_id" {
   default     = null
   description = "The Azure Resource ID for the virtual network where the private cloud will be deployed. This is required when deploying a generation 2 AVS private cloud."
 
+  deprecated = "This variable is deprecated and will be removed in the next minor release, use 'gen2_private_cloud' variable instead."
+
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       var.external_storage_address_block != null
     )
-    error_message = "Setting the external storage address block is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `external_storage_address_block` is null when including a `virtual_network_resource_id`."
+    error_message = "Setting the external storage address block is not allowed when configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`. Please ensure `external_storage_address_block` is null."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.extended_network_blocks) > 0
     )
-    error_message = "Setting extended address blocks is not allowed when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `extended_network_blocks` is empty when including a `virtual_network_resource_id`."
+    error_message = "Setting extended address blocks is not allowed when configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`. Please ensure `extended_network_blocks` is empty."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       var.sku_name != "av64"
     )
-    error_message = "Gen2 private clouds only support AV64 SKU when supplying the virtual network resource ID for a generation 2 private cloud. Please ensure `sku_name` is set to `av64` when including a `virtual_network_resource_id`."
+    error_message = "Gen2 private clouds only support AV64 SKU when configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`. Please ensure `sku_name` is set to `av64`."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.avs_interconnect_connections) > 0
     )
-    error_message = "Gen2 private clouds don't support AVS expressRoute interconnect connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the AVS interconnect connections."
+    error_message = "Gen2 private clouds don't support AVS expressRoute interconnect connections. When configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`, please ensure that no value is provided for the AVS interconnect connections."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.expressroute_connections) > 0
     )
-    error_message = "Gen2 private clouds don't support expressRoute connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the expressRoute connections."
+    error_message = "Gen2 private clouds don't support expressRoute connections. When configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`, please ensure that no value is provided for the expressRoute connections."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.global_reach_connections) > 0
     )
-    error_message = "Gen2 private clouds don't support global reach connections. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the global reach connections."
+    error_message = "Gen2 private clouds don't support global reach connections. When configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`, please ensure that no value is provided for the global reach connections."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       length(var.internet_inbound_public_ips) > 0
     )
-    error_message = "Gen2 private clouds don't support inbound public IPs. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that no value is provided for the internet inbound public IPs."
+    error_message = "Gen2 private clouds don't support inbound public IPs. When configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`, please ensure that no value is provided for the internet inbound public IPs."
   }
   validation {
     condition = !(
-      var.virtual_network_resource_id != null &&
+      (length(var.gen2_private_cloud) > 0 || var.virtual_network_resource_id != null) &&
       var.internet_enabled != false
     )
-    error_message = "Gen2 private clouds don't support internet enabled configuration. When supplying the virtual network resource ID for a generation 2 private cloud, Please ensure that `internet_enabled` is set to false."
+    error_message = "Gen2 private clouds don't support internet enabled configuration. When configuring a generation 2 private cloud with `gen2_private_cloud` or `virtual_network_resource_id`, please ensure that `internet_enabled` is set to false."
+  }
+  validation {
+    condition = (
+      length(var.gen2_private_cloud) == 0 ||
+      var.virtual_network_resource_id == null ||
+      try(values(var.gen2_private_cloud)[0].virtual_network_resource_id, null) == var.virtual_network_resource_id
+    )
+    error_message = "When both `gen2_private_cloud` and `virtual_network_resource_id` are provided, they must reference the same virtual network resource ID."
   }
 }

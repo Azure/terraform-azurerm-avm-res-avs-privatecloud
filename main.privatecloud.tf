@@ -23,9 +23,9 @@ locals {
   base_properties_availability = {
     strategy = var.enable_stretch_cluster ? "DualZone" : "SingleZone"
   }
-  #assumes that a vnetID is the flag for gen 2 private clouds.  Sets the DNS Zone type since it is only valid with gen 2 private clouds.
-  base_properties_vnet = var.virtual_network_resource_id != null ? {
-    virtualNetworkId = var.virtual_network_resource_id
+  # Uses the effective gen2 VNet input (new map input first, legacy string fallback).
+  base_properties_vnet = local.gen2_effective_virtual_network_id != null ? {
+    virtualNetworkId = local.gen2_effective_virtual_network_id
     dnsZoneType      = var.dns_zone_type
   } : {}
   full_body = merge(local.base_body, { properties = merge(local.properties_map, local.base_properties_vnet) }) #merge the properties map into the body map
@@ -90,6 +90,23 @@ resource "azapi_resource" "this_private_cloud" {
   lifecycle {
     ignore_changes = [body.properties.nsxtPassword, body.properties.vcenterPassword, body.properties.managementCluster.hosts, body.properties.availability.zone]
   }
+}
+
+resource "azapi_resource" "vcf_firewall_license" {
+  count = var.vcf_firewall_license != null ? 1 : 0
+
+  name                   = "VmwareFirewall"
+  parent_id              = azapi_resource.this_private_cloud.id
+  type                   = "Microsoft.AVS/privateClouds/licenses@2025-09-01"
+  body                   = { properties = var.vcf_firewall_license }
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs  = ["body.properties"]
+  response_export_values = ["*"]
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [azapi_resource.this_private_cloud]
 }
 
 #use a data resource to get the identity details to avoid terraform import issues
