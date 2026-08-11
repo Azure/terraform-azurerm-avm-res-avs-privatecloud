@@ -415,7 +415,6 @@ variable "gen2_private_cloud" {
     virtual_network_resource_id = string
   }))
   default     = {}
-  nullable    = false
   description = <<GEN2_PRIVATE_CLOUD
 Map input used for generation 2 private cloud configuration. This map allows the module to make gen2 decisions at plan time even when the virtual network resource ID is unknown until apply.
 
@@ -431,6 +430,7 @@ gen2_private_cloud = {
 }
 ```
 GEN2_PRIVATE_CLOUD
+  nullable    = false
 
   validation {
     condition     = length(var.gen2_private_cloud) <= 1
