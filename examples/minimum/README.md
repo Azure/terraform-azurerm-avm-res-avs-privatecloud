@@ -9,12 +9,12 @@ This example demonstrates a deployment with a single Azure VMware Solution priva
 ```hcl
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.12.0"
 }
 
 module "generate_deployment_region" {
@@ -97,7 +97,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.10)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.35)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 5.2)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
@@ -145,13 +145,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.4.2
+Version: 0.4.3
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.0
+Version: 0.12.0
 
 ### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
 
