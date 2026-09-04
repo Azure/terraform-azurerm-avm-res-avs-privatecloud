@@ -68,15 +68,15 @@ module "test_private_cloud" {
   sku_name                   = jsondecode(local_file.region_sku_cache.content).sku-mgmt
   dns_zone_type              = "Public"
   enable_telemetry           = var.enable_telemetry
-  internet_enabled           = false
-  management_cluster_size    = 3
-  tags = {
-    scenario = "avs_minimal_gen_2"
-  }
   gen2_private_cloud = {
     primary = {
       virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
     }
+  }
+  internet_enabled        = false
+  management_cluster_size = 3
+  tags = {
+    scenario = "avs_minimal_gen_2"
   }
 }
 ```

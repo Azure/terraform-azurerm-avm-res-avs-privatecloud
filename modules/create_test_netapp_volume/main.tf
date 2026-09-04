@@ -45,4 +45,3 @@ resource "azurerm_netapp_volume" "anf_volume" {
     ignore_changes = [zone]
   }
 }
-

@@ -1,4 +1,3 @@
-
 resource "azurerm_public_ip" "bastion_pip" {
   count = var.create_bastion ? 1 : 0
 
@@ -96,13 +95,13 @@ data "template_file" "run_script" {
   }
 }
 
-
 #build the DC VM
 locals {
   protected_settings_script_primary = jsonencode({
     commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
   })
 }
+
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
@@ -253,7 +252,6 @@ resource "azurerm_virtual_network_dns_servers" "dc_dns" {
   depends_on = [module.testvm]
 }
 
-
 ###############################################################
 # Create secondary DC
 ###############################################################
@@ -328,13 +326,13 @@ data "template_file" "run_script_secondary" {
   }
 }
 
-
 #build the secondary DC VM
 locals {
   protected_settings_script_secondary = jsonencode({
     commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.run_script_secondary.rendered)}')) | Out-File -filepath run_script.ps1\" && powershell -ExecutionPolicy Unrestricted -File run_script.ps1"
   })
 }
+
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"

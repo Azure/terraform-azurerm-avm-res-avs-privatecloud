@@ -118,8 +118,6 @@ resource "azapi_update_resource" "gen2_mgmt_route_table" {
       ]
     }
   }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   lifecycle {
     ignore_changes = [resource_id]
@@ -211,8 +209,6 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_0" {
       }
     }
   }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   lifecycle {
     ignore_changes = [resource_id]
@@ -258,8 +254,6 @@ resource "azapi_update_resource" "gen2_nsx_gw_subnet_udr_association_1" {
       }
     }
   }
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   lifecycle {
     ignore_changes = [resource_id]

@@ -104,7 +104,6 @@ resource "azurerm_express_route_gateway" "vwan_express_route_gateway" {
   virtual_hub_id      = azurerm_virtual_hub.vwan_hub.id
 }
 
-
 resource "azurerm_public_ip" "nat_gateway" {
   allocation_method   = "Static"
   location            = azurerm_resource_group.this.location
