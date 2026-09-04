@@ -15,7 +15,6 @@ This example demonstrates a deployment with a single Azure VMware Solution priva
         - Bastion enabled for accessing the Jump Box GUI
 
 ```hcl
-
 locals {
   vm_sku = "Standard_D2s_v5"
 }

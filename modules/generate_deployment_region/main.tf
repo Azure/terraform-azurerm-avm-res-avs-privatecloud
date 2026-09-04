@@ -63,4 +63,3 @@ resource "random_integer" "region_index" {
   max = try((length(local.valid_region_keys) - 1), 0)
   min = 0
 }
-

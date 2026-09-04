@@ -62,16 +62,12 @@ resource "azapi_resource" "this_private_cloud" {
   parent_id                 = var.resource_group_resource_id
   type                      = "Microsoft.AVS/privateClouds@2025-09-01"
   body                      = local.full_body
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_casing             = true
   ignore_missing_property   = true
   ignore_null_property      = true
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values    = ["*"]
   schema_validation_enabled = false
   tags                      = var.tags
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned
@@ -99,12 +95,8 @@ resource "azapi_resource" "vcf_firewall_license" {
   parent_id              = azapi_resource.this_private_cloud.id
   type                   = "Microsoft.AVS/privateClouds/licenses@2025-09-01"
   body                   = { properties = var.vcf_firewall_license }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs  = ["body.properties"]
   response_export_values = ["*"]
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [azapi_resource.this_private_cloud]
 }

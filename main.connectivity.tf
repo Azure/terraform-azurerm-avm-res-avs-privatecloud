@@ -19,10 +19,6 @@ resource "azapi_resource" "globalreach_connections" {
       peerExpressRouteCircuit = each.value.peer_expressroute_circuit_resource_id
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -67,11 +63,7 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
       }
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  tags           = each.value.tags == {} ? var.tags : each.value.tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags = each.value.tags == {} ? var.tags : each.value.tags
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -112,11 +104,7 @@ resource "azapi_resource" "avs_private_cloud_expressroute_vnet_gateway_connectio
       }
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  tags           = each.value.tags == {} ? var.tags : each.value.tags
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  tags = each.value.tags == {} ? var.tags : each.value.tags
 
   depends_on = [
     azapi_resource.this_private_cloud,
@@ -368,10 +356,6 @@ resource "azapi_resource" "avs_interconnect" {
       linkedCloud = each.value.linked_private_cloud_resource_id
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   depends_on = [
     azapi_resource.this_private_cloud,

@@ -373,7 +373,6 @@ module "create_dc" {
   depends_on = [module.avm_res_keyvault_vault, module.gateway_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway, azurerm_virtual_network_gateway.gateway]
 }
 
-
 resource "azurerm_log_analytics_workspace" "this_workspace" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.log_analytics_workspace.name_unique
@@ -417,6 +416,7 @@ resource "azurerm_virtual_network_gateway" "gateway_secondary" {
     ignore_changes = [ip_configuration]
   }
 }
+
 /*
 module "create_anf_volume" {
   source = "../../modules/create_test_netapp_volume"

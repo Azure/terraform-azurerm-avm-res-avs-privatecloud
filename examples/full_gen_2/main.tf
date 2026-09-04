@@ -213,7 +213,6 @@ module "create_dc" {
   depends_on = [module.avm_res_keyvault_vault, module.avs_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway]
 }
 
-
 resource "azurerm_log_analytics_workspace" "this_workspace" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.log_analytics_workspace.name_unique
@@ -287,6 +286,7 @@ resource "azurerm_virtual_network" "avs_vnet_primary_region" {
   resource_group_name = azurerm_resource_group.this.name
   address_space       = ["10.200.0.0/16"]
 }
+
 /* test this first
 resource "azurerm_public_ip" "nat_gateway_avs" {
   allocation_method   = "Static"
@@ -310,11 +310,11 @@ module "peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.8.1"
 
+  name                         = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
   allow_forwarded_traffic      = true
   allow_gateway_transit        = true
   allow_virtual_network_access = true
   create_reverse_peering       = true
-  name                         = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
   remote_virtual_network = {
     resource_id = module.avs_vnet_primary_region.resource_id
   }
@@ -384,6 +384,11 @@ module "test_private_cloud" {
   }
   dns_zone_type    = "Private"
   enable_telemetry = var.enable_telemetry
+  gen2_private_cloud = {
+    primary = {
+      virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
+    }
+  }
   internet_enabled = false
   lock = {
     name = "lock-avs-sddc-${substr(module.naming.unique-seed, 0, 4)}"
@@ -437,11 +442,6 @@ module "test_private_cloud" {
     test_local = {
       ldap_user          = module.create_dc.ldap_user
       ldap_user_password = module.create_dc.ldap_user_password
-    }
-  }
-  gen2_private_cloud = {
-    primary = {
-      virtual_network_resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
     }
   }
 }
