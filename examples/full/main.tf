@@ -168,10 +168,9 @@ module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.22.2"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  location      = azurerm_resource_group.this.location
+  address_space = ["10.100.0.0/16"]
+  name          = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -205,6 +204,7 @@ module "gateway_vnet_primary_region" {
       ]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_public_ip" "nat_gateway" {
@@ -232,10 +232,9 @@ module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.22.2"
 
-  address_space       = ["10.101.0.0/16"]
-  location            = azurerm_resource_group.this_secondary.location
-  resource_group_name = azurerm_resource_group.this_secondary.name
-  name                = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  location      = azurerm_resource_group.this_secondary.location
+  address_space = ["10.101.0.0/16"]
+  name          = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -278,6 +277,7 @@ module "gateway_vnet_secondary_region" {
       ]
     }
   }
+  resource_group_name = azurerm_resource_group.this_secondary.name
 }
 
 resource "azurerm_public_ip" "nat_gateway_2" {

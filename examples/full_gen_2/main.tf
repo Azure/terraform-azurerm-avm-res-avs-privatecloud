@@ -130,10 +130,9 @@ module "avs_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.22.2"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  location      = azurerm_resource_group.this.location
+  address_space = ["10.100.0.0/16"]
+  name          = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     DCSubnet = {
       name             = "DCSubnet"
@@ -163,6 +162,7 @@ module "avs_vnet_primary_region" {
       ]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_public_ip" "nat_gateway" {
