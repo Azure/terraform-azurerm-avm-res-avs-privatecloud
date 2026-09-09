@@ -310,23 +310,23 @@ module "peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.8.1"
 
-  name                         = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
-  allow_forwarded_traffic      = true
-  allow_gateway_transit        = true
-  allow_virtual_network_access = true
-  create_reverse_peering       = true
+  name = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
   remote_virtual_network = {
     resource_id = module.avs_vnet_primary_region.resource_id
   }
+  virtual_network = {
+    resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
+  }
+  allow_forwarded_traffic              = true
+  allow_gateway_transit                = true
+  allow_virtual_network_access         = true
+  create_reverse_peering               = true
   reverse_allow_forwarded_traffic      = false
   reverse_allow_gateway_transit        = false
   reverse_allow_virtual_network_access = true
   reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-hub-to-avs"
   reverse_use_remote_gateways          = false
   use_remote_gateways                  = false
-  virtual_network = {
-    resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
-  }
 }
 
 module "test_private_cloud" {
