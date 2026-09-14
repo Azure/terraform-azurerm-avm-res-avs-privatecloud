@@ -17,12 +17,12 @@ This example demonstrates a deployment with a single Azure VMware Solution priva
 ```hcl
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.12.0"
 }
 
 data "azurerm_client_config" "current" {}
@@ -143,12 +143,11 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "vm_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.22.2"
 
-  address_space       = ["10.230.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = "VMVnet"
+  location      = azurerm_resource_group.this.location
+  address_space = ["10.230.0.0/16"]
+  name          = "VMVnet"
   subnets = {
     VMSubnet = {
       name             = "VMSubnet"
@@ -162,6 +161,7 @@ module "vm_vnet" {
       address_prefixes = ["10.230.2.0/24"]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_virtual_hub_connection" "vm_vnet_connection" {
@@ -180,7 +180,7 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.11.0"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
@@ -266,7 +266,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~>1.10)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.35)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 5.5)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
@@ -317,7 +317,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: 0.10.0
+Version: 0.11.0
 
 ### <a name="module_create_jump_vm"></a> [create\_jump\_vm](#module\_create\_jump\_vm)
 
@@ -335,13 +335,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.4.2
+Version: 0.4.3
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.0
+Version: 0.12.0
 
 ### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
 
@@ -359,7 +359,7 @@ Version: 0.3.0
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.7.1
+Version: 0.22.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

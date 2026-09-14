@@ -91,10 +91,9 @@ module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.22.2"
 
-  address_space       = ["10.230.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  name                = "GatewayHubVnet"
+  location      = azurerm_resource_group.this.location
+  address_space = ["10.230.0.0/16"]
+  name          = "GatewayHubVnet"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -116,6 +115,7 @@ module "gateway_vnet" {
       address_prefixes = ["10.230.3.0/24"]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_log_analytics_workspace" "this_workspace" {
