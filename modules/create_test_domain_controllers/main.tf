@@ -105,22 +105,10 @@ locals {
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.19.3"
+  version = "0.21.0"
 
-  location = var.resource_group_location
-  name     = var.dc_vm_name
-  network_interfaces = {
-    network_interface_1 = {
-      name = "${var.dc_vm_name}-nic1"
-      ip_configurations = {
-        ip_configuration_1 = {
-          name                          = "${var.dc_vm_name}-nic1-ipconfig1"
-          private_ip_subnet_resource_id = var.dc_subnet_resource_id
-          private_ip_address            = var.private_ip_address
-        }
-      }
-    }
-  }
+  location            = var.resource_group_location
+  name                = var.dc_vm_name
   resource_group_name = var.resource_group_name
   zone                = "1"
   account_credentials = {
@@ -144,6 +132,18 @@ module "testvm" {
   }
   managed_identities = {
     system_assigned = true
+  }
+  network_interfaces = {
+    network_interface_1 = {
+      name = "${var.dc_vm_name}-nic1"
+      ip_configurations = {
+        ip_configuration_1 = {
+          name                          = "${var.dc_vm_name}-nic1-ipconfig1"
+          private_ip_subnet_resource_id = var.dc_subnet_resource_id
+          private_ip_address            = var.private_ip_address
+        }
+      }
+    }
   }
   os_type = "Windows"
   secrets = [
@@ -336,21 +336,10 @@ locals {
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.19.3"
+  version = "0.21.0"
 
-  location = var.resource_group_location
-  name     = var.dc_vm_name_secondary
-  network_interfaces = {
-    network_interface_1 = {
-      name = "${var.dc_vm_name_secondary}-nic1"
-      ip_configurations = {
-        ip_configuration_1 = {
-          name                          = "${var.dc_vm_name_secondary}-nic1-ipconfig1"
-          private_ip_subnet_resource_id = var.dc_subnet_resource_id
-        }
-      }
-    }
-  }
+  location            = var.resource_group_location
+  name                = var.dc_vm_name_secondary
   resource_group_name = var.resource_group_name
   zone                = "1"
   account_credentials = {
@@ -374,6 +363,17 @@ module "testvm_secondary" {
   }
   managed_identities = {
     system_assigned = true
+  }
+  network_interfaces = {
+    network_interface_1 = {
+      name = "${var.dc_vm_name_secondary}-nic1"
+      ip_configurations = {
+        ip_configuration_1 = {
+          name                          = "${var.dc_vm_name_secondary}-nic1-ipconfig1"
+          private_ip_subnet_resource_id = var.dc_subnet_resource_id
+        }
+      }
+    }
   }
   os_type = "Windows"
   secrets = [
