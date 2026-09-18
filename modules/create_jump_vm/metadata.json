@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "Create Jump VM",
+  "moduleDescription": "This module creates a simple virtual machine that can be used to validate a test configuration by logging into the Vcenter and/or NSX consoles to set up the initial AVS configuration.",
+  "canonicalType": "helper"
+}

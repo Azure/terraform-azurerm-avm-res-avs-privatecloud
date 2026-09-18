@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "Create Elastic SAN Volume",
+  "moduleDescription": "This module creates a simple Elastic SAN pool and volume that is configured to provide an IScSI block external datastore for AVS.",
+  "canonicalType": "helper"
+}
