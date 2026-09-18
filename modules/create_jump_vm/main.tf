@@ -28,10 +28,20 @@ resource "azurerm_bastion_host" "bastion" {
 #create the virtual machine
 module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.19.3"
+  version = "0.21.0"
 
-  location = var.resource_group_location
-  name     = var.vm_name
+  location            = var.resource_group_location
+  name                = var.vm_name
+  resource_group_name = var.resource_group_name
+  zone                = "1"
+  account_credentials = {
+    key_vault_configuration = {
+      resource_id = var.key_vault_resource_id
+    }
+  }
+  managed_identities = {
+    system_assigned = true
+  }
   network_interfaces = {
     network_interface_1 = {
       name = "${var.vm_name}-nic1"
@@ -42,16 +52,6 @@ module "jumpvm" {
         }
       }
     }
-  }
-  resource_group_name = var.resource_group_name
-  zone                = "1"
-  account_credentials = {
-    key_vault_configuration = {
-      resource_id = var.key_vault_resource_id
-    }
-  }
-  managed_identities = {
-    system_assigned = true
   }
   os_type  = "Windows"
   sku_size = var.vm_sku

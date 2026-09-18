@@ -264,13 +264,13 @@ The following Modules are called:
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: =0.19.3
+Version: 0.21.0
 
 ### <a name="module_testvm_secondary"></a> [testvm\_secondary](#module\_testvm\_secondary)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: =0.19.3
+Version: 0.21.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
