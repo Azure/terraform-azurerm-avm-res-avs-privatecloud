@@ -15,6 +15,8 @@ module "naming" {
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.5.0"
+
+  enable_telemetry = var.enable_telemetry
 }
 
 module "generate_deployment_region" {
@@ -125,7 +127,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ## Outputs
 

@@ -37,6 +37,7 @@ module "regions" {
   version = "0.5.0"
 
   availability_zones_filter = true
+  enable_telemetry          = var.enable_telemetry
 }
 
 locals {
@@ -85,8 +86,9 @@ module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
 
-  location      = azurerm_resource_group.this.location
-  cache_results = true
+  location         = azurerm_resource_group.this.location
+  cache_results    = true
+  enable_telemetry = var.enable_telemetry
   vm_filters = {
     min_vcpus                      = 2
     max_vcpus                      = 2
@@ -107,6 +109,7 @@ module "avm_res_keyvault_vault" {
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
+  enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
   keys = {
     "cmk-disk-key" = {
@@ -162,6 +165,7 @@ module "avs_vnet_primary_region" {
   address_space       = ["10.100.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = var.enable_telemetry
   name                = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     DCSubnet = {
@@ -518,7 +522,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ## Outputs
 

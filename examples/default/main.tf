@@ -10,6 +10,8 @@ module "naming" {
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.5.0"
+
+  enable_telemetry = var.enable_telemetry
 }
 
 data "azurerm_client_config" "current" {}
@@ -94,6 +96,7 @@ module "gateway_vnet" {
   address_space       = ["10.230.0.0/16"]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = var.enable_telemetry
   name                = "GatewayHubVnet"
   subnets = {
     GatewaySubnet = {
@@ -156,6 +159,7 @@ module "avm_res_keyvault_vault" {
   name                   = module.naming.key_vault.name_unique
   resource_group_name    = azurerm_resource_group.this.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
+  enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
   network_acls = {
     default_action = "Allow"
