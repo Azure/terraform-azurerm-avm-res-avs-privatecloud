@@ -1,11 +1,11 @@
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.12.0"
 
   availability_zones_filter = true
   enable_telemetry          = var.enable_telemetry
@@ -74,7 +74,7 @@ module "vm_sku" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.11.0"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
@@ -131,7 +131,7 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "avs_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.22.2"
 
   address_space       = ["10.100.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -312,7 +312,7 @@ resource "azurerm_nat_gateway" "this_nat_gateway_avs" {
 #peer to the hub vnet
 module "peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
-  version = "0.8.1"
+  version = "0.22.2"
 
   name = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
   remote_virtual_network = {

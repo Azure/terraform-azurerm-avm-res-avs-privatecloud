@@ -105,7 +105,7 @@ locals {
 #create the virtual machine
 module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.19.3"
+  version = "0.21.0"
 
   location = var.resource_group_location
   name     = var.dc_vm_name
@@ -336,7 +336,7 @@ locals {
 #create the virtual machine
 module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "=0.19.3"
+  version = "0.21.0"
 
   location = var.resource_group_location
   name     = var.dc_vm_name_secondary

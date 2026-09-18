@@ -4,12 +4,12 @@ locals {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.12.0"
 
   enable_telemetry = var.enable_telemetry
 }
@@ -91,7 +91,7 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.8.1"
+  version = "0.22.2"
 
   address_space       = ["10.230.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -153,7 +153,7 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.11.0"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
