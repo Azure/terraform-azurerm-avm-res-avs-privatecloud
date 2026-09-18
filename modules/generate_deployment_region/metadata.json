@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "Generate Deployment Region",
+  "moduleDescription": "The test subscription only had limited quota in select regions for testing AVS examples. This module queries the quota API for the allocated test regions to locate one or more regions with available quota and outputs the region and quota details.",
+  "canonicalType": "helper"
+}
