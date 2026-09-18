@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "AVS Private Cloud",
+  "moduleDescription": "AVM Resource Module for AVS Private Cloud",
+  "canonicalType": "Microsoft.AVS/privateClouds",
+  "owners": [
+    "jchancellor-ms"
+  ],
+  "telemetryIdPrefix": "46d3xtrf.res.99c1e23"
+}
