@@ -29,15 +29,15 @@ The following example code uses several test modules, so be sure to include them
 ```hcl
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.12.0"
 
-  availability_zones_filter = true
   enable_telemetry          = var.enable_telemetry
+  availability_zones_filter = true
 }
 
 locals {
@@ -134,7 +134,7 @@ resource "azurerm_resource_group" "this_secondary" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.11.0"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
@@ -198,13 +198,12 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.22.2"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  location         = azurerm_resource_group.this.location
+  address_space    = ["10.100.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -238,6 +237,7 @@ module "gateway_vnet_primary_region" {
       ]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_public_ip" "nat_gateway" {
@@ -263,13 +263,12 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.22.2"
 
-  address_space       = ["10.101.0.0/16"]
-  location            = azurerm_resource_group.this_secondary.location
-  resource_group_name = azurerm_resource_group.this_secondary.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  location         = azurerm_resource_group.this_secondary.location
+  address_space    = ["10.101.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -312,6 +311,7 @@ module "gateway_vnet_secondary_region" {
       ]
     }
   }
+  resource_group_name = azurerm_resource_group.this_secondary.name
 }
 
 resource "azurerm_public_ip" "nat_gateway_2" {
@@ -332,7 +332,7 @@ resource "azurerm_nat_gateway" "this_nat_gateway_2" {
 
 module "avm_res_keyvault_vault_2" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.11.0"
 
   location               = "westus3"
   name                   = "${module.naming.key_vault.name_unique}-2"
@@ -713,13 +713,13 @@ The following Modules are called:
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: 0.10.0
+Version: 0.11.0
 
 ### <a name="module_avm_res_keyvault_vault_2"></a> [avm\_res\_keyvault\_vault\_2](#module\_avm\_res\_keyvault\_vault\_2)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: 0.10.0
+Version: 0.11.0
 
 ### <a name="module_create_dc"></a> [create\_dc](#module\_create\_dc)
 
@@ -731,13 +731,13 @@ Version:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.7.1
+Version: 0.22.2
 
 ### <a name="module_gateway_vnet_secondary_region"></a> [gateway\_vnet\_secondary\_region](#module\_gateway\_vnet\_secondary\_region)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.7.1
+Version: 0.22.2
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
@@ -749,13 +749,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.4.2
+Version: 0.4.3
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.0
+Version: 0.12.0
 
 ### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
 
