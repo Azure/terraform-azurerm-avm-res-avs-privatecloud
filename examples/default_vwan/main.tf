@@ -131,11 +131,10 @@ module "vm_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.22.2"
 
-  address_space       = ["10.230.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "VMVnet"
+  location         = azurerm_resource_group.this.location
+  address_space    = ["10.230.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "VMVnet"
   subnets = {
     VMSubnet = {
       name             = "VMSubnet"
@@ -149,6 +148,7 @@ module "vm_vnet" {
       address_prefixes = ["10.230.2.0/24"]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_virtual_hub_connection" "vm_vnet_connection" {
