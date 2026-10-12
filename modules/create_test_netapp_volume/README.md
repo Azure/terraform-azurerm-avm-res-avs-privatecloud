@@ -4,14 +4,19 @@
 
 This module configures an Azure Netapp Files (ANF) account, pool and volume configured for use by AVS testing.
 
+## Provider migration
+
+The unused AzAPI provider requirement has been removed. Calls that explicitly pass `azapi` must remove
+that entry from this helper's `providers` map; remove the map if it becomes empty. Keep any `azurerm`
+mapping, including aliases. Calls without an explicit provider map need no change. Resource addresses
+are unchanged; no state migration is required.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
 The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
-
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.115, < 5.0)
 
