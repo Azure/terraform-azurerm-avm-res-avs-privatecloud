@@ -184,12 +184,12 @@ module "avm_res_keyvault_vault" {
   }
 }
 
-/*
-data "azapi_resource" "cmk_key" {
-  type = "Microsoft.KeyVault/vaults/keys@2023-07-01"
-  resource_id = module.avm_res_keyvault_vault.keys_resource_ids.cmk_key.resource_id
-}
-*/
+#
+#data "azapi_resource" "cmk_key" {
+#  type = "Microsoft.KeyVault/vaults/keys@2023-07-01"
+#  resource_id = module.avm_res_keyvault_vault.keys_resource_ids.cmk_key.resource_id
+#}
+#
 
 data "azurerm_key_vault_key" "cmk_key" {
   key_vault_id = module.avm_res_keyvault_vault.resource_id
@@ -452,64 +452,64 @@ resource "azurerm_virtual_network_gateway" "gateway_secondary" {
   }
 }
 
-/*
-module "create_anf_volume" {
-  source = "../../modules/create_test_netapp_volume"
-  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_netapp_volume"
-
-  resource_group_name     = azurerm_resource_group.this.name
-  resource_group_location = azurerm_resource_group.this.location
-  anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
-  anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
-  anf_pool_size           = 4
-  anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
-  anf_volume_size         = 4096
-  anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].resource_id
-  anf_zone_number         = try(module.test_private_cloud.resource.properties.availability.zone, 1)
-  anf_nfs_allowed_clients = ["0.0.0.0/0"]
-}
-
-
-module "elastic_san" {
-  source = "../../modules/create_elastic_san_volume"
-  #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
-  elastic_san_name      = "esan-${module.naming.storage_share.name_unique}"
-  resource_group_id     = azurerm_resource_group.this.id
-  location              = azurerm_resource_group.this.location
-  base_size_in_tib      = 1
-  extended_size_in_tib  = 1
-  zones                 = [try(module.test_private_cloud.resource.properties.availability.zone, 1)]
-  public_network_access = "Enabled"
-
-  sku = {
-    name = "Premium_LRS"
-    tier = "Premium"
-  }
-
-  elastic_san_volume_groups = {
-    vg_1 = {
-      name          = "esan-vg-${module.naming.storage_share.name_unique}"
-      protocol_type = "iSCSI"
-      volumes = {
-        volume_1 = {
-          name        = "esan-vol-${module.naming.storage_share.name_unique}-01"
-          size_in_gib = 100
-        }
-      }
-
-      private_link_service_connections = {
-        pls_conn_1 = {
-          private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
-          resource_group_name                  = azurerm_resource_group.this.name
-          resource_group_location              = azurerm_resource_group.this.location
-          esan_subnet_resource_id              = module.gateway_vnet_primary_region.subnets["ElasticSanSubnet"].resource_id
-          private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
-        }
-      }
-    }
-  }
-}
-*/
+#
+#module "create_anf_volume" {
+#  source = "../../modules/create_test_netapp_volume"
+#  #source = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_test_netapp_volume"
+#
+#  resource_group_name     = azurerm_resource_group.this.name
+#  resource_group_location = azurerm_resource_group.this.location
+#  anf_account_name        = "anf-${module.naming.storage_share.name_unique}"
+#  anf_pool_name           = "anf-pool-${module.naming.storage_share.name_unique}"
+#  anf_pool_size           = 4
+#  anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
+#  anf_volume_size         = 4096
+#  anf_subnet_resource_id  = module.gateway_vnet_primary_region.subnets["ANFSubnet"].resource_id
+#  anf_zone_number         = try(module.test_private_cloud.resource.properties.availability.zone, 1)
+#  anf_nfs_allowed_clients = ["0.0.0.0/0"]
+#}
+#
+#
+#module "elastic_san" {
+#  source = "../../modules/create_elastic_san_volume"
+#  #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
+#  elastic_san_name      = "esan-${module.naming.storage_share.name_unique}"
+#  resource_group_id     = azurerm_resource_group.this.id
+#  location              = azurerm_resource_group.this.location
+#  base_size_in_tib      = 1
+#  extended_size_in_tib  = 1
+#  zones                 = [try(module.test_private_cloud.resource.properties.availability.zone, 1)]
+#  public_network_access = "Enabled"
+#
+#  sku = {
+#    name = "Premium_LRS"
+#    tier = "Premium"
+#  }
+#
+#  elastic_san_volume_groups = {
+#    vg_1 = {
+#      name          = "esan-vg-${module.naming.storage_share.name_unique}"
+#      protocol_type = "iSCSI"
+#      volumes = {
+#        volume_1 = {
+#          name        = "esan-vol-${module.naming.storage_share.name_unique}-01"
+#          size_in_gib = 100
+#        }
+#      }
+#
+#      private_link_service_connections = {
+#        pls_conn_1 = {
+#          private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
+#          resource_group_name                  = azurerm_resource_group.this.name
+#          resource_group_location              = azurerm_resource_group.this.location
+#          esan_subnet_resource_id              = module.gateway_vnet_primary_region.subnets["ElasticSanSubnet"].resource_id
+#          private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
+#        }
+#      }
+#    }
+#  }
+#}
+#
 module "test_private_cloud" {
   source = "../../"
 

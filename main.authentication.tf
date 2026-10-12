@@ -42,23 +42,23 @@ resource "azurerm_role_assignment" "this_private_cloud" {
   ]
 }
 
-/* TODO: add this back if we can get a working API call to modify the credentials
-#Update the vcenter or nsxt passwords using Terraform instead of deferring to the portal
-#This allows for password rotation using Terraform Idempotency
-resource "azapi_update_resource" "manual_passwords" {
-  count = var.nsxt_password != null || var.vcenter_password != null ? 1 : 0 #if either password value is set, then update the password.
-
-  type      = "Microsoft.AVS/privateClouds@2023-03-01"
-  #name      = "${azapi_resource.this_private_cloud.name}-passwords"
-  resource_id = azapi_resource.this_private_cloud.id
-  body = jsonencode({
-    properties = {
-      nsxtPassword    = local.nsxt_password
-      vcenterPassword = local.vcenter_password
-    }
-  })
-}
-*/
+# TODO: add this back if we can get a working API call to modify the credentials
+##Update the vcenter or nsxt passwords using Terraform instead of deferring to the portal
+##This allows for password rotation using Terraform Idempotency
+#resource "azapi_update_resource" "manual_passwords" {
+#  count = var.nsxt_password != null || var.vcenter_password != null ? 1 : 0 #if either password value is set, then update the password.
+#
+#  type      = "Microsoft.AVS/privateClouds@2023-03-01"
+#  #name      = "${azapi_resource.this_private_cloud.name}-passwords"
+#  resource_id = azapi_resource.this_private_cloud.id
+#  body = jsonencode({
+#    properties = {
+#      nsxtPassword    = local.nsxt_password
+#      vcenterPassword = local.vcenter_password
+#    }
+#  })
+#}
+#
 
 #get SDDC credentials for use with the credentials output
 data "azapi_resource_action" "sddc_creds" {
