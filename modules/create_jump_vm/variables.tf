@@ -1,6 +1,11 @@
 variable "key_vault_resource_id" {
   type        = string
   description = "The Azure Resource ID for the key vault where the DSC key and VM passwords will be stored."
+
+  validation {
+    condition     = var.key_vault_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.KeyVault/vaults", var.key_vault_resource_id))
+    error_message = "`key_vault_resource_id` must be a valid Key Vault resource ID, or null."
+  }
 }
 
 variable "resource_group_location" {
@@ -24,6 +29,11 @@ variable "vm_name" {
 variable "vm_subnet_resource_id" {
   type        = string
   description = "The subnet resource ID to use for deploying the virtual machine nics."
+
+  validation {
+    condition     = var.vm_subnet_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.vm_subnet_resource_id))
+    error_message = "`vm_subnet_resource_id` must be a valid subnet resource ID, or null."
+  }
 }
 
 #bastion name
@@ -46,6 +56,11 @@ variable "bastion_subnet_resource_id" {
   type        = string
   default     = null
   description = "The Azure Resource ID for the subnet where the bastion will be connected."
+
+  validation {
+    condition     = var.bastion_subnet_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.bastion_subnet_resource_id))
+    error_message = "`bastion_subnet_resource_id` must be a valid subnet resource ID, or null."
+  }
 }
 
 #create bastion

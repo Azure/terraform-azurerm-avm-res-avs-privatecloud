@@ -2,6 +2,11 @@
 variable "dc_subnet_resource_id" {
   type        = string
   description = "The Azure Resource ID for the subnet where the DC will be connected."
+
+  validation {
+    condition     = var.dc_subnet_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.dc_subnet_resource_id))
+    error_message = "`dc_subnet_resource_id` must be a valid subnet resource ID, or null."
+  }
 }
 
 #names
@@ -19,6 +24,11 @@ variable "dc_vm_name_secondary" {
 variable "key_vault_resource_id" {
   type        = string
   description = "The Azure Resource ID for the key vault where the DSC key and VM passwords will be stored."
+
+  validation {
+    condition     = var.key_vault_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.KeyVault/vaults", var.key_vault_resource_id))
+    error_message = "`key_vault_resource_id` must be a valid Key Vault resource ID, or null."
+  }
 }
 
 variable "private_ip_address" {
@@ -39,6 +49,11 @@ variable "resource_group_name" {
 variable "virtual_network_resource_id" {
   type        = string
   description = "The resource ID Of the virtual network where the resources are deployed."
+
+  validation {
+    condition     = var.virtual_network_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks", var.virtual_network_resource_id))
+    error_message = "`virtual_network_resource_id` must be a valid virtual network resource ID, or null."
+  }
 }
 
 variable "admin_group_name" {
@@ -67,6 +82,11 @@ variable "bastion_subnet_resource_id" {
   type        = string
   default     = null
   description = "The Azure Resource ID for the subnet where the bastion will be connected."
+
+  validation {
+    condition     = var.bastion_subnet_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.bastion_subnet_resource_id))
+    error_message = "`bastion_subnet_resource_id` must be a valid subnet resource ID, or null."
+  }
 }
 
 #create bastion

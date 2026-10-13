@@ -6,6 +6,11 @@ This repo is used for the Azure Verified Modules version of an Azure VMWare Solu
 
 It leverages both the AzAPI and AzureRM providers to implement the child-level resources.
 
+## Provider migration
+
+This module and its helpers require AzureRM v4. Upgrade AzureRM v3 configurations before using this
+version; resource addresses are unchanged.
+
 > **\_NOTE:\_**  This module is not currently fully idempotent. Because run commands are used to implement the configuration of identity sources and run-commands don't have an effective data provider to do standard reads, we currently redeploy the run-command resource to get the identity provider state. Based on the output of the read, the delete and configure resources are also re-run and either set/update the identity values or run a second and/or third Get call to avoid making unnecessary changes.
 
 <!-- markdownlint-disable MD033 -->
@@ -17,7 +22,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.115, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 

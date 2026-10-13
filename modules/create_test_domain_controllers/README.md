@@ -4,6 +4,9 @@
 
 This module creates two windows virtual machines configured as domain controllers for use in testing the identity provider configuration. The VM's include Active Directory Certificate Services and DNS server and are configured to support LDAPs. The module also modifies the DNS configuration in the Vnet to point at the primary DC for DNS.
 
+ARM resource ID inputs are validated with AzAPI. Existing VM provider inheritance and partial caller
+provider maps are retained.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -13,7 +16,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.115, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
