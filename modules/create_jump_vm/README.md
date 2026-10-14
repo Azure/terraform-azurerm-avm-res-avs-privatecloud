@@ -4,6 +4,9 @@
 
 This module creates a simple virtual machine that can be used to validate a test configuration by logging into the Vcenter and/or NSX consoles to set up the initial AVS configuration.
 
+ARM resource ID inputs are validated with AzAPI. Existing VM provider inheritance and partial caller
+provider maps are retained.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -13,7 +16,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.115, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 ## Resources
 

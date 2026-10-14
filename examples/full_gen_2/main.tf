@@ -240,47 +240,47 @@ module "create_anf_volume" {
   resource_group_name     = azurerm_resource_group.this.name
 }
 
-/* #Elastic SAN is not currently supported in the Gen 2 public preview.
-module "elastic_san" {
-  source = "../../modules/create_elastic_san_volume"
-  #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
-  elastic_san_name      = "esan-${module.naming.storage_share.name_unique}"
-  resource_group_id     = azurerm_resource_group.this.id
-  location              = azurerm_resource_group.this.location
-  base_size_in_tib      = 1
-  extended_size_in_tib  = 1
-  zones                 = [module.test_private_cloud.resource.properties.availability.zone]
-  public_network_access = "Enabled"
-
-  sku = {
-    name = "Premium_LRS"
-    tier = "Premium"
-  }
-
-  elastic_san_volume_groups = {
-    vg_1 = {
-      name          = "esan-vg-${module.naming.storage_share.name_unique}"
-      protocol_type = "iSCSI"
-      volumes = {
-        volume_1 = {
-          name        = "esan-vol-${module.naming.storage_share.name_unique}-01"
-          size_in_gib = 100
-        }
-      }
-
-      private_link_service_connections = {
-        pls_conn_1 = {
-          private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
-          resource_group_name                  = azurerm_resource_group.this.name
-          resource_group_location              = azurerm_resource_group.this.location
-          esan_subnet_resource_id              = module.avs_vnet_primary_region.subnets["ElasticSanSubnet"].resource_id
-          private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
-        }
-      }
-    }
-  }
-}
-*/
+# #Elastic SAN is not currently supported in the Gen 2 public preview.
+#module "elastic_san" {
+#  source = "../../modules/create_elastic_san_volume"
+#  #source                = "git::https://github.com/Azure/terraform-azurerm-avm-res-avs-privatecloud.git//modules/create_elastic_san_volume"
+#  elastic_san_name      = "esan-${module.naming.storage_share.name_unique}"
+#  resource_group_id     = azurerm_resource_group.this.id
+#  location              = azurerm_resource_group.this.location
+#  base_size_in_tib      = 1
+#  extended_size_in_tib  = 1
+#  zones                 = [module.test_private_cloud.resource.properties.availability.zone]
+#  public_network_access = "Enabled"
+#
+#  sku = {
+#    name = "Premium_LRS"
+#    tier = "Premium"
+#  }
+#
+#  elastic_san_volume_groups = {
+#    vg_1 = {
+#      name          = "esan-vg-${module.naming.storage_share.name_unique}"
+#      protocol_type = "iSCSI"
+#      volumes = {
+#        volume_1 = {
+#          name        = "esan-vol-${module.naming.storage_share.name_unique}-01"
+#          size_in_gib = 100
+#        }
+#      }
+#
+#      private_link_service_connections = {
+#        pls_conn_1 = {
+#          private_endpoint_name                = "esan-${module.naming.private_endpoint.name_unique}"
+#          resource_group_name                  = azurerm_resource_group.this.name
+#          resource_group_location              = azurerm_resource_group.this.location
+#          esan_subnet_resource_id              = module.avs_vnet_primary_region.subnets["ElasticSanSubnet"].resource_id
+#          private_link_service_connection_name = "esan-${module.naming.private_service_connection.name_unique}"
+#        }
+#      }
+#    }
+#  }
+#}
+#
 
 # create the virtual network for the avs private cloud
 # this is required since the gen 2 AVS private cloud manages the subnets
@@ -291,23 +291,23 @@ resource "azurerm_virtual_network" "avs_vnet_primary_region" {
   address_space       = ["10.200.0.0/16"]
 }
 
-/* test this first
-resource "azurerm_public_ip" "nat_gateway_avs" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.nat_gateway.name_unique}-pip-avs"
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
-  zones               = ["1", "2", "3"]
-}
-
-resource "azurerm_nat_gateway" "this_nat_gateway_avs" {
-  location            = azurerm_resource_group.this.location
-  name                = "${module.naming.nat_gateway.name_unique}-avs"
-  resource_group_name = azurerm_resource_group.this.name
-  sku_name            = "Standard"
-}
-*/
+# test this first
+#resource "azurerm_public_ip" "nat_gateway_avs" {
+#  allocation_method   = "Static"
+#  location            = azurerm_resource_group.this.location
+#  name                = "${module.naming.nat_gateway.name_unique}-pip-avs"
+#  resource_group_name = azurerm_resource_group.this.name
+#  sku                 = "Standard"
+#  zones               = ["1", "2", "3"]
+#}
+#
+#resource "azurerm_nat_gateway" "this_nat_gateway_avs" {
+#  location            = azurerm_resource_group.this.location
+#  name                = "${module.naming.nat_gateway.name_unique}-avs"
+#  resource_group_name = azurerm_resource_group.this.name
+#  sku_name            = "Standard"
+#}
+#
 
 #peer to the hub vnet
 module "peering" {
