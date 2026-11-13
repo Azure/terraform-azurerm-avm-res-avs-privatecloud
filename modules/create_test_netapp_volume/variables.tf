@@ -38,14 +38,21 @@ variable "anf_zone_number" {
   description = "The zone where the ANF volume should be deployed."
 }
 
-variable "resource_group_location" {
+variable "location" {
   type        = string
-  description = "The region for the resource group where the dc will be installed."
+  description = "The Azure region for this module's resources or telemetry deployment."
+  nullable    = false
 }
 
 variable "resource_group_name" {
   type        = string
   description = "The name of the resource group where the dc will be installed."
+}
+
+variable "resource_group_location" {
+  type        = string
+  default     = null
+  description = "An optional resource-group region override. Defaults to location."
 }
 
 variable "tags" {

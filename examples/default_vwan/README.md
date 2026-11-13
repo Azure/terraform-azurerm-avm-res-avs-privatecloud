@@ -16,14 +16,15 @@ This example demonstrates a deployment with a single Azure VMware Solution priva
 
 ```hcl
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.13.0"
 
+  location         = var.location
   enable_telemetry = var.enable_telemetry
 }
 
@@ -250,7 +251,7 @@ module "create_jump_vm" {
   source = "../../modules/create_jump_vm"
 
   key_vault_resource_id      = module.avm_res_keyvault_vault.resource_id
-  resource_group_location    = azurerm_resource_group.this.location
+  location                   = var.location
   resource_group_name        = azurerm_resource_group.this.name
   vm_name                    = "jump-${module.naming.virtual_machine.name_unique}"
   vm_subnet_resource_id      = module.vm_vnet.subnets["VMSubnet"].resource_id
@@ -258,6 +259,7 @@ module "create_jump_vm" {
   bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
   bastion_subnet_resource_id = module.vm_vnet.subnets["AzureBastionSubnet"].resource_id
   create_bastion             = true
+  resource_group_location    = azurerm_resource_group.this.location
   vm_sku                     = module.vm_sku.sku
 
   depends_on = [module.avm_res_keyvault_vault, module.vm_vnet, azurerm_nat_gateway.this_nat_gateway]
@@ -274,6 +276,8 @@ The following requirements are needed by this module:
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.35)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
+
+- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 ## Resources
 
@@ -310,6 +314,14 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
+
 ## Outputs
 
 No outputs.
@@ -338,15 +350,15 @@ Version:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: 0.4.2
+Version: 0.2.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.0
+Version: 0.13.0
 
 ### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
 

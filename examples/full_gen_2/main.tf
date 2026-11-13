@@ -1,14 +1,15 @@
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.0"
+  version = "0.13.2"
 
-  availability_zones_filter = true
-  enable_telemetry          = var.enable_telemetry
+  location               = azurerm_resource_group.this.location
+  enable_telemetry       = var.enable_telemetry
+  has_availability_zones = true
 }
 
 locals {
@@ -197,8 +198,8 @@ module "create_dc" {
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
   key_vault_resource_id       = module.avm_res_keyvault_vault.resource_id
+  location                    = var.location
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
-  resource_group_location     = azurerm_resource_group.this.location
   resource_group_name         = azurerm_resource_group.this.name
   virtual_network_resource_id = module.avs_vnet_primary_region.resource_id
   admin_group_name            = local.test_admin_group_name
@@ -212,6 +213,7 @@ module "create_dc" {
   domain_fqdn               = local.test_domain_name
   domain_netbios_name       = local.test_domain_netbios
   ldap_user                 = local.ldap_user_name
+  resource_group_location   = azurerm_resource_group.this.location
   test_admin_user           = local.test_admin_user_name
 
   depends_on = [module.avm_res_keyvault_vault, module.avs_vnet_primary_region, azurerm_nat_gateway.this_nat_gateway]
@@ -236,8 +238,9 @@ module "create_anf_volume" {
   anf_volume_name         = "anf-volume-${module.naming.storage_share.name_unique}"
   anf_volume_size         = 4096
   anf_zone_number         = module.test_private_cloud.resource.properties.availability.zone
-  resource_group_location = azurerm_resource_group.this.location
+  location                = var.location
   resource_group_name     = azurerm_resource_group.this.name
+  resource_group_location = azurerm_resource_group.this.location
 }
 
 # #Elastic SAN is not currently supported in the Gen 2 public preview.

@@ -16,7 +16,7 @@ are unchanged; no state migration is required.
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11.0, < 2.0.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
@@ -81,9 +81,9 @@ Description: The zone where the ANF volume should be deployed.
 
 Type: `number`
 
-### <a name="input_resource_group_location"></a> [resource\_group\_location](#input\_resource\_group\_location)
+### <a name="input_location"></a> [location](#input\_location)
 
-Description: The region for the resource group where the dc will be installed.
+Description: The Azure region for this module's resources or telemetry deployment.
 
 Type: `string`
 
@@ -96,6 +96,14 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_resource_group_location"></a> [resource\_group\_location](#input\_resource\_group\_location)
+
+Description: An optional resource-group region override. Defaults to location.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

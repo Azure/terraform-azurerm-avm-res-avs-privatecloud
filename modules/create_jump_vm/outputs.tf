@@ -1,5 +1,6 @@
 output "resource" {
   description = "The jump vm resource output required by the spec."
+  sensitive   = true
   value       = module.jumpvm.resource
 }
 

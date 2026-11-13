@@ -12,11 +12,13 @@ provider maps are retained.
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.8)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11.0, < 2.0.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+
+- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -75,15 +77,15 @@ Description: The Azure Resource ID for the key vault where the DSC key and VM pa
 
 Type: `string`
 
-### <a name="input_private_ip_address"></a> [private\_ip\_address](#input\_private\_ip\_address)
+### <a name="input_location"></a> [location](#input\_location)
 
-Description: The ip address to use for the primary dc
+Description: The Azure region for this module's resources or telemetry deployment.
 
 Type: `string`
 
-### <a name="input_resource_group_location"></a> [resource\_group\_location](#input\_resource\_group\_location)
+### <a name="input_private_ip_address"></a> [private\_ip\_address](#input\_private\_ip\_address)
 
-Description: The region for the resource group where the dc will be installed.
+Description: The ip address to use for the primary dc
 
 Type: `string`
 
@@ -198,6 +200,14 @@ Description: the username to use for the account used to query ldap.
 Type: `string`
 
 Default: `"ldapuser"`
+
+### <a name="input_resource_group_location"></a> [resource\_group\_location](#input\_resource\_group\_location)
+
+Description: An optional resource-group region override. Defaults to location.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

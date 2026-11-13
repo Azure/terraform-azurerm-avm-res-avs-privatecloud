@@ -1,5 +1,5 @@
 resource "azurerm_netapp_account" "anf_account" {
-  location            = var.resource_group_location
+  location            = local.resource_group_location
   name                = var.anf_account_name
   resource_group_name = var.resource_group_name
   tags                = var.tags
@@ -7,7 +7,7 @@ resource "azurerm_netapp_account" "anf_account" {
 
 resource "azurerm_netapp_pool" "anf_pool" {
   account_name        = azurerm_netapp_account.anf_account.name
-  location            = var.resource_group_location
+  location            = local.resource_group_location
   name                = var.anf_pool_name
   resource_group_name = var.resource_group_name
   service_level       = "Standard"
@@ -17,7 +17,7 @@ resource "azurerm_netapp_pool" "anf_pool" {
 
 resource "azurerm_netapp_volume" "anf_volume" {
   account_name                    = azurerm_netapp_account.anf_account.name
-  location                        = var.resource_group_location
+  location                        = local.resource_group_location
   name                            = var.anf_volume_name
   pool_name                       = azurerm_netapp_pool.anf_pool.name
   resource_group_name             = var.resource_group_name

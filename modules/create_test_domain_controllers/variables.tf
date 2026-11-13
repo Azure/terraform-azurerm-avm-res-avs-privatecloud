@@ -31,14 +31,15 @@ variable "key_vault_resource_id" {
   }
 }
 
+variable "location" {
+  type        = string
+  description = "The Azure region for this module's resources or telemetry deployment."
+  nullable    = false
+}
+
 variable "private_ip_address" {
   type        = string
   description = "The ip address to use for the primary dc"
-}
-
-variable "resource_group_location" {
-  type        = string
-  description = "The region for the resource group where the dc will be installed."
 }
 
 variable "resource_group_name" {
@@ -139,6 +140,12 @@ variable "ldap_user" {
   type        = string
   default     = "ldapuser"
   description = "the username to use for the account used to query ldap."
+}
+
+variable "resource_group_location" {
+  type        = string
+  default     = null
+  description = "An optional resource-group region override. Defaults to location."
 }
 
 variable "tags" {
