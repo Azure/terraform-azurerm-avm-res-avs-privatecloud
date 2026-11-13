@@ -8,9 +8,10 @@ variable "key_vault_resource_id" {
   }
 }
 
-variable "resource_group_location" {
+variable "location" {
   type        = string
-  description = "The region for the resource group where the dc will be installed."
+  description = "The Azure region for this module's resources or telemetry deployment."
+  nullable    = false
 }
 
 variable "resource_group_name" {
@@ -68,6 +69,12 @@ variable "create_bastion" {
   type        = bool
   default     = false
   description = "Create a bastion resource to use for logging into the domain controller?  Defaults to false."
+}
+
+variable "resource_group_location" {
+  type        = string
+  default     = null
+  description = "An optional resource-group region override. Defaults to location."
 }
 
 variable "tags" {

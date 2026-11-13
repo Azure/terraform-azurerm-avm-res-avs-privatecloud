@@ -1,10 +1,12 @@
 output "dc_details" {
   description = "The primary domain controller data resource output."
+  sensitive   = true
   value       = data.azurerm_virtual_machine.this_vm
 }
 
 output "dc_details_secondary" {
   description = "The secondary domain controller data resource output."
+  sensitive   = true
   value       = data.azurerm_virtual_machine.this_vm_secondary
 }
 
@@ -43,6 +45,7 @@ output "primary_dc_private_ip_address" {
 
 output "resource" {
   description = "the full module output for the primary domain controller. Including this to comply with the spec tests."
+  sensitive   = true
   value       = module.testvm
 }
 

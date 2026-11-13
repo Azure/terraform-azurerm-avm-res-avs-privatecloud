@@ -2,7 +2,7 @@ resource "azurerm_public_ip" "bastion_pip" {
   count = var.create_bastion ? 1 : 0
 
   allocation_method   = "Static"
-  location            = var.resource_group_location
+  location            = local.resource_group_location
   name                = var.bastion_pip_name
   resource_group_name = var.resource_group_name
   sku                 = "Standard"
@@ -13,7 +13,7 @@ resource "azurerm_public_ip" "bastion_pip" {
 resource "azurerm_bastion_host" "bastion" {
   count = var.create_bastion ? 1 : 0
 
-  location            = var.resource_group_location
+  location            = local.resource_group_location
   name                = var.bastion_name
   resource_group_name = var.resource_group_name
   tags                = var.tags
@@ -107,7 +107,7 @@ module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "=0.19.3"
 
-  location = var.resource_group_location
+  location = local.resource_group_location
   name     = var.dc_vm_name
   network_interfaces = {
     network_interface_1 = {
@@ -338,7 +338,7 @@ module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "=0.19.3"
 
-  location = var.resource_group_location
+  location = local.resource_group_location
   name     = var.dc_vm_name_secondary
   network_interfaces = {
     network_interface_1 = {

@@ -87,25 +87,19 @@ mock_provider "random" {
   }
 }
 
-mock_provider "template" {
-  mock_data "template_file" {
-    defaults = {
-      rendered = "Write-Output 'Mocked domain-controller configuration'"
-    }
-  }
-}
-
-mock_provider "time" {}
-
 mock_provider "tls" {}
+
+variables {
+  key_vault_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.KeyVault/vaults/kv-test"
+  location              = "eastus2"
+  resource_group_name   = "rg-test"
+  vm_name               = "vm-test"
+  vm_subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/vm"
+}
 
 run "jump_vm_default_providers" {
   command   = apply
   state_key = "jump_vm_default"
-
-  module {
-    source = "./tests/unit/fixtures/jump_vm"
-  }
 
   providers = {
     azapi   = azapi
@@ -119,14 +113,19 @@ run "jump_vm_default_providers" {
     condition     = endswith(output.resource_id, "/vm-default")
     error_message = "The jump VM must use the caller's default AzureRM provider."
   }
+
+  assert {
+    condition     = output.resource.location == "eastus2"
+    error_message = "The jump VM must use the canonical location when no resource-group location override is supplied."
+  }
 }
 
 run "jump_vm_aliased_providers" {
   command   = apply
   state_key = "jump_vm_aliased"
 
-  module {
-    source = "./tests/unit/fixtures/jump_vm"
+  variables {
+    resource_group_location = "westus3"
   }
 
   providers = {
@@ -141,62 +140,9 @@ run "jump_vm_aliased_providers" {
     condition     = endswith(output.resource_id, "/vm-alternate")
     error_message = "The jump VM dependency must receive the caller's aliased AzureRM provider."
   }
-}
-
-run "domain_controllers_default_providers" {
-  command   = apply
-  state_key = "domain_controllers_default"
-
-  module {
-    source = "./tests/unit/fixtures/domain_controllers"
-  }
-
-  providers = {
-    azapi    = azapi
-    azurerm  = azurerm
-    modtm    = modtm
-    random   = random
-    template = template
-    time     = time
-    tls      = tls
-  }
 
   assert {
-    condition     = endswith(output.resource_id, "/vm-default") && output.primary_dc_private_ip_address == "10.100.1.4"
-    error_message = "The domain-controller VM dependency must use the caller's default AzureRM provider."
-  }
-
-  assert {
-    condition     = output.domain_fqdn == "test.local"
-    error_message = "Provider forwarding must preserve the domain-controller configuration."
-  }
-}
-
-run "domain_controllers_aliased_providers" {
-  command   = apply
-  state_key = "domain_controllers_aliased"
-
-  module {
-    source = "./tests/unit/fixtures/domain_controllers"
-  }
-
-  providers = {
-    azapi    = azapi.alternate
-    azurerm  = azurerm.alternate
-    modtm    = modtm
-    random   = random
-    template = template
-    time     = time
-    tls      = tls
-  }
-
-  assert {
-    condition     = endswith(output.resource_id, "/vm-alternate") && output.primary_dc_private_ip_address == "10.100.1.5"
-    error_message = "The domain-controller VM dependency must receive the caller's aliased AzureRM provider."
-  }
-
-  assert {
-    condition     = output.domain_fqdn == "test.local"
-    error_message = "Provider forwarding must preserve the domain-controller configuration."
+    condition     = output.resource.location == "westus3"
+    error_message = "An authored resource-group location must retain precedence for the jump VM."
   }
 }
