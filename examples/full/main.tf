@@ -1,6 +1,6 @@
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 module "regions" {
@@ -80,7 +80,7 @@ resource "azurerm_resource_group" "this" {
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  version = "0.4.2"
 
   location         = "westus3" #azurerm_resource_group.this.location
   cache_results    = true
@@ -106,7 +106,7 @@ resource "azurerm_resource_group" "this_secondary" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
@@ -170,7 +170,7 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.23.0"
 
   address_space       = ["10.100.0.0/16"]
   location            = azurerm_resource_group.this.location
@@ -235,7 +235,7 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.23.0"
 
   address_space       = ["10.101.0.0/16"]
   location            = azurerm_resource_group.this_secondary.location
@@ -304,7 +304,7 @@ resource "azurerm_nat_gateway" "this_nat_gateway_2" {
 
 module "avm_res_keyvault_vault_2" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = "westus3"
   name                   = "${module.naming.key_vault.name_unique}-2"
