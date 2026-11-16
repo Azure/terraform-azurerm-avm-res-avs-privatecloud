@@ -94,11 +94,10 @@ module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.23.0"
 
-  address_space       = ["10.230.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "GatewayHubVnet"
+  location         = azurerm_resource_group.this.location
+  address_space    = ["10.230.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "GatewayHubVnet"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -120,6 +119,7 @@ module "gateway_vnet" {
       address_prefixes = ["10.230.3.0/24"]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_log_analytics_workspace" "this_workspace" {
@@ -158,7 +158,6 @@ module "avm_res_keyvault_vault" {
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -175,6 +174,7 @@ module "avm_res_keyvault_vault" {
   wait_for_rbac_before_secret_operations = {
     create = "60s"
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 module "elastic_san" {
