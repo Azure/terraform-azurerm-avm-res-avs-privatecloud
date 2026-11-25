@@ -89,3 +89,9 @@ variable "vm_sku" {
   default     = "Standard_D2_v4"
   description = "The virtual machine sku size to use for the domain controller.  Defaults to Standard_D2_v4"
 }
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "Controls telemetry for the virtual machine module. See <https://aka.ms/avm/telemetry>."
+}

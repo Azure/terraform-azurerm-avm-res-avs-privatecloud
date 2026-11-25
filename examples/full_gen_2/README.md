@@ -29,12 +29,12 @@ The following example code uses several test modules, so be sure to include them
 ```hcl
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.2"
+  version = "0.14.0"
 
   location               = azurerm_resource_group.this.location
   enable_telemetry       = var.enable_telemetry
@@ -85,7 +85,7 @@ resource "azurerm_resource_group" "this" {
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  version = "0.4.2"
 
   location         = azurerm_resource_group.this.location
   cache_results    = true
@@ -104,11 +104,11 @@ module "vm_sku" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -161,11 +161,11 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "avs_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.23.0"
 
   address_space       = ["10.100.0.0/16"]
   location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  parent_id           = azurerm_resource_group.this.id
   enable_telemetry    = var.enable_telemetry
   name                = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
@@ -226,6 +226,7 @@ module "create_dc" {
   dc_subnet_resource_id       = module.avs_vnet_primary_region.subnets["DCSubnet"].resource_id
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
+  enable_telemetry            = var.enable_telemetry
   key_vault_resource_id       = module.avm_res_keyvault_vault.resource_id
   location                    = var.location
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
@@ -344,19 +345,17 @@ resource "azurerm_virtual_network" "avs_vnet_primary_region" {
 #peer to the hub vnet
 module "peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
-  version = "0.8.1"
+  version = "0.23.0"
 
-  name = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
-  remote_virtual_network = {
-    resource_id = module.avs_vnet_primary_region.resource_id
-  }
-  virtual_network = {
-    resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
-  }
+  name                                 = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
+  parent_id                            = azurerm_virtual_network.avs_vnet_primary_region.id
+  remote_virtual_network_id            = module.avs_vnet_primary_region.resource_id
   allow_forwarded_traffic              = true
   allow_gateway_transit                = true
   allow_virtual_network_access         = true
   create_reverse_peering               = true
+  enable_telemetry                     = var.enable_telemetry
+  location                             = azurerm_virtual_network.avs_vnet_primary_region.location
   reverse_allow_forwarded_traffic      = false
   reverse_allow_gateway_transit        = false
   reverse_allow_virtual_network_access = true
@@ -494,8 +493,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
 ## Resources
 
 The following resources are used by this module:
@@ -577,13 +574,13 @@ The following Modules are called:
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: 0.10.0
+Version: 0.13.1
 
 ### <a name="module_avs_vnet_primary_region"></a> [avs\_vnet\_primary\_region](#module\_avs\_vnet\_primary\_region)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.7.1
+Version: 0.23.0
 
 ### <a name="module_create_anf_volume"></a> [create\_anf\_volume](#module\_create\_anf\_volume)
 
@@ -607,19 +604,19 @@ Version:
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_peering"></a> [peering](#module\_peering)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/peering
 
-Version: 0.8.1
+Version: 0.23.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.13.2
+Version: 0.14.0
 
 ### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
 
@@ -631,7 +628,7 @@ Version:
 
 Source: Azure/avm-utl-sku-finder/azapi
 
-Version: 0.3.0
+Version: 0.4.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

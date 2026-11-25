@@ -21,12 +21,12 @@ locals {
 
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.0"
+  version = "0.14.0"
 
   location         = var.location
   enable_telemetry = var.enable_telemetry
@@ -109,11 +109,11 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.8.1"
+  version = "0.23.0"
 
   address_space       = ["10.230.0.0/16"]
   location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  parent_id           = azurerm_resource_group.this.id
   enable_telemetry    = var.enable_telemetry
   name                = "GatewayHubVnet"
   subnets = {
@@ -171,11 +171,11 @@ resource "azurerm_virtual_network_gateway" "gateway" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -280,6 +280,7 @@ module "test_private_cloud" {
 module "create_jump_vm" {
   source = "../../modules/create_jump_vm"
 
+  enable_telemetry           = var.enable_telemetry
   key_vault_resource_id      = module.avm_res_keyvault_vault.resource_id
   location                   = var.location
   resource_group_name        = azurerm_resource_group.this.name
@@ -306,8 +307,6 @@ The following requirements are needed by this module:
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.35)
 
 - <a name="requirement_local"></a> [local](#requirement\_local) (~> 2.5)
-
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 ## Resources
 
@@ -362,7 +361,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: 0.10.0
+Version: 0.13.1
 
 ### <a name="module_create_jump_vm"></a> [create\_jump\_vm](#module\_create\_jump\_vm)
 
@@ -380,7 +379,7 @@ Version:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.8.1
+Version: 0.23.0
 
 ### <a name="module_generate_deployment_region"></a> [generate\_deployment\_region](#module\_generate\_deployment\_region)
 
@@ -392,13 +391,13 @@ Version:
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.13.0
+Version: 0.14.0
 
 ### <a name="module_test_private_cloud"></a> [test\_private\_cloud](#module\_test\_private\_cloud)
 

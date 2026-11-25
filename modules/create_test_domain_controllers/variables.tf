@@ -159,3 +159,9 @@ variable "test_admin_user" {
   default     = "testAdmin"
   description = "the username to use for the account used to query ldap."
 }
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "Controls telemetry for the virtual machine modules. See <https://aka.ms/avm/telemetry>."
+}

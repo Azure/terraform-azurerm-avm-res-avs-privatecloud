@@ -30,8 +30,9 @@ module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.22.1"
 
-  location = local.resource_group_location
-  name     = var.vm_name
+  location         = local.resource_group_location
+  name             = var.vm_name
+  enable_telemetry = var.enable_telemetry
   network_interfaces = {
     network_interface_1 = {
       name = "${var.vm_name}-nic1"

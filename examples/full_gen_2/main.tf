@@ -79,7 +79,7 @@ module "avm_res_keyvault_vault" {
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -134,11 +134,11 @@ module "avs_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.23.0"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  address_space    = ["10.100.0.0/16"]
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     DCSubnet = {
       name             = "DCSubnet"
@@ -197,6 +197,7 @@ module "create_dc" {
   dc_subnet_resource_id       = module.avs_vnet_primary_region.subnets["DCSubnet"].resource_id
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
+  enable_telemetry            = var.enable_telemetry
   key_vault_resource_id       = module.avm_res_keyvault_vault.resource_id
   location                    = var.location
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
@@ -317,17 +318,15 @@ module "peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.23.0"
 
-  name = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
-  remote_virtual_network = {
-    resource_id = module.avs_vnet_primary_region.resource_id
-  }
-  virtual_network = {
-    resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
-  }
+  name                                 = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
+  parent_id                            = azurerm_virtual_network.avs_vnet_primary_region.id
+  remote_virtual_network_id            = module.avs_vnet_primary_region.resource_id
   allow_forwarded_traffic              = true
   allow_gateway_transit                = true
   allow_virtual_network_access         = true
   create_reverse_peering               = true
+  enable_telemetry                     = var.enable_telemetry
+  location                             = azurerm_virtual_network.avs_vnet_primary_region.location
   reverse_allow_forwarded_traffic      = false
   reverse_allow_gateway_transit        = false
   reverse_allow_virtual_network_access = true

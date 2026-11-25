@@ -79,7 +79,7 @@ data "template_file" "run_script" {
   template = file("${path.module}/templates/dc_configure_script.ps1")
   vars = {
     thumbprint                   = azurerm_key_vault_certificate.this.thumbprint
-    admin_username               = module.testvm.virtual_machine.admin_username
+    admin_username               = module.testvm.admin_username
     admin_password               = module.testvm.admin_password
     active_directory_fqdn        = var.domain_fqdn
     active_directory_netbios     = var.domain_netbios_name
@@ -107,8 +107,9 @@ module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.22.1"
 
-  location = local.resource_group_location
-  name     = var.dc_vm_name
+  location         = local.resource_group_location
+  name             = var.dc_vm_name
+  enable_telemetry = var.enable_telemetry
   network_interfaces = {
     network_interface_1 = {
       name = "${var.dc_vm_name}-nic1"
@@ -247,7 +248,7 @@ resource "azurerm_key_vault_secret" "test_admin_password" {
 
 resource "azurerm_virtual_network_dns_servers" "dc_dns" {
   virtual_network_id = var.virtual_network_resource_id
-  dns_servers        = [module.testvm.virtual_machine.private_ip_address]
+  dns_servers        = [module.testvm.virtual_machine_azurerm.private_ip_address]
 
   depends_on = [module.testvm]
 }
@@ -310,7 +311,7 @@ data "template_file" "run_script_secondary" {
   template = file("${path.module}/templates/dc_configure_script.ps1")
   vars = {
     thumbprint                   = azurerm_key_vault_certificate.this_secondary.thumbprint
-    admin_username               = module.testvm_secondary.virtual_machine.admin_username
+    admin_username               = module.testvm_secondary.admin_username
     admin_password               = module.testvm_secondary.admin_password
     active_directory_fqdn        = var.domain_fqdn
     active_directory_netbios     = var.domain_netbios_name
@@ -338,8 +339,9 @@ module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.22.1"
 
-  location = local.resource_group_location
-  name     = var.dc_vm_name_secondary
+  location         = local.resource_group_location
+  name             = var.dc_vm_name_secondary
+  enable_telemetry = var.enable_telemetry
   network_interfaces = {
     network_interface_1 = {
       name = "${var.dc_vm_name_secondary}-nic1"

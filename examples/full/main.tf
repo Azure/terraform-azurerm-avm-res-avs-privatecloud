@@ -110,7 +110,7 @@ module "avm_res_keyvault_vault" {
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -172,11 +172,11 @@ module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.23.0"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  address_space    = ["10.100.0.0/16"]
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -237,11 +237,11 @@ module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.23.0"
 
-  address_space       = ["10.101.0.0/16"]
-  location            = azurerm_resource_group.this_secondary.location
-  resource_group_name = azurerm_resource_group.this_secondary.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  address_space    = ["10.101.0.0/16"]
+  location         = azurerm_resource_group.this_secondary.location
+  parent_id        = azurerm_resource_group.this_secondary.id
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -308,7 +308,7 @@ module "avm_res_keyvault_vault_2" {
 
   location               = "westus3"
   name                   = "${module.naming.key_vault.name_unique}-2"
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -360,6 +360,7 @@ module "create_dc" {
   dc_subnet_resource_id       = module.gateway_vnet_secondary_region.subnets["DCSubnet"].resource_id #module.gateway_vnet_primary_region.subnets["DCSubnet"].resource_id
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
+  enable_telemetry            = var.enable_telemetry
   key_vault_resource_id       = module.avm_res_keyvault_vault_2.resource_id #module.avm_res_keyvault_vault.resource_id
   location                    = var.location
   private_ip_address          = cidrhost("10.100.1.0/24", 4)

@@ -94,11 +94,11 @@ module "gateway_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.23.0"
 
-  address_space       = ["10.230.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "GatewayHubVnet"
+  address_space    = ["10.230.0.0/16"]
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = var.enable_telemetry
+  name             = "GatewayHubVnet"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -158,7 +158,7 @@ module "avm_res_keyvault_vault" {
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -263,6 +263,7 @@ module "test_private_cloud" {
 module "create_jump_vm" {
   source = "../../modules/create_jump_vm"
 
+  enable_telemetry           = var.enable_telemetry
   key_vault_resource_id      = module.avm_res_keyvault_vault.resource_id
   location                   = var.location
   resource_group_name        = azurerm_resource_group.this.name
