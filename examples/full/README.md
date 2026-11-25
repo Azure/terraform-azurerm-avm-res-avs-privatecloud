@@ -201,11 +201,11 @@ module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.23.0"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  parent_id           = azurerm_resource_group.this.id
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.100.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -266,11 +266,11 @@ module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.23.0"
 
-  address_space       = ["10.101.0.0/16"]
-  location            = azurerm_resource_group.this_secondary.location
-  parent_id           = azurerm_resource_group.this_secondary.id
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  location         = azurerm_resource_group.this_secondary.location
+  parent_id        = azurerm_resource_group.this_secondary.id
+  address_space    = ["10.101.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -389,7 +389,6 @@ module "create_dc" {
   dc_subnet_resource_id       = module.gateway_vnet_secondary_region.subnets["DCSubnet"].resource_id #module.gateway_vnet_primary_region.subnets["DCSubnet"].resource_id
   dc_vm_name                  = "dc01-${module.naming.virtual_machine.name_unique}"
   dc_vm_name_secondary        = "dc02-${module.naming.virtual_machine.name_unique}"
-  enable_telemetry            = var.enable_telemetry
   key_vault_resource_id       = module.avm_res_keyvault_vault_2.resource_id #module.avm_res_keyvault_vault.resource_id
   location                    = var.location
   private_ip_address          = cidrhost("10.100.1.0/24", 4)
@@ -404,6 +403,7 @@ module "create_dc" {
   domain_distinguished_name   = local.test_domain_dn
   domain_fqdn                 = local.test_domain_name
   domain_netbios_name         = local.test_domain_netbios
+  enable_telemetry            = var.enable_telemetry
   ldap_user                   = local.ldap_user_name
   resource_group_location     = "westus3" #azurerm_resource_group.this.location
   test_admin_user             = local.test_admin_user_name

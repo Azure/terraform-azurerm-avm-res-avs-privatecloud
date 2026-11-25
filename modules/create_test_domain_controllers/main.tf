@@ -107,21 +107,8 @@ module "testvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.22.1"
 
-  location         = local.resource_group_location
-  name             = var.dc_vm_name
-  enable_telemetry = var.enable_telemetry
-  network_interfaces = {
-    network_interface_1 = {
-      name = "${var.dc_vm_name}-nic1"
-      ip_configurations = {
-        ip_configuration_1 = {
-          name                          = "${var.dc_vm_name}-nic1-ipconfig1"
-          private_ip_subnet_resource_id = var.dc_subnet_resource_id
-          private_ip_address            = var.private_ip_address
-        }
-      }
-    }
-  }
+  location            = local.resource_group_location
+  name                = var.dc_vm_name
   resource_group_name = var.resource_group_name
   zone                = "1"
   account_credentials = {
@@ -133,6 +120,7 @@ module "testvm" {
       resource_id = var.key_vault_resource_id
     }
   }
+  enable_telemetry = var.enable_telemetry
   extensions = {
     configure_domain_controller = {
       name                       = "${module.testvm.virtual_machine.name}-configure-domain-controller"
@@ -145,6 +133,18 @@ module "testvm" {
   }
   managed_identities = {
     system_assigned = true
+  }
+  network_interfaces = {
+    network_interface_1 = {
+      name = "${var.dc_vm_name}-nic1"
+      ip_configurations = {
+        ip_configuration_1 = {
+          name                          = "${var.dc_vm_name}-nic1-ipconfig1"
+          private_ip_subnet_resource_id = var.dc_subnet_resource_id
+          private_ip_address            = var.private_ip_address
+        }
+      }
+    }
   }
   os_type = "Windows"
   secrets = [
@@ -339,20 +339,8 @@ module "testvm_secondary" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.22.1"
 
-  location         = local.resource_group_location
-  name             = var.dc_vm_name_secondary
-  enable_telemetry = var.enable_telemetry
-  network_interfaces = {
-    network_interface_1 = {
-      name = "${var.dc_vm_name_secondary}-nic1"
-      ip_configurations = {
-        ip_configuration_1 = {
-          name                          = "${var.dc_vm_name_secondary}-nic1-ipconfig1"
-          private_ip_subnet_resource_id = var.dc_subnet_resource_id
-        }
-      }
-    }
-  }
+  location            = local.resource_group_location
+  name                = var.dc_vm_name_secondary
   resource_group_name = var.resource_group_name
   zone                = "1"
   account_credentials = {
@@ -364,6 +352,7 @@ module "testvm_secondary" {
       resource_id = var.key_vault_resource_id
     }
   }
+  enable_telemetry = var.enable_telemetry
   extensions = {
     configure_domain_controller = {
       name                       = "${module.testvm_secondary.virtual_machine.name}-configure-domain-controller"
@@ -376,6 +365,17 @@ module "testvm_secondary" {
   }
   managed_identities = {
     system_assigned = true
+  }
+  network_interfaces = {
+    network_interface_1 = {
+      name = "${var.dc_vm_name_secondary}-nic1"
+      ip_configurations = {
+        ip_configuration_1 = {
+          name                          = "${var.dc_vm_name_secondary}-nic1-ipconfig1"
+          private_ip_subnet_resource_id = var.dc_subnet_resource_id
+        }
+      }
+    }
   }
   os_type = "Windows"
   secrets = [

@@ -71,6 +71,13 @@ variable "create_bastion" {
   description = "Create a bastion resource to use for logging into the domain controller?  Defaults to false."
 }
 
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = "Controls telemetry for the virtual machine module. See <https://aka.ms/avm/telemetry>."
+  nullable    = false
+}
+
 variable "resource_group_location" {
   type        = string
   default     = null
@@ -88,10 +95,4 @@ variable "vm_sku" {
   type        = string
   default     = "Standard_D2_v4"
   description = "The virtual machine sku size to use for the domain controller.  Defaults to Standard_D2_v4"
-}
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  nullable    = false
-  description = "Controls telemetry for the virtual machine module. See <https://aka.ms/avm/telemetry>."
 }
