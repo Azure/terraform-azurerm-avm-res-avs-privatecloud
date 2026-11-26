@@ -1,6 +1,6 @@
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 module "regions" {
@@ -80,7 +80,7 @@ resource "azurerm_resource_group" "this" {
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  version = "0.4.2"
 
   location         = "westus3" #azurerm_resource_group.this.location
   cache_results    = true
@@ -106,11 +106,10 @@ resource "azurerm_resource_group" "this_secondary" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -154,6 +153,7 @@ module "avm_res_keyvault_vault" {
   wait_for_rbac_before_secret_operations = {
     create = "60s"
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 #
@@ -170,13 +170,12 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "gateway_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.23.0"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  location         = azurerm_resource_group.this.location
+  address_space    = ["10.100.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -210,6 +209,7 @@ module "gateway_vnet_primary_region" {
       ]
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_public_ip" "nat_gateway" {
@@ -235,13 +235,12 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "gateway_vnet_secondary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.23.0"
 
-  address_space       = ["10.101.0.0/16"]
-  location            = azurerm_resource_group.this_secondary.location
-  resource_group_name = azurerm_resource_group.this_secondary.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
+  location         = azurerm_resource_group.this_secondary.location
+  address_space    = ["10.101.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this_secondary.location}-2"
   subnets = {
     GatewaySubnet = {
       name             = "GatewaySubnet"
@@ -284,6 +283,7 @@ module "gateway_vnet_secondary_region" {
       ]
     }
   }
+  resource_group_name = azurerm_resource_group.this_secondary.name
 }
 
 resource "azurerm_public_ip" "nat_gateway_2" {
@@ -304,11 +304,10 @@ resource "azurerm_nat_gateway" "this_nat_gateway_2" {
 
 module "avm_res_keyvault_vault_2" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = "westus3"
   name                   = "${module.naming.key_vault.name_unique}-2"
-  resource_group_name    = azurerm_resource_group.this.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -352,6 +351,7 @@ module "avm_res_keyvault_vault_2" {
   wait_for_rbac_before_secret_operations = {
     create = "60s"
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 module "create_dc" {
