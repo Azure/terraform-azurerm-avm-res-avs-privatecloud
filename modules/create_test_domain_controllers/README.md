@@ -18,8 +18,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 - <a name="requirement_template"></a> [template](#requirement\_template) (~> 2.2)
@@ -193,6 +191,14 @@ Type: `string`
 
 Default: `"test"`
 
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: Controls telemetry for the virtual machine modules. See <https://aka.ms/avm/telemetry>.
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_ldap_user"></a> [ldap\_user](#input\_ldap\_user)
 
 Description: the username to use for the account used to query ldap.
@@ -277,13 +283,13 @@ The following Modules are called:
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: =0.19.3
+Version: 0.22.1
 
 ### <a name="module_testvm_secondary"></a> [testvm\_secondary](#module\_testvm\_secondary)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: =0.19.3
+Version: 0.22.1
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

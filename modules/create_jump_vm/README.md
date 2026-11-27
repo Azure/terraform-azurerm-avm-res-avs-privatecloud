@@ -18,8 +18,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
 ## Resources
 
 The following resources are used by this module:
@@ -98,6 +96,14 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: Controls telemetry for the virtual machine module. See <https://aka.ms/avm/telemetry>.
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_resource_group_location"></a> [resource\_group\_location](#input\_resource\_group\_location)
 
 Description: An optional resource-group region override. Defaults to location.
@@ -142,7 +148,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: =0.19.3
+Version: 0.22.1
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

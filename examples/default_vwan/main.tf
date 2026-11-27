@@ -1,11 +1,11 @@
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.0"
+  version = "0.14.0"
 
   location         = var.location
   enable_telemetry = var.enable_telemetry
@@ -60,7 +60,7 @@ resource "local_file" "region_sku_cache" {
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  version = "0.4.2"
 
   location         = azurerm_resource_group.this.location
   cache_results    = true
@@ -130,13 +130,13 @@ resource "azurerm_nat_gateway_public_ip_association" "this_nat_gateway" {
 
 module "vm_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.23.0"
 
-  address_space       = ["10.230.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "VMVnet"
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.230.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "VMVnet"
   subnets = {
     VMSubnet = {
       name             = "VMSubnet"
@@ -168,11 +168,11 @@ resource "azurerm_log_analytics_workspace" "this_workspace" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -242,6 +242,7 @@ module "create_jump_vm" {
   bastion_pip_name           = "${module.naming.bastion_host.name_unique}-pip"
   bastion_subnet_resource_id = module.vm_vnet.subnets["AzureBastionSubnet"].resource_id
   create_bastion             = true
+  enable_telemetry           = var.enable_telemetry
   resource_group_location    = azurerm_resource_group.this.location
   vm_sku                     = module.vm_sku.sku
 

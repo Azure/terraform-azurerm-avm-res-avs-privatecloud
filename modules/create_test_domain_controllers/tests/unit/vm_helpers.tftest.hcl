@@ -1,7 +1,43 @@
-mock_provider "azapi" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_id          = "00000000-0000-0000-0000-000000000000"
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+
+  mock_resource "azapi_resource" {
+    defaults = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Compute/virtualMachines/vm-default"
+      output = {
+        properties = {
+          ipConfigurations = [{ properties = { primary = true, privateIPAddress = "10.100.1.4" } }]
+        }
+      }
+    }
+  }
+}
 
 mock_provider "azapi" {
   alias = "alternate"
+
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_id          = "00000000-0000-0000-0000-000000000000"
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+
+  mock_resource "azapi_resource" {
+    defaults = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Compute/virtualMachines/vm-alternate"
+      output = {
+        properties = {
+          ipConfigurations = [{ properties = { primary = true, privateIPAddress = "10.100.1.5" } }]
+        }
+      }
+    }
+  }
 }
 
 mock_provider "azurerm" {
@@ -11,20 +47,6 @@ mock_provider "azurerm" {
       object_id       = "00000000-0000-0000-0000-000000000000"
       subscription_id = "00000000-0000-0000-0000-000000000000"
       tenant_id       = "00000000-0000-0000-0000-000000000000"
-    }
-  }
-
-  mock_resource "azurerm_windows_virtual_machine" {
-    defaults = {
-      id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Compute/virtualMachines/vm-default"
-      private_ip_address   = "10.100.1.4"
-      private_ip_addresses = ["10.100.1.4"]
-    }
-  }
-
-  mock_resource "azurerm_network_interface" {
-    defaults = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/networkInterfaces/nic-default"
     }
   }
 
@@ -48,33 +70,10 @@ mock_provider "azurerm" {
     }
   }
 
-  mock_resource "azurerm_windows_virtual_machine" {
-    defaults = {
-      id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Compute/virtualMachines/vm-alternate"
-      private_ip_address   = "10.100.1.5"
-      private_ip_addresses = ["10.100.1.5"]
-    }
-  }
-
-  mock_resource "azurerm_network_interface" {
-    defaults = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/networkInterfaces/nic-alternate"
-    }
-  }
-
   mock_resource "azurerm_key_vault_certificate" {
     defaults = {
       secret_id  = "https://kv-test.vault.azure.net/secrets/dc-certificate/00000000000000000000000000000000"
       thumbprint = "0000000000000000000000000000000000000000"
-    }
-  }
-}
-
-mock_provider "modtm" {
-  mock_data "modtm_module_source" {
-    defaults = {
-      module_source  = "registry.terraform.io/Azure/avm-res-compute-virtualmachine/azurerm"
-      module_version = "0.19.3"
     }
   }
 }
@@ -117,7 +116,6 @@ run "domain_controllers_default_providers" {
   providers = {
     azapi    = azapi
     azurerm  = azurerm
-    modtm    = modtm
     random   = random
     template = template
     time     = time
@@ -126,7 +124,7 @@ run "domain_controllers_default_providers" {
 
   assert {
     condition     = endswith(output.resource_id, "/vm-default") && output.primary_dc_private_ip_address == "10.100.1.4"
-    error_message = "The domain-controller VM dependency must use the caller's default AzureRM provider."
+    error_message = "The domain-controller VM dependency must use the caller's default AzAPI provider."
   }
 
   assert {
@@ -151,7 +149,6 @@ run "domain_controllers_aliased_providers" {
   providers = {
     azapi    = azapi.alternate
     azurerm  = azurerm.alternate
-    modtm    = modtm
     random   = random
     template = template
     time     = time
@@ -160,7 +157,7 @@ run "domain_controllers_aliased_providers" {
 
   assert {
     condition     = endswith(output.resource_id, "/vm-alternate") && output.primary_dc_private_ip_address == "10.100.1.5"
-    error_message = "The domain-controller VM dependency must receive the caller's aliased AzureRM provider."
+    error_message = "The domain-controller VM dependency must receive the caller's aliased AzAPI provider."
   }
 
   assert {

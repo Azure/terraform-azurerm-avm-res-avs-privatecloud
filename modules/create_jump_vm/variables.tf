@@ -71,6 +71,13 @@ variable "create_bastion" {
   description = "Create a bastion resource to use for logging into the domain controller?  Defaults to false."
 }
 
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = "Controls telemetry for the virtual machine module. See <https://aka.ms/avm/telemetry>."
+  nullable    = false
+}
+
 variable "resource_group_location" {
   type        = string
   default     = null

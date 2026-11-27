@@ -136,6 +136,13 @@ variable "domain_netbios_name" {
   description = "The Netbios name for the domain.  Default to test."
 }
 
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = "Controls telemetry for the virtual machine modules. See <https://aka.ms/avm/telemetry>."
+  nullable    = false
+}
+
 variable "ldap_user" {
   type        = string
   default     = "ldapuser"

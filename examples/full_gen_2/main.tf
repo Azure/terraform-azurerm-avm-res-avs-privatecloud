@@ -1,11 +1,11 @@
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.2"
+  version = "0.14.0"
 
   location               = azurerm_resource_group.this.location
   enable_telemetry       = var.enable_telemetry
@@ -56,7 +56,7 @@ resource "azurerm_resource_group" "this" {
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  version = "0.4.2"
 
   location         = azurerm_resource_group.this.location
   cache_results    = true
@@ -75,11 +75,11 @@ module "vm_sku" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.0"
+  version = "0.13.1"
 
   location               = azurerm_resource_group.this.location
   name                   = module.naming.key_vault.name_unique
-  resource_group_name    = azurerm_resource_group.this.name
+  parent_id              = azurerm_resource_group.this.id
   tenant_id              = data.azurerm_client_config.current.tenant_id
   enable_telemetry       = var.enable_telemetry
   enabled_for_deployment = true
@@ -132,13 +132,13 @@ data "azurerm_key_vault_key" "cmk_key" {
 
 module "avs_vnet_primary_region" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "0.23.0"
 
-  address_space       = ["10.100.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = "HubVnet-${azurerm_resource_group.this.location}"
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.100.0.0/16"]
+  enable_telemetry = var.enable_telemetry
+  name             = "HubVnet-${azurerm_resource_group.this.location}"
   subnets = {
     DCSubnet = {
       name             = "DCSubnet"
@@ -212,6 +212,7 @@ module "create_dc" {
   domain_distinguished_name = local.test_domain_dn
   domain_fqdn               = local.test_domain_name
   domain_netbios_name       = local.test_domain_netbios
+  enable_telemetry          = var.enable_telemetry
   ldap_user                 = local.ldap_user_name
   resource_group_location   = azurerm_resource_group.this.location
   test_admin_user           = local.test_admin_user_name
@@ -315,19 +316,17 @@ resource "azurerm_virtual_network" "avs_vnet_primary_region" {
 #peer to the hub vnet
 module "peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
-  version = "0.8.1"
+  version = "0.23.0"
 
-  name = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
-  remote_virtual_network = {
-    resource_id = module.avs_vnet_primary_region.resource_id
-  }
-  virtual_network = {
-    resource_id = azurerm_virtual_network.avs_vnet_primary_region.id
-  }
+  name                                 = "${module.naming.virtual_network_peering.name_unique}-avs-to-hub"
+  parent_id                            = azurerm_virtual_network.avs_vnet_primary_region.id
+  remote_virtual_network_id            = module.avs_vnet_primary_region.resource_id
   allow_forwarded_traffic              = true
   allow_gateway_transit                = true
   allow_virtual_network_access         = true
   create_reverse_peering               = true
+  enable_telemetry                     = var.enable_telemetry
+  location                             = azurerm_virtual_network.avs_vnet_primary_region.location
   reverse_allow_forwarded_traffic      = false
   reverse_allow_gateway_transit        = false
   reverse_allow_virtual_network_access = true
